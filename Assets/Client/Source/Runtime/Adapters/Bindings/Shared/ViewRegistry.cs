@@ -4,11 +4,8 @@ using UnityEngine;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// Turns the simulation's opaque <c>ViewHandleComp.Id</c> back into a real
-    /// <see cref="Transform"/>. The only place in the project that knows both a handle number and
-    /// a scene object.
-    /// </summary>
+    /// <summary>Resolves a <c>ViewHandleComp.Id</c> to a <see cref="Transform"/>.</summary>
+    /// <remarks>This is the only place that knows both a handle number and a scene object.</remarks>
     public sealed class ViewRegistry
     {
         private readonly Dictionary<int, Transform> _views = new();
@@ -35,9 +32,8 @@ namespace Game.Adapters.Bindings
 
         public bool TryResolve(int handleId, out Transform view, out CardView card)
         {
-            // A destroyed GameObject leaves a non-null dictionary entry that compares equal to
-            // null through Unity's overload. Treat it as unresolvable rather than handing a
-            // caller a dead Transform.
+            // A destroyed GameObject stays in the dictionary but compares equal to null.
+            // Report it as unresolved instead of returning a dead Transform.
             if (_views.TryGetValue(handleId, out view) && view != null)
             {
                 _cards.TryGetValue(handleId, out card);
@@ -55,7 +51,7 @@ namespace Game.Adapters.Bindings
             return _views.Remove(handleId);
         }
 
-        /// <summary>Every live view. Used to kill tweens that would outlive the world.</summary>
+        /// <summary>Every live view. Use it to kill tweens that would outlive the world.</summary>
         public IEnumerable<Transform> Views => _views.Values;
 
         public void Clear()

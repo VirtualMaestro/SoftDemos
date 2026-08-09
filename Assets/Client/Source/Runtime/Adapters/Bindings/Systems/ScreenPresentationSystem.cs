@@ -14,13 +14,11 @@ namespace Game.Adapters.Bindings
         private readonly MenuScreen _menu;
         private readonly DemoHudView _demoHud;
         private readonly GameObject _loadingIndicator;
-        /// <summary>
-        /// The shell backdrop, which lives outside <c>SafeArea</c> and so is not a child of any
-        /// screen — nothing would ever hide it. On a Screen Space Overlay canvas that means it
-        /// draws over the demo's world sprites and the demo is simply not there.
-        /// </summary>
+        /// <summary>The shell backdrop. It sits outside <c>SafeArea</c>, so it belongs to no screen.</summary>
+        /// <remarks>Nothing else hides it. On an overlay canvas it would cover the whole demo.</remarks>
         private readonly GameObject _menuBackground;
         private readonly TweenPlayer _tweens;
+        private readonly StageReadyChannel _stageReady;
         private readonly CanvasGroup _menuGroup;
         private readonly CanvasGroup _demoHudGroup;
         private readonly CanvasGroup _loadingGroup;
@@ -29,23 +27,28 @@ namespace Game.Adapters.Bindings
         private ILog _log;
         private ScreenId _lastScreen;
         private int _lastDemoIndex;
+        private bool _lastStageReady;
         private bool _hasState;
+        private bool _menuWasVisible;
+        private bool _demoWasVisible;
+        private bool _loadingWasVisible;
 
         public ScreenPresentationSystem(
             MenuScreen menu,
             DemoHudView demoHud,
             GameObject loadingIndicator,
             ShellSkinView shellSkin,
-            TweenPlayer tweens)
+            TweenPlayer tweens,
+            StageReadyChannel stageReady)
         {
             _menu = menu;
             _demoHud = demoHud;
             _loadingIndicator = loadingIndicator;
             _menuBackground = shellSkin.Background.gameObject;
             _tweens = tweens;
+            _stageReady = stageReady;
 
-            // Resolved once here rather than per transition: GetComponent on a screen that never
-            // changes is a constant, and LateRun already runs on every frame of a demo.
+            // Resolve once. The screen never changes, and LateRun runs on every frame.
             _menuGroup = menu.GetComponent<CanvasGroup>();
             _demoHudGroup = demoHud.GetComponent<CanvasGroup>();
             _loadingGroup = loadingIndicator.GetComponent<CanvasGroup>();
@@ -54,44 +57,58 @@ namespace Game.Adapters.Bindings
         public void LateRun()
         {
             ref readonly var state = ref _world.Get<ScreenStateComp>();
+            var stageReady = _stageReady.IsReady;
 
             if (_hasState &&
                 state.Current == _lastScreen &&
-                state.ActiveDemoIndex == _lastDemoIndex)
+                state.ActiveDemoIndex == _lastDemoIndex &&
+                stageReady == _lastStageReady)
                 return;
 
+            // `ScreenId.Demo` means only that the scene landed. The stage system paints its
+            // background a few frames later, and the demo draws nothing until then. Keep the
+            // shell up for those frames, or the camera clear colour shows through.
+            var demoActive = state.Current == ScreenId.Demo;
             var menuVisible = state.Current == ScreenId.Menu;
-            var demoVisible = state.Current == ScreenId.Demo;
-            var loadingVisible =
-                state.Current == ScreenId.Loading || state.Current == ScreenId.Unloading;
+            var demoVisible = demoActive && stageReady;
+            var loadingVisible = state.Current == ScreenId.Loading ||
+                state.Current == ScreenId.Unloading ||
+                (demoActive && stageReady == false);
 
-            _menu.gameObject.SetActive(menuVisible);
-            _demoHud.gameObject.SetActive(demoVisible);
-            _loadingIndicator.SetActive(loadingVisible);
-            // The backdrop stays up through the load so the transition is not a black flash, and
-            // goes away for the demo, which brings its own.
-            _menuBackground.SetActive(demoVisible == false);
             _demoHud.SetDemoIndex(state.ActiveDemoIndex);
+            // Keep the backdrop through the load, so the change is not a black flash. Remove it
+            // for the demo, which brings its own by then.
+            _menuBackground.SetActive(demoVisible == false);
 
-            // Only the appearing screen fades. A fade-out would need the object to outlive the
-            // transition that hid it, which is a state machine rather than a transition — and the
-            // early-out above already guarantees this runs once per change, not once per frame.
-            _FadeInIfVisible(_menuGroup, menuVisible);
-            _FadeInIfVisible(_demoHudGroup, demoVisible);
-            _FadeInIfVisible(_loadingGroup, loadingVisible);
+            _ApplyVisibility(_menu.gameObject, _menuGroup, menuVisible, ref _menuWasVisible);
+            _ApplyVisibility(_demoHud.gameObject, _demoHudGroup, demoVisible, ref _demoWasVisible);
+            _ApplyVisibility(_loadingIndicator, _loadingGroup, loadingVisible, ref _loadingWasVisible);
 
             _lastScreen = state.Current;
             _lastDemoIndex = state.ActiveDemoIndex;
+            _lastStageReady = stageReady;
             _hasState = true;
 
             _log.Info($"Screen presentation: menu={menuVisible}, demo={demoVisible}, " +
-                $"loading={loadingVisible}, demoIndex={state.ActiveDemoIndex}.");
+                $"loading={loadingVisible}, stageReady={stageReady}, " +
+                $"demoIndex={state.ActiveDemoIndex}.");
         }
 
-        private void _FadeInIfVisible(CanvasGroup group, bool isVisible)
+        /// <summary>Shows or hides one screen. It fades in only on the rising edge.</summary>
+        /// <remarks>
+        /// The indicator spans two states: <c>Loading</c> and the unpainted part of <c>Demo</c>.
+        /// A second fade at that boundary would add a blink. Only the screen that appears fades.
+        /// A fade-out needs the object to outlive the change that hid it.
+        /// </remarks>
+        private void _ApplyVisibility(
+            GameObject target, CanvasGroup group, bool isVisible, ref bool wasVisible)
         {
-            // `?.` bypasses Unity's null overload, so a destroyed group would slip past it.
-            if (isVisible == false || group == null)
+            target.SetActive(isVisible);
+            var isRisingEdge = isVisible && wasVisible == false;
+            wasVisible = isVisible;
+
+            // `?.` skips Unity's null overload, so a destroyed group would pass the check.
+            if (isRisingEdge == false || group == null)
                 return;
 
             _tweens.FadeIn(group, FadeSeconds);

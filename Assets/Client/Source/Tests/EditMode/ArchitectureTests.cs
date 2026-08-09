@@ -9,15 +9,12 @@ using UnityEngine;
 
 namespace Game.Simulation.Tests
 {
-    /// <summary>
-    /// Guards the one boundary the whole architecture rests on: <c>Game.Simulation</c> holds
-    /// pure game logic and must never reach into Unity.
-    ///
-    /// Two complementary checks, neither sufficient alone:
-    /// the asmdef check catches a *widened declaration* (the compiler silently drops asmdef
-    /// references no code uses, so reflection cannot see one), and the reflection check catches
-    /// what the assembly *actually* compiled against.
-    /// </summary>
+    /// <summary>Guards the main boundary: <c>Game.Simulation</c> must not use Unity.</summary>
+    /// <remarks>
+    /// Both checks are necessary. The asmdef check finds a new reference that no code uses yet,
+    /// because the compiler drops those and reflection cannot see them. The reflection check
+    /// finds what the assembly compiled against.
+    /// </remarks>
     public sealed class ArchitectureTests
     {
         private const string SimulationAssembly = "Game.Simulation";
@@ -46,10 +43,7 @@ namespace Game.Simulation.Tests
             "DCFApixels.DragonECS",
         };
 
-        /// <summary>
-        /// The primary guard. A reference added to the asmdef but not yet used by any code is
-        /// invisible to reflection — the C# compiler drops it. Read the declaration itself.
-        /// </summary>
+        /// <summary>Reads the asmdef itself, because the compiler drops an unused reference.</summary>
         [Test]
         public void SimulationAsmdef_DeclaresExactlyOneReference()
         {
@@ -61,8 +55,8 @@ namespace Game.Simulation.Tests
             var asmdef = JsonUtility.FromJson<AssemblyDefinitionJson>(json);
             Assert.That(asmdef, Is.Not.Null, $"Could not parse '{asmdefPath}'.");
 
-            // JsonUtility fills omitted bools with false, which would make a *deleted* key look
-            // like a passing value. Require the keys to actually be declared.
+            // JsonUtility sets a missing bool to false, so a deleted key looks like a pass.
+            // Check that the keys are present.
             foreach (var key in new[] { "autoReferenced", "overrideReferences", "noEngineReferences" })
                 Assert.That(json, Does.Contain($"\"{key}\""),
                     $"'{asmdefPath}' no longer declares \"{key}\". Full file:\n{json}");
@@ -86,8 +80,7 @@ namespace Game.Simulation.Tests
             Assert.That(asmdef.autoReferenced, Is.False,
                 $"'{SimulationAssembly}' must not be auto-referenced by the predefined assemblies.{context}");
 
-            // overrideReferences + empty precompiledReferences keep loose "Any platform" DLLs out.
-            // DOTween.dll is exactly such a plugin and is otherwise referenced by every assembly.
+            // These two keep loose "Any platform" DLLs out. DOTween.dll is one of them.
             Assert.That(asmdef.overrideReferences, Is.True,
                 $"'{SimulationAssembly}' needs overrideReferences:true, otherwise auto-referenced " +
                 $"precompiled plugins such as DOTween.dll leak in.{context}");
@@ -95,18 +88,14 @@ namespace Game.Simulation.Tests
             Assert.That(asmdef.precompiledReferences, Is.Null.Or.Empty,
                 $"'{SimulationAssembly}' must not declare any precompiled reference.{context}");
 
-            // Structural enforcement: without this, UnityEngine.CoreModule sits in the compile-time
-            // reference set and `using UnityEngine;` compiles even though nothing declares it.
+            // Without this, UnityEngine.CoreModule stays in the reference set and
+            // `using UnityEngine;` compiles.
             Assert.That(asmdef.noEngineReferences, Is.True,
                 $"'{SimulationAssembly}' needs noEngineReferences:true — it is what makes " +
                 $"`using UnityEngine;` fail to compile inside the simulation.{context}");
         }
 
-        /// <summary>
-        /// The runtime cross-check: what the assembly actually got compiled against. Catches a
-        /// reference that was widened *and* used, which is the case the asmdef check alone would
-        /// still catch but this one proves end to end.
-        /// </summary>
+        /// <summary>Checks what the assembly compiled against, not what it declares.</summary>
         [Test]
         public void Simulation_DoesNotReferenceUnityEngine()
         {
@@ -138,10 +127,7 @@ namespace Game.Simulation.Tests
                 $"[{string.Join(", ", AllowedCompiledReferencePrefixes)}].{context}");
         }
 
-        /// <summary>
-        /// asmdef references may be stored either as a plain assembly name or as
-        /// <c>"GUID:&lt;32 hex&gt;"</c>. Normalise both to the assembly name.
-        /// </summary>
+        /// <summary>Converts an asmdef reference to an assembly name. It can be a name or a GUID.</summary>
         private static string _ResolveReferenceName(string reference)
         {
             const string guidPrefix = "GUID:";
@@ -159,11 +145,8 @@ namespace Game.Simulation.Tests
             return referenced?.name ?? $"<unnamed asmdef at {path}>";
         }
 
-        /// <summary>
-        /// The asmdef wire format, not our data model. <see cref="JsonUtility"/> maps JSON keys to
-        /// field names verbatim, so these have to be spelled exactly as Unity writes them —
-        /// PascalCase here would deserialize to nulls and the assertions would pass on empty data.
-        /// </summary>
+        /// <summary>The asmdef file format. <see cref="JsonUtility"/> maps JSON keys to field names.</summary>
+        /// <remarks>Keep the exact spelling Unity writes. PascalCase gives nulls and the tests pass on empty data.</remarks>
 #pragma warning disable IDE1006 // Naming rule violation — field names are the JSON keys.
         [Serializable]
         private sealed class AssemblyDefinitionJson

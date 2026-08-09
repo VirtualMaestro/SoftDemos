@@ -2,14 +2,12 @@ using UnityEngine;
 
 namespace Game.Adapters.Views
 {
-    /// <summary>
-    /// Spins the loading indicator. A spinner that does not spin reads as a hang.
-    ///
-    /// Deliberately not a tween: <c>TweenPlaybackSystem</c> is the project's single DOTween call
-    /// site, and a looping rotation needs none of what a tween buys. It also needs no stop logic —
-    /// <c>ScreenPresentationSystem</c> deactivates the indicator, and <c>Update</c> stops with it.
-    /// <c>unscaledDeltaTime</c> so the spinner survives a paused or slowed timescale.
-    /// </summary>
+    /// <summary>Rotates the loading indicator.</summary>
+    /// <remarks>
+    /// This is not a tween. A loop needs nothing a tween gives, and it needs no stop logic:
+    /// the screen deactivates the indicator and <c>Update</c> stops with it. It uses
+    /// <c>unscaledDeltaTime</c>, so it keeps turning at any timescale.
+    /// </remarks>
     public sealed class LoadingSpinnerView : MonoBehaviour
     {
         [SerializeField] private float degreesPerSecond = -180f;

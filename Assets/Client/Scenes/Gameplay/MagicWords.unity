@@ -428,7 +428,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Bindings.VList
   prototypeItem: {fileID: 211377998711175720, guid: 4b20635e4aa5a514188368d71ead0626, type: 3}
-  prototypeSize: {x: 0, y: 180}
+  prototypeSize: {x: 0, y: 210}
   isAutoGap: 0
   gap: {x: 0, y: 12}
   isViewportDynamic: 1

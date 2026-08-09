@@ -4,11 +4,8 @@ using UnityEngine;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// Per-line payload handed to the dialogue <see cref="VList"/>; DialogueLineView.OnShow
-    /// renders it. Also carries the per-line avatar-poll bookkeeping DialogueLogSystem keeps,
-    /// so one object per line replaces the old view binding record.
-    /// </summary>
+    /// <summary>One dialogue line for the <see cref="VList"/>. <c>DialogueLineView.OnShow</c> draws it.</summary>
+    /// <remarks>It also carries the avatar poll state, so there is one object per line.</remarks>
     public sealed class DialogueLineItemData : IItemData
     {
         public int EntityId;
@@ -21,7 +18,7 @@ namespace Game.Adapters.Bindings
         public string Body;
         public Sprite Avatar;
 
-        // Avatar poll bookkeeping (system-owned, never rendered).
+        // Avatar poll state. The system owns it and nothing draws it.
         public AvatarLoadState LastState = (AvatarLoadState)(-1);
         public int LastHandleId = -1;
 

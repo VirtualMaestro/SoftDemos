@@ -24,6 +24,9 @@ namespace Game.Adapters.Bindings
     {
         private const float FadeSeconds = 0.2f;
 
+        private const string EmojiSizeOpen = "<size=200%>";
+        private const string EmojiSizeClose = "</size>";
+
         private readonly AvatarImageRouterService _avatars;
         private readonly TweenPlayer _tweens;
         private readonly DialogueLogChannel _channel;
@@ -221,16 +224,16 @@ namespace Game.Adapters.Bindings
         {
             _body.Clear();
 
-            if (segments != null)
-            {
-                foreach (var segment in segments)
-                {
-                    if (segment.Kind == SegmentKind.Emoji)
-                        _body.Append("<sprite name=\"").Append(segment.Value).Append("\">");
-                    else
-                        _body.Append("<noparse>").Append(segment.Value).Append("</noparse>");
-                }
-            }
+            if (segments == null)
+                return _body.ToString();
+
+            foreach (var segment in segments)
+                if (segment.Kind == SegmentKind.Emoji)
+                    _body.Append(EmojiSizeOpen)
+                        .Append("<sprite name=\"").Append(segment.Value).Append("\">")
+                        .Append(EmojiSizeClose);
+                else
+                    _body.Append("<noparse>").Append(segment.Value).Append("</noparse>");
 
             return _body.ToString();
         }

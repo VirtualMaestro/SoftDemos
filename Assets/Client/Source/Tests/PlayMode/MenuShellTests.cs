@@ -57,13 +57,12 @@ namespace Game.Adapters.Tests
                 $"Unloading '{BootScene}' leaked a world.");
         }
 
-        /// <summary>
-        /// The menu panel lays its children out with a <c>VerticalLayoutGroup</c> that has
-        /// <c>childControlHeight</c> off, so the group positions children by the height their own
-        /// <c>RectTransform</c> already carries. A child left at height 0 gets a slot but no box:
-        /// its text overflows into the entry below it. Every child must therefore be taller than
-        /// nothing.
-        /// </summary>
+        /// <summary>Every menu child must have a height above zero.</summary>
+        /// <remarks>
+        /// The panel uses a <c>VerticalLayoutGroup</c> with <c>childControlHeight</c> off, so it
+        /// places children by their own height. A child at height 0 gets a slot but no box, and
+        /// its text runs into the entry below.
+        /// </remarks>
         [UnityTest]
         public IEnumerator EveryMenuEntry_HasAPositiveHeight()
         {
@@ -81,14 +80,12 @@ namespace Game.Adapters.Tests
             yield return SceneManager.UnloadSceneAsync(BootScene);
         }
 
-        /// <summary>
-        /// Unity gives no ordering guarantee between destroying a screen's buttons and running the
-        /// screen's own <c>OnDestroy</c>, and a destroyed <c>UnityEngine.Object</c> is not
-        /// <c>null</c> — it only compares equal to it. A screen that unsubscribes through
-        /// <c>?.</c> therefore reaches a live-looking reference and throws
-        /// <c>MissingReferenceException</c> out of a teardown path, which the Test Framework turns
-        /// into a failing test. Destroy a button first, then the screen: teardown must stay quiet.
-        /// </summary>
+        /// <summary>Destroys a button first, then the screen. Teardown must stay quiet.</summary>
+        /// <remarks>
+        /// Unity does not define the order of these two. A destroyed object is not <c>null</c>, so
+        /// a screen that unsubscribes through <c>?.</c> reaches a dead reference and throws
+        /// <c>MissingReferenceException</c> out of teardown.
+        /// </remarks>
         [UnityTest]
         public IEnumerator Screens_SurviveTheirButtonsBeingDestroyedFirst()
         {
@@ -108,8 +105,7 @@ namespace Game.Adapters.Tests
             Assert.That(menuButton, Is.Not.Null, $"MenuScreen must hold a '{MenuButton}' child.");
             Assert.That(backButton, Is.Not.Null, $"DemoHudView must hold a '{BackButton}' child.");
 
-            // The pipeline goes first so no LateRun touches a half-destroyed screen — this test is
-            // about the screens' own teardown, not about presentation surviving it.
+            // Destroy the pipeline first, so no LateRun touches a half-destroyed screen.
             Object.DestroyImmediate(entryPoint.gameObject);
 
             Object.DestroyImmediate(menuButton.gameObject);
@@ -121,12 +117,11 @@ namespace Game.Adapters.Tests
             yield return SceneManager.UnloadSceneAsync(BootScene);
         }
 
-        /// <summary>
-        /// The indicator's whole job happens between two steady states, so a test that only looks
-        /// before and after would pass against an indicator that never appeared at all. This one
-        /// samples inside the wait loop: it must be seen while the scene is in flight, and gone
-        /// once the demo is up.
-        /// </summary>
+        /// <summary>Samples inside the wait loop, not only before and after.</summary>
+        /// <remarks>
+        /// The indicator works between two steady states. A test that looks only at the ends
+        /// passes against an indicator that never appeared.
+        /// </remarks>
         [UnityTest]
         public IEnumerator LoadingIndicator_IsVisibleOnlyWhileALoadIsInFlight()
         {
@@ -162,13 +157,25 @@ namespace Game.Adapters.Tests
             Assert.That(sawIndicator, Is.True,
                 "The loading indicator was never shown while the scene was loading.");
 
-            // Presentation is a LateRun, so the frame that flips the state is not yet the frame
-            // that repaints for it. One tick, then the indicator must be gone.
+            // A landed scene is not a drawable demo. The stage system starts its atlas and
+            // background requests on that frame. The indicator must cover that gap too.
+            deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+            while (entryPoint.StageReady.IsReady == false)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    "The demo never painted its background.");
+                Assert.That(indicator.activeInHierarchy, Is.True,
+                    "The loading indicator must stay up until the demo has its own background.");
+                yield return null;
+            }
+
+            // Presentation runs in LateRun, so the frame that sets the flag does not repaint yet.
+            // Wait one tick, then the indicator must be gone.
             yield return null;
             Assert.That(indicator.activeInHierarchy, Is.False,
                 "The loading indicator must be hidden once the demo is up.");
-            // The backdrop lives outside SafeArea, so it belongs to no screen and nothing else
-            // would ever hide it — on a Screen Space Overlay canvas it would cover the whole demo.
+            // The backdrop sits outside SafeArea, so it belongs to no screen and nothing else
+            // hides it. On an overlay canvas it would cover the whole demo.
             Assert.That(backdrop.activeInHierarchy, Is.False,
                 "The menu backdrop must be gone while a demo is open; it draws over the demo.");
 
@@ -185,12 +192,8 @@ namespace Game.Adapters.Tests
             yield return SceneManager.UnloadSceneAsync(BootScene);
         }
 
-        /// <summary>
-        /// The shell's art is loaded by address, so "the menu looks right" is really "every
-        /// <c>Image</c> the skin owns received a sprite, in the order the demo list declares" —
-        /// and the sprites are <c>SpriteAtlas.GetSprite</c> copies, so unloading Boot must leave
-        /// the asset source holding nothing.
-        /// </summary>
+        /// <summary>Checks that every skin <c>Image</c> got a sprite, in the order the demo list gives.</summary>
+        /// <remarks>The sprites are atlas copies, so an unload of Boot must leave the asset source empty.</remarks>
         [UnityTest]
         public IEnumerator ShellSkin_ResolvesEverySpriteTarget()
         {
@@ -213,8 +216,7 @@ namespace Game.Adapters.Tests
             foreach (var button in skin.Buttons)
                 Assert.That(button.sprite, Is.Not.Null, $"'{button.name}' was never skinned.");
 
-            // demoIcons[i] is painted from demos[i].IconName; a swapped pair is invisible to a
-            // count check and obvious here.
+            // demoIcons[i] comes from demos[i].IconName. A count check cannot see a swapped pair.
             var expected = new[]
             {
                 "ui-icon-ace-of-shadows", "ui-icon-magic-words", "ui-icon-phoenix-flame"

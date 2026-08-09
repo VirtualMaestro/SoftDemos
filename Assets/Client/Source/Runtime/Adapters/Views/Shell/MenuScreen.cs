@@ -13,19 +13,15 @@ namespace Game.Adapters.Views
 
         private EcsWorld _world;
 
-        /// <summary>How many entries this screen can show. <c>EntryPoint</c> checks it against the
-        /// catalog it was authored with, so a fourth demo cannot be half-added.</summary>
+        /// <summary>How many entries this screen can show. <c>EntryPoint</c> checks it against the catalog.</summary>
         public int ButtonCount => demoButtons?.Length ?? 0;
 
-        /// <summary>
-        /// Registers the click listeners and labels every button from <paramref name="demos"/>.
-        ///
-        /// Binding — not <c>Awake</c> — is what makes the buttons live: they ship
-        /// <c>interactable = false</c>, because Unity runs every <c>Awake</c> before any
-        /// <c>Start</c>, so a click landing before <c>EntryPoint.Start</c> would write into a null
-        /// world. The labels come from the same list that supplies the scene addresses, so button
-        /// order and scene order are one fact rather than two that can drift.
-        /// </summary>
+        /// <summary>Adds the click listeners and labels every button from <paramref name="demos"/>.</summary>
+        /// <remarks>
+        /// The buttons start disabled and this call enables them. Unity runs every <c>Awake</c>
+        /// before any <c>Start</c>, so an earlier click would write into a world that does not
+        /// exist yet. The labels and the scene addresses come from the same list.
+        /// </remarks>
         public void Bind(EcsWorld world, IReadOnlyList<DemoEntry> demos)
         {
             _world = world;
@@ -44,9 +40,8 @@ namespace Game.Adapters.Views
             }
         }
 
-        // A destroyed UnityEngine.Object is not null — it only compares equal to null through
-        // Unity's overloaded operator. `?.` bypasses that overload and hands back a live-looking
-        // reference, so the null check has to be written out (Unity analyzer UNT0008).
+        // A destroyed object is not null. It only compares equal to null through Unity's operator.
+        // `?.` skips that operator, so write the check out (analyzer UNT0008).
         private void OnDestroy()
         {
             if (demoButtons == null)

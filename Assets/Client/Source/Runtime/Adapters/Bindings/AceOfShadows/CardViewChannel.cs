@@ -5,14 +5,11 @@ using UnityEngine;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// The Ace of Shadows card-view channel, shared between <see cref="AceOfShadowsStageSystem"/>
-    /// (which fills and clears it) and <see cref="CardBindingSystem"/> (which reads it). A plain
-    /// collaborator rather than properties on the stage system, because systems must never hold
-    /// other systems (see SystemIsolationTests). The stage system stays owner of every view and
-    /// sprite lifetime; this object only carries the references and the two change counters —
-    /// it is not an object pool, nothing is acquired or released through it.
-    /// </summary>
+    /// <summary>Shared card views for Ace of Shadows. The stage system writes, the binding system reads.</summary>
+    /// <remarks>
+    /// The stage system owns every view and sprite. This object holds the references and two
+    /// change counters. It is not a pool: nothing is acquired or released here.
+    /// </remarks>
     public sealed class CardViewChannel
     {
         private readonly List<CardView> _views = new();

@@ -11,15 +11,12 @@ using UnityEngine.TestTools;
 
 namespace Game.Adapters.Tests
 {
-    /// <summary>
-    /// The milestone's stated experiment: command → tween → completion, proven on a throwaway
-    /// object so that Ace of Shadows inherits a working mechanism instead of discovering the
-    /// problem at milestone 6.
-    ///
-    /// What matters is that the *simulation-facing* contract holds — <see cref="MoveCommand"/>
-    /// in, <see cref="MoveCompletedTag"/> out, position reached — because that contract survives
-    /// even if DOTween is later swapped for a per-tick interpolation.
-    /// </summary>
+    /// <summary>Proves the command, tween and completion cycle on a throwaway object.</summary>
+    /// <remarks>
+    /// The test asserts the contract the simulation sees: <see cref="MoveCommand"/> in,
+    /// <see cref="MoveCompletedTag"/> out, position reached. That contract holds even if
+    /// DOTween is replaced later.
+    /// </remarks>
     public sealed class TweenRoundTripTests
     {
         private const int TargetSlot = 1;

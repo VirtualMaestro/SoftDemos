@@ -1,10 +1,7 @@
 namespace Game.Simulation.PhoenixFlame
 {
-    /// <summary>
-    /// The three colours the flame cycles through. <b>The cycle order is the declaration order</b>:
-    /// <see cref="FlamePhaseCycle.Next"/> walks the underlying numbers and wraps at the end, so the
-    /// values must stay contiguous from zero and inserting one in the middle changes the cycle.
-    /// </summary>
+    /// <summary>The three colours of the flame. The cycle follows this order.</summary>
+    /// <remarks>Keep the values contiguous from zero. A new value in the middle changes the cycle.</remarks>
     public enum FlamePhase
     {
         Orange = 0,
@@ -12,19 +9,16 @@ namespace Game.Simulation.PhoenixFlame
         Blue = 2
     }
 
-    /// <summary>
-    /// The single place that knows how long the cycle is. Systems and tests call <see cref="Next"/>
-    /// instead of inlining <c>% 3</c>, so adding a fourth phase stays a one-file change.
-    /// </summary>
+    /// <summary>The only place that knows the length of the cycle.</summary>
+    /// <remarks>Call <see cref="Next"/> instead of <c>% 3</c>, so a fourth phase is one change here.</remarks>
     public static class FlamePhaseCycle
     {
         public const int Count = 3;
 
         public static FlamePhase Next(FlamePhase phase) => (FlamePhase)(((int)phase + 1) % Count);
 
-        // Not Enum.IsDefined: it boxes the value and reflects over the enum metadata, which costs
-        // an allocation per call and is exactly the shape IL2CPP strips badly. Three comparisons
-        // are the entire check.
+        // Do not use Enum.IsDefined. It boxes the value and uses reflection, which allocates
+        // on every call and does not survive IL2CPP stripping well.
         public static bool IsDefined(FlamePhase phase) =>
             phase == FlamePhase.Orange || phase == FlamePhase.Green || phase == FlamePhase.Blue;
     }

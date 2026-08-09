@@ -2,10 +2,7 @@ using DCFApixels.DragonECS;
 
 namespace Game.Simulation.Messages
 {
-    /// <summary>
-    /// The answer to a <see cref="MoveCommand"/>: the movement finished. Added by the adapter on
-    /// an ECS tick, never from inside a tween callback — world mutation stays on one thread and at
-    /// one well-defined point in the frame.
-    /// </summary>
+    /// <summary>Reports that a <see cref="MoveCommand"/> finished.</summary>
+    /// <remarks>The adapter adds this on a tick, never inside a tween callback.</remarks>
     public struct MoveCompletedTag : IEcsTagComponent { }
 }

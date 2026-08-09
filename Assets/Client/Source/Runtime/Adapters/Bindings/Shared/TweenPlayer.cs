@@ -8,15 +8,12 @@ using UnityEngine;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// The only place DOTween is spoken to. Deliberately not a system: several systems share this
-    /// tween behaviour, and systems must never hold other systems (see SystemIsolationTests), so
-    /// it lives in a plain collaborator owned by the composition root — exactly like
-    /// <see cref="ViewRegistry"/>. <see cref="TweenPlaybackSystem"/> remains the pipeline block
-    /// that drives the command → tween → completion round-trip through it, and the teardown calls
-    /// (<see cref="KillTweensFor"/>, <see cref="KillFades"/>) stay synchronous on purpose — the
-    /// caller destroys the views in the same frame.
-    /// </summary>
+    /// <summary>The only place that calls DOTween.</summary>
+    /// <remarks>
+    /// This is not a system. Several systems share the behaviour, so the composition root owns it,
+    /// like <see cref="ViewRegistry"/>. <see cref="TweenPlaybackSystem"/> drives it. The teardown
+    /// calls are synchronous, because the caller destroys the views in the same frame.
+    /// </remarks>
     public sealed class TweenPlayer
     {
         private readonly EcsWorld _world;
@@ -46,8 +43,8 @@ namespace Game.Adapters.Bindings
 
             if (card != null)
             {
-                // Both closures are created once per move; OnUpdate does not allocate per frame.
-                // Translation eases out, but the flip stays linear so its midpoint remains legible at ×8.
+                // Both closures are made once per move. OnUpdate does not allocate per frame.
+                // The move eases out. The flip stays linear, so its midpoint is clear at high speed.
                 tween.OnUpdate(() => card.OnMoveProgress(tween.ElapsedPercentage()));
             }
 
@@ -101,10 +98,8 @@ namespace Game.Adapters.Bindings
             return killed;
         }
 
-        /// <summary>
-        /// Kills every tween before the world goes away. A tween that outlives its world calls
-        /// back into a destroyed pipeline — this is not a defensive extra.
-        /// </summary>
+        /// <summary>Kills every tween before the world goes away.</summary>
+        /// <remarks>A tween that outlives its world calls back into a destroyed pipeline.</remarks>
         public void KillAll()
         {
             var faded = KillFades();
@@ -125,7 +120,7 @@ namespace Game.Adapters.Bindings
 
         private static bool _ContainsHandle(IReadOnlyList<int> handleIds, int handleId)
         {
-            // ponytail: teardown-only O(n²); add a handle-to-entity map if pools grow past hundreds.
+            // This is O(n²), but it runs only on teardown. Add a handle map if the pools grow.
             foreach (var id in handleIds)
                 if (id == handleId)
                     return true;

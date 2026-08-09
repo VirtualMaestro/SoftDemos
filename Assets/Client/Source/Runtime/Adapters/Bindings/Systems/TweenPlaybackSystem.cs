@@ -4,28 +4,14 @@ using Game.Simulation.Ports;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// The command → tween → completion round-trip, driven through <see cref="TweenPlayer"/> —
-    /// the one place DOTween is spoken to.
-    ///
-    /// The simulation adds a <see cref="MoveCommand"/> carrying a slot index and a duration.
-    /// This system resolves the entity's view and asks the player to move it to whatever position
-    /// the layout puts that slot at; when the tween finishes the player <b>enqueues</b> the
-    /// entity. The queue is drained at the start of the next <see cref="LateRun"/>, where
-    /// <see cref="MoveCommand"/> is removed and <see cref="MoveCompletedTag"/> added.
-    ///
-    /// Draining on the tick rather than inside the DOTween callback is the load-bearing part: it
-    /// keeps every world mutation on one thread and at one well-defined point in the frame.
-    ///
-    /// <see cref="IEcsLateRun"/> comes from the DragonECS-<b>Unity</b> assembly
-    /// (<c>src/Buildin/UnityGameCyclieProcesses.cs:21</c>). Core DragonECS only offers
-    /// <see cref="IEcsRun"/>, which ticks in <c>Update</c> and would break the rule that views
-    /// read simulation state in <c>LateUpdate</c>.
-    ///
-    /// If DOTween ever proves awkward, replace <see cref="TweenPlayer.StartMove"/> with a
-    /// per-tick interpolation: <see cref="MoveCommand"/>, <see cref="MoveCompletedTag"/> and
-    /// every test written against them stay unchanged.
-    /// </summary>
+    /// <summary>Runs the command, tween and completion cycle through <see cref="TweenPlayer"/>.</summary>
+    /// <remarks>
+    /// The simulation adds a <see cref="MoveCommand"/> with a slot index and a duration. This
+    /// system moves the entity's view to that slot. When the tween ends, the player queues the
+    /// entity. The next <see cref="LateRun"/> drains the queue, removes the command and adds
+    /// <see cref="MoveCompletedTag"/>. The queue matters: it keeps every world change on one
+    /// thread at one point in the frame. DOTween is only used here, through the player.
+    /// </remarks>
     public sealed class TweenPlaybackSystem : IEcsInit, IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<ViewRegistry>
     {
@@ -48,8 +34,7 @@ namespace Game.Adapters.Bindings
 
         public void Init()
         {
-            // The GetPool<T> overloads are constrained by the component's marker interface, so a
-            // tag component resolves to EcsTagPool<T> without naming the pool type here.
+            // The component's marker interface picks the pool type, so a tag gets EcsTagPool.
             _commands = _world.GetPool<MoveCommand>();
             _completed = _world.GetPool<MoveCompletedTag>();
             _running = _world.GetPool<TweenRunningTag>();
@@ -73,8 +58,8 @@ namespace Game.Adapters.Bindings
 
             foreach (var completion in _player.Completions)
             {
-                // The entity may have been deleted while its tween was running. entlong carries a
-                // generation tag, so a recycled id reads as dead instead of hitting a stranger.
+                // The entity can die while its tween runs. entlong holds a generation, so a
+                // recycled id reads as dead.
                 if (completion.TryGetID(out var entityId) == false)
                 {
                     _log.Warn("A tween completed for an entity that no longer exists. Ignoring.");
@@ -97,8 +82,7 @@ namespace Game.Adapters.Bindings
 
                 if (_views.TryResolve(handleId, out var view, out var card) == false)
                 {
-                    // Failure is data, not an exception: drop the command and report completion so
-                    // the simulation is never left waiting on a move that can never happen.
+                    // Report a failure as a completion. The simulation must not wait forever.
                     _log.Error($"Entity {entityId}: view handle #{handleId} does not resolve. " +
                                "Dropping the move command.");
                     _commands.TryDel(entityId);

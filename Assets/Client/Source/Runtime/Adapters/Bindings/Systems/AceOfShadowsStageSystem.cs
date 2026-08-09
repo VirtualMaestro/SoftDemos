@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DCFApixels.DragonECS;
 using Game.Adapters.Services;
 using Game.Adapters.Views;
@@ -27,6 +28,7 @@ namespace Game.Adapters.Bindings
         private readonly TweenPlayer _tweens;
         private readonly SharedUiSprites _uiSprites;
         private readonly CardViewChannel _channel;
+        private readonly StageReadyChannel _stageReady;
         private readonly Sprite[] _atlasSprites = new Sprite[FaceCount + 1];
         private readonly Sprite[] _faces = new Sprite[FaceCount];
 
@@ -49,7 +51,7 @@ namespace Game.Adapters.Bindings
 
         public AceOfShadowsStageSystem(AceOfShadowsConfig config, ViewRegistry views,
             StackSlotLayout layout, AddressablesAssetService assets, TweenPlayer tweens,
-            SharedUiSprites uiSprites, CardViewChannel channel)
+            SharedUiSprites uiSprites, CardViewChannel channel, StageReadyChannel stageReady)
         {
             _config = config;
             _views = views;
@@ -58,6 +60,7 @@ namespace Game.Adapters.Bindings
             _tweens = tweens;
             _uiSprites = uiSprites;
             _channel = channel;
+            _stageReady = stageReady;
         }
 
         public void LateRun()
@@ -114,7 +117,7 @@ namespace Game.Adapters.Bindings
 
                 if (atlasStatus == AsyncOpStatus.Failed || backgroundStatus == AsyncOpStatus.Failed)
                 {
-                    _log.Error("[FIX:ace-content-retry] Ace of Shadows content load failed; retrying while the scene remains active.");
+                    _log.Error("Ace of Shadows content load failed. Retrying while the scene is open.");
                     _Teardown(false);
                     return;
                 }
@@ -131,6 +134,9 @@ namespace Game.Adapters.Bindings
                 _contentReady = true;
                 _channel.SetSprites(_cardBack, _faces);
                 _scene.Background.sprite = _backgroundSprite;
+                // The screen is covered now, so the shell can hand over. The cards still arrive
+                // over the next few frames, on top of the background.
+                _stageReady.MarkReady();
                 _SkinSpeedButton();
                 _RecalculateLayout();
                 _log.Info("Ace of Shadows content loaded.");
@@ -156,13 +162,11 @@ namespace Game.Adapters.Bindings
             _TransitionTo(StageState.Ready);
         }
 
-        /// <summary>
-        /// Paints the speed button with the shell's shared <c>ui-button</c> sprite so it stops
-        /// reading as a placeholder next to the skinned Back button. Borrowed rather than loaded:
-        /// a second request on <c>art/shared/ui-atlas</c> would mean a second sprite copy to own
-        /// and a second entry in every leak assertion, for the same pixels. Silently skipped if the
-        /// shell has not finished loading — the button then looks exactly as it did before.
-        /// </summary>
+        /// <summary>Skins the speed button with the shell's shared <c>ui-button</c> sprite.</summary>
+        /// <remarks>
+        /// The sprite is borrowed, not loaded. A second request on the shared atlas would make a
+        /// second copy of the same pixels. Does nothing if the shell has not loaded yet.
+        /// </remarks>
         private void _SkinSpeedButton()
         {
             var image = _scene.SpeedButtonImage;
@@ -295,6 +299,7 @@ namespace Game.Adapters.Bindings
                 _backgroundRequestId == 0 && _channel.Views.Count == 0)
                 return;
 
+            _stageReady.Clear();
             _tweens.KillTweensFor(_channel.Handles);
 
             if (resetDeck)

@@ -15,8 +15,7 @@ namespace Game.Bootstrap
 {
     public class EntryPoint : MonoBehaviour
     {
-        // Serialized fields carry no leading underscore: the inspector shows the field name, and a
-        // label reading "_ menu screen" is noise in the one place a designer reads it.
+        // Serialized fields use no leading underscore. The inspector shows the field name.
         [SerializeField] private MenuScreen menuScreen;
         [FormerlySerializedAs("demoHudScreen")]
         [SerializeField] private DemoHudView demoHud;
@@ -35,12 +34,14 @@ namespace Game.Bootstrap
         private AvatarImageRouterService _avatarImages;
         private ViewRegistry _viewRegistry;
         private TweenPlayer _tweenPlayer;
+        private StageReadyChannel _stageReady;
 
         public EcsWorld World => _world;
         public ViewRegistry Views => _viewRegistry;
         public AddressablesAssetService Assets => _assetSource;
         public AvatarImageRouterService Avatars => _avatarImages;
         public TweenPlayer TweenPlayer => _tweenPlayer;
+        public StageReadyChannel StageReady => _stageReady;
 
         private void Start()
         {
@@ -63,27 +64,27 @@ namespace Game.Bootstrap
             var slotLayout = new StackSlotLayout();
             var aceConfig = new AceOfShadowsConfig();
 
-            // The world exists before the collaborators: TweenPlayer cleans move state out of
-            // its pools when tweens are killed.
+            // Make the world before the collaborators. TweenPlayer clears move state from its
+            // pools when it kills a tween.
             _world = new EcsWorld();
 
-            // Non-system collaborators — the shared state and behaviour systems reach through
-            // instead of holding each other. Systems must never hold systems (SystemIsolationTests).
+            // Shared state and behaviour. Systems reach through these instead of holding each other.
             _tweenPlayer = new TweenPlayer(_world, _viewRegistry, new UnityLogService("Tweens"));
             var uiSprites = new SharedUiSprites();
             var cardChannel = new CardViewChannel();
             var dialogueChannel = new DialogueLogChannel();
+            _stageReady = new StageReadyChannel();
 
             var tweenPlayback = new TweenPlaybackSystem(slotLayout, _tweenPlayer);
             var shellStage = new ShellStageSystem(shellSkin, demos, _assetSource, uiSprites);
-            var aceStage = new AceOfShadowsStageSystem(
-                aceConfig, _viewRegistry, slotLayout, _assetSource, _tweenPlayer, uiSprites, cardChannel);
+            var aceStage = new AceOfShadowsStageSystem(aceConfig, _viewRegistry, slotLayout,
+                _assetSource, _tweenPlayer, uiSprites, cardChannel, _stageReady);
             var cardBinding = new CardBindingSystem(_viewRegistry, slotLayout, cardChannel);
             var deckHud = new DeckHudSystem(slotLayout);
             var dialogueLog = new DialogueLogSystem(_avatarImages, _tweenPlayer, dialogueChannel);
-            var magicWordsStage = new MagicWordsStageSystem(
-                _assetSource, _atlasImages, _avatarImages, dialogueChannel, _tweenPlayer);
-            var phoenixFlameStage = new PhoenixFlameStageSystem(_assetSource);
+            var magicWordsStage = new MagicWordsStageSystem(_assetSource, _atlasImages,
+                _avatarImages, dialogueChannel, _tweenPlayer, _stageReady);
+            var phoenixFlameStage = new PhoenixFlameStageSystem(_assetSource, _stageReady);
 
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
@@ -110,7 +111,7 @@ namespace Game.Bootstrap
                 .Add(tweenPlayback)
                 .Add(shellStage)
                 .Add(new ScreenPresentationSystem(
-                    menuScreen, demoHud, loadingIndicator, shellSkin, _tweenPlayer))
+                    menuScreen, demoHud, loadingIndicator, shellSkin, _tweenPlayer, _stageReady))
                 .BuildAndInit();
 
             menuScreen.Bind(_world, demos);
@@ -170,8 +171,8 @@ namespace Game.Bootstrap
                 }
             }
 
-            // The buttons and the catalog are one ordered fact. If they disagree, Bind would either
-            // label the wrong button or index past the end of the list.
+            // The buttons and the catalog share one order. A mismatch labels the wrong button or
+            // reads past the end of the list.
             if (isComplete && menuScreen.ButtonCount != demos.Length)
             {
                 _log.Error($"MenuScreen has {menuScreen.ButtonCount} button(s) but {nameof(demos)} " +
@@ -179,8 +180,8 @@ namespace Game.Bootstrap
                 isComplete = false;
             }
 
-            // demoIcons[i] is painted from demos[i].IconName, so the two lists are one ordered fact
-            // as well. A count mismatch means at least one button keeps a stale or blank icon.
+            // demoIcons[i] comes from demos[i].IconName, so these two share one order too.
+            // A different count leaves at least one button with a blank or old icon.
             if (isComplete && shellSkin.DemoIconCount != demos.Length)
             {
                 _log.Error($"{nameof(shellSkin)} exposes {shellSkin.DemoIconCount} demo icon(s) but " +
@@ -215,16 +216,13 @@ namespace Game.Bootstrap
             _pipeline?.LateRun();
         }
 
-        /// <summary>
-        /// Teardown order is load-bearing: <b>pipeline, then ports, then world.</b>
-        ///
-        /// <c>IEcsDestroy</c> handlers run inside <see cref="EcsPipeline.Destroy"/>, and one of
-        /// them may still call <c>ISceneService.Release(id)</c> — disposing the adapters first
-        /// would hand that system a disposed object. Systems stop before their ports do.
-        ///
-        /// The world goes last because DragonECS registers worlds globally: one that outlives its
-        /// owner keeps its id and pools allocated, and the next run inherits the corruption.
-        /// </summary>
+        /// <summary>Tears down in this order: pipeline, then ports, then world.</summary>
+        /// <remarks>
+        /// <c>IEcsDestroy</c> handlers run inside <see cref="EcsPipeline.Destroy"/> and one of
+        /// them can still call a port, so the systems must stop before the ports do. The world
+        /// goes last, because DragonECS registers worlds globally and a world that outlives its
+        /// owner keeps its id and its pools.
+        /// </remarks>
         private void OnDestroy()
         {
             _pipeline?.Destroy();
@@ -246,6 +244,7 @@ namespace Game.Bootstrap
 
             _viewRegistry = null;
             _tweenPlayer = null;
+            _stageReady = null;
 
             _world?.Destroy();
             _world = null;

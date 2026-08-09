@@ -9,17 +9,12 @@ using UnityEngine.U2D;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// The only place the flame Animator is driven. It loads the Phoenix Flame content, starts and
-    /// resets the simulation, turns button presses into <see cref="AdvanceFlamePhaseCommand"/> and
-    /// mirrors <see cref="FlameStateComp"/> onto the Animator, the button and its label.
-    ///
-    /// The start costs a frame, which is why <c>Starting</c> exists: this system runs in
-    /// <c>LateRun</c> and <c>FlameSetupSystem</c> in <c>Run</c>, so a command written here is
-    /// consumed in the next frame's update and <see cref="FlameStateComp"/> is still
-    /// <c>default</c> until then — reading <c>CurrentPhase</c> or
-    /// <c>TransitionDurationSeconds</c> before <c>IsActive</c> turns true reads zeroes.
-    /// </summary>
+    /// <summary>Drives the flame Animator. Loads the content and mirrors <see cref="FlameStateComp"/> onto the view.</summary>
+    /// <remarks>
+    /// The <c>Starting</c> state exists because the start costs one frame. This system runs in
+    /// <c>LateRun</c> and <c>FlameSetupSystem</c> in <c>Run</c>. Read the state only after
+    /// <c>IsActive</c> is true.
+    /// </remarks>
     public sealed class PhoenixFlameStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
@@ -28,10 +23,7 @@ namespace Game.Adapters.Bindings
         private const string SmokeSpriteName = "smoke";
         private const string SparkSpriteName = "spark";
 
-        /// <summary>
-        /// The 2x2 flame silhouette frames sliced from <c>flames_sheet.png</c>; the Texture Sheet
-        /// Animation module on the flame system picks one at random per particle.
-        /// </summary>
+        /// <summary>The four flame frames sliced from <c>flames_sheet.png</c>. Each particle gets one at random.</summary>
         private static readonly string[] FlameFrameSpriteNames =
             { "flame_0", "flame_1", "flame_2", "flame_3" };
         private const string OrangeLabel = "Orange";
@@ -41,23 +33,18 @@ namespace Game.Adapters.Bindings
         private const string OrangeTrigger = "ToOrange";
         private const string GreenTrigger = "ToGreen";
         private const string BlueTrigger = "ToBlue";
-        /// <summary>
-        /// The blend length authored on every <c>AnyState</c> transition in
-        /// <c>PhoenixFlame.controller</c>, in seconds.
-        ///
-        /// Once the graph owns the blend there are two numbers for one fact — this one and
-        /// <see cref="FlameStateComp.TransitionDurationSeconds"/>, which is what the simulation
-        /// counts down and what flips the phase label. Nothing makes them agree, so
-        /// <see cref="_ContinueStarting"/> asserts it out loud rather than letting a silent
-        /// disagreement show the new label over the old colour.
-        /// </summary>
+        /// <summary>The blend length on every <c>AnyState</c> transition in <c>PhoenixFlame.controller</c>, in seconds.</summary>
+        /// <remarks>
+        /// This must agree with <see cref="FlameStateComp.TransitionDurationSeconds"/>, which the
+        /// simulation counts down. <see cref="_ContinueStarting"/> logs a mismatch.
+        /// </remarks>
         private const float AuthoredTransitionSeconds = 1f;
         private const int PhoenixFlameDemoIndex = 2;
-        // Starting waits for the simulation to consume StartFlameCommand, which normally costs one
-        // frame. This is a deadlock guard, not a budget — it only fires when the command never lands.
+        // Deadlock guard, not a budget. It fires only if the simulation never takes the command.
         private const int StartTimeoutFrames = 300;
 
         private readonly AddressablesAssetService _assets;
+        private readonly StageReadyChannel _stageReady;
         private readonly int[] _phaseHashes;
         private readonly int[] _phaseTriggers;
 
@@ -77,19 +64,18 @@ namespace Game.Adapters.Bindings
         private int _screenHeight = -1;
         private FlamePhase _shownPhase;
         private FlamePhase _shownLabelPhase = (FlamePhase)(-1);
-        // Nullable so the first write always reaches the button: the scene authors interactable=true
-        // and a `false` seed would make the change check skip the write that switches it off.
+        // Nullable so the first write always reaches the button. The scene starts it interactable.
         private bool? _shownInteractable;
         private bool _advanceRequested;
         private int _startFrames;
         private bool _loggedMissingCamera;
         private bool _loggedLoadFailure;
 
-        public PhoenixFlameStageSystem(AddressablesAssetService assets)
+        public PhoenixFlameStageSystem(AddressablesAssetService assets, StageReadyChannel stageReady)
         {
             _assets = assets;
-            // Built once: CrossFadeInFixedTime takes a state hash, and hashing three strings per
-            // frame would be an allocation on the presentation path.
+            _stageReady = stageReady;
+            // Hash once. CrossFadeInFixedTime takes a state hash, and hashing per frame allocates.
             _phaseHashes = new int[FlamePhaseCycle.Count];
             _phaseHashes[(int)FlamePhase.Orange] = Animator.StringToHash(OrangeLabel);
             _phaseHashes[(int)FlamePhase.Green] = Animator.StringToHash(GreenLabel);
@@ -141,8 +127,7 @@ namespace Game.Adapters.Bindings
 
             _scene = current;
             _scene.OnAdvancePressed += _OnRequestAdvance;
-            // The scene ships the button enabled; switch it off for the whole load so a tap cannot
-            // queue an advance that would fire the moment the flame starts.
+            // Disable the button for the whole load. A tap must not queue an advance.
             _ApplyInteractable(false);
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
             _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
@@ -171,6 +156,9 @@ namespace Game.Adapters.Bindings
 
             _loggedLoadFailure = false;
             _scene.Background.sprite = _backgroundSprite;
+            // The screen is covered now, so the shell can hand over. Starting waits only for the
+            // simulation to take StartFlameCommand, which changes nothing on screen.
+            _stageReady.MarkReady();
             _scene.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
             _WriteCommand<StartFlameCommand>();
@@ -193,14 +181,11 @@ namespace Game.Adapters.Bindings
                 return;
             }
 
-            // A press landed during the load is never replayed — the user asked for a step on a
-            // screen that had not started yet.
+            // Discard a press made during the load. The screen was not running yet.
             _advanceRequested = false;
-            // Play the configured phase explicitly. The controller's own default state is never
-            // load-bearing, so changing PhoenixFlameConfig.StartPhase cannot desync the screen.
+            // Play the configured phase. The controller default state does not matter.
             _shownPhase = flame.CurrentPhase;
-            // Still a Play, not a trigger: the start phase must snap. A trigger would route through
-            // the AnyState transition and blend into it from whatever the graph happens to sit on.
+            // Use Play, not a trigger. The start phase must snap, and a trigger would blend.
             _ResetPhaseTriggers();
             _scene.FlameAnimator.Play(_phaseHashes[(int)flame.CurrentPhase], 0, 0f);
 
@@ -239,15 +224,14 @@ namespace Game.Adapters.Bindings
             _log.Info($"Flame animator triggering {flame.CurrentPhase} -> {flame.NextPhase} " +
                 $"over {AuthoredTransitionSeconds}s.");
             _shownPhase = flame.NextPhase;
-            // Triggers latch: one left set from an earlier phase would fire the moment any other
-            // transition finished, so the two that are not wanted are cleared before the one that is.
+            // Triggers latch. Clear the other two before you set the one you want.
             _ResetPhaseTriggers();
             _scene.FlameAnimator.SetTrigger(_phaseTriggers[(int)flame.NextPhase]);
         }
 
         private void _ResetPhaseTriggers()
         {
-            // `?.` bypasses Unity's null overload, and teardown runs while the scene is going away.
+            // `?.` skips Unity's null overload. Teardown runs while the scene closes.
             if (_scene == null || _scene.FlameAnimator == null)
                 return;
 
@@ -284,10 +268,7 @@ namespace Game.Adapters.Bindings
             return OrangeLabel;
         }
 
-        /// <summary>
-        /// Reports a failed load once per visit and tells the user on screen, then drops back to
-        /// <c>Idle</c> so the next frame retries while the scene is still open.
-        /// </summary>
+        /// <summary>Reports a failed load once per visit, then returns to <c>Idle</c> to retry.</summary>
         private void _FailLoad(string message)
         {
             _LogLoadFailureOnce(message);
@@ -335,7 +316,7 @@ namespace Game.Adapters.Bindings
                 return false;
             }
 
-            // GetSprite hands back a copy this system owns; teardown destroys every one of them.
+            // GetSprite returns a copy this system owns. Teardown destroys all of them.
             _flameFrames = new Sprite[FlameFrameSpriteNames.Length];
             var hasEveryFrame = true;
 
@@ -393,14 +374,13 @@ namespace Game.Adapters.Bindings
                 _backgroundRequestId == 0)
                 return;
 
+            _stageReady.Clear();
+
             if (resetFlame)
                 _WriteCommand<ResetFlameCommand>();
 
-            // Order is load-bearing: the view drops the module and property-block references first,
-            // and only then may the sprite copies be destroyed. The other way round leaves the
-            // particle systems pointing at destroyed sprites.
-            // Triggers latch, and the Animator outlives one visit to the demo when the scene is
-            // reopened — a set trigger left behind fires on the next Play.
+            // Keep this order. The view must release its sprite references before you destroy them.
+            // Clear the triggers too. The Animator survives a reopen and a latched trigger fires again.
             _ResetPhaseTriggers();
 
             if (_scene != null)
@@ -424,8 +404,7 @@ namespace Game.Adapters.Bindings
             _advanceRequested = false;
             _startFrames = 0;
             _loggedMissingCamera = false;
-            // Only a real close clears the once-flag; the retry path keeps it so a permanently
-            // failing address logs one Error per visit instead of one per frame.
+            // Only a real close clears the flag. The retry path keeps it to log once per visit.
             if (resetFlame)
                 _loggedLoadFailure = false;
 

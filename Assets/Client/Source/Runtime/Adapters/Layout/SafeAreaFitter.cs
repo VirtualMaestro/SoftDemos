@@ -2,15 +2,11 @@ using UnityEngine;
 
 namespace Game.Adapters.Layout
 {
-    /// <summary>
-    /// Keeps a <see cref="RectTransform"/> inside <see cref="Screen.safeArea"/>, so shell UI does
-    /// not end up under a notch or a home indicator.
-    ///
-    /// Driven by <see cref="ResponsiveCanvas.OnResolutionChanged"/> rather than by a per-frame poll:
-    /// the safe area only moves when the surface it is measured against does, and this ships to
-    /// WebGL next to a demo running 144 animated sprites. `Screen.safeArea` is a native call, and
-    /// a shell that costs one every frame forever is a cost with no event behind it.
-    /// </summary>
+    /// <summary>Keeps a <see cref="RectTransform"/> inside <see cref="Screen.safeArea"/>.</summary>
+    /// <remarks>
+    /// <see cref="ResponsiveCanvas.OnResolutionChanged"/> drives it. The safe area moves only when
+    /// the resolution does, and <c>Screen.safeArea</c> is a native call. Do not poll it per frame.
+    /// </remarks>
     [RequireComponent(typeof(RectTransform))]
     public sealed class SafeAreaFitter : MonoBehaviour
     {

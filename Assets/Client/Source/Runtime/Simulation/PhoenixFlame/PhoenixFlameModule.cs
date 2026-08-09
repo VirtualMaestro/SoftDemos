@@ -11,18 +11,12 @@ namespace Game.Simulation.PhoenixFlame
             _config = config;
         }
 
-        /// <summary>
-        /// The order is load-bearing, not alphabetical.
-        ///
-        /// Setup runs first so that a <c>StartFlameCommand</c> and an
-        /// <c>AdvanceFlamePhaseCommand</c> arriving in the same tick are both honoured — the stage
-        /// system emits the start on scene open, and a press on that very frame must not be
-        /// discarded as "the flame is not active".
-        ///
-        /// The transition runs last so a press consumed this tick opens a transition that only
-        /// starts counting down on the next one. Ticking before the press would spend the first
-        /// frame's delta on a transition that did not exist yet.
-        /// </summary>
+        /// <summary>Adds the three systems. Keep this order.</summary>
+        /// <remarks>
+        /// Setup runs first, so a start command and an advance command in the same tick both work.
+        /// The transition runs last, so a press accepted this tick starts to count down on the
+        /// next tick and not on this one.
+        /// </remarks>
         public void Import(EcsPipeline.Builder builder)
         {
             builder.Add(new FlameSetupSystem(_config));

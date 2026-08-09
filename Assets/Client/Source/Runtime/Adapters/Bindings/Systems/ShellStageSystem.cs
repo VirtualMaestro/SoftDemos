@@ -9,29 +9,20 @@ using UnityEngine.UI;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// Paints the persistent shell with content loaded by address.
-    ///
-    /// Shaped on <see cref="AceOfShadowsStageSystem"/>, but with a shorter lifecycle:
-    /// <c>Idle -> Loading -> Ready</c> and no <c>Closing</c>, because <c>Boot</c> is never
-    /// unloaded while the game runs. <c>Ready</c> is terminal for both outcomes — a failed load is
-    /// reported once and left alone rather than retried, since a shell retry would relog the same
-    /// error every frame for the whole session.
-    ///
-    /// Every sprite handed out by <see cref="SpriteAtlas.GetSprite"/> is a fresh copy this system
-    /// owns; each one is destroyed in <see cref="Destroy"/> or <c>BootSceneSmokeTests</c> sees the
-    /// leak grow across load/unload passes.
-    /// </summary>
+    /// <summary>Paints the persistent shell with content loaded by address.</summary>
+    /// <remarks>
+    /// The lifecycle is <c>Idle -> Loading -> Ready</c>. There is no <c>Closing</c>, because
+    /// <c>Boot</c> stays loaded. <c>Ready</c> is terminal: a failed load is reported once and
+    /// not retried. Every sprite from <see cref="SpriteAtlas.GetSprite"/> is a copy this system
+    /// owns and must destroy in <see cref="Destroy"/>.
+    /// </remarks>
     public sealed class ShellStageSystem : IEcsLateRun, IEcsDestroy, IEcsInject<ILog>
     {
-        /// <summary>
-        /// How many Addressables requests the shell keeps open for the whole session.
-        ///
-        /// The sprites are <see cref="SpriteAtlas.GetSprite"/> copies backed by the atlas texture,
-        /// so releasing the handles once they are applied would unload the pages underneath them.
-        /// The shell therefore holds its three requests until <see cref="Destroy"/> — which makes
-        /// this the floor every demo's leak assertion has to return to, not zero.
-        /// </summary>
+        /// <summary>How many Addressables requests the shell keeps open for the whole session.</summary>
+        /// <remarks>
+        /// The sprite copies are backed by the atlas texture. Releasing the handles would unload it.
+        /// This count is the floor a leak check returns to, not zero.
+        /// </remarks>
         public const int AddressCount = 3;
 
         private const string BackgroundAddress = "art/menu/background";
@@ -132,9 +123,8 @@ namespace Game.Adapters.Bindings
             _ApplyHiddenUntilLoaded(_skin.BackIcon, _TakeSprite(sharedAtlas, BackIconSpriteName));
             _ApplyHiddenUntilLoaded(_skin.Spinner, _TakeSprite(sharedAtlas, SpinnerSpriteName));
 
-            // One copy shared by every button: GetSprite allocates a new Sprite per call, and four
-            // identical copies would be four objects to destroy for no visible difference. The
-            // same copy is lent out through SharedUiSprites; this system stays its owner.
+            // Share one copy across all buttons. GetSprite allocates a new Sprite on each call.
+            // SharedUiSprites lends this copy out. This system stays the owner.
             var buttonSprite = _TakeSprite(sharedAtlas, ButtonSpriteName);
             foreach (var button in _skin.Buttons)
                 button.sprite = buttonSprite;
@@ -148,15 +138,12 @@ namespace Game.Adapters.Bindings
             return true;
         }
 
-        /// <summary>
-        /// Assigns a sprite to an <see cref="Image"/> that ships <c>enabled = false</c>.
-        ///
-        /// A uGUI <see cref="Image"/> with no sprite draws a white quad, so every target this
-        /// system owns and nothing else draws — the buttons and the panel are not routed through
-        /// here, because disabling a button's <see cref="Image"/> would also remove its raycast
-        /// target and silently kill the click. A failed load therefore leaves the shell plain
-        /// rather than covered in white boxes.
-        /// </summary>
+        /// <summary>Assigns a sprite to an <see cref="Image"/> that starts disabled.</summary>
+        /// <remarks>
+        /// An <see cref="Image"/> with no sprite draws a white quad. A failed load must leave the
+        /// shell plain. Do not route buttons through here: a disabled <see cref="Image"/> loses its
+        /// raycast target and stops responding to clicks.
+        /// </remarks>
         private static void _ApplyHiddenUntilLoaded(Image image, Sprite sprite)
         {
             image.sprite = sprite;
@@ -167,8 +154,7 @@ namespace Game.Adapters.Bindings
             if (fitter == null || sprite == null)
                 return;
 
-            // The fitter's ratio has to match whatever the address resolved to; an authored
-            // constant would silently letterbox or crop the day the source image is re-exported.
+            // Take the ratio from the loaded image. A constant would crop after a re-export.
             fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         }
 
@@ -203,17 +189,14 @@ namespace Game.Adapters.Bindings
                 return null;
             }
 
-            // GetSprite hands back a copy named "<name>(Clone)"; the atlas keeps nothing of it.
+            // GetSprite returns a copy named "<name>(Clone)". The atlas does not keep it.
             sprite.name = spriteName;
             _ownedSprites.Add(sprite);
             return sprite;
         }
 
-        /// <summary>
-        /// The menu backdrop ships as a standalone image rather than an atlas entry, so it may
-        /// resolve as either a <see cref="Sprite"/> or the raw <see cref="Texture2D"/> depending on
-        /// its importer. The <see cref="Sprite.Create"/> branch is owned exactly like an atlas copy.
-        /// </summary>
+        /// <summary>Resolves the menu backdrop, which can load as a <see cref="Sprite"/> or a <see cref="Texture2D"/>.</summary>
+        /// <remarks>The backdrop is a standalone image, not an atlas entry. Its importer decides the type.</remarks>
         private Sprite _CreateBackgroundSprite()
         {
             var handleId = _assets.ResolveHandle(_backgroundRequestId);

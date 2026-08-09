@@ -1,12 +1,10 @@
 namespace Game.Simulation.Ports
 {
-    /// <summary>
-    /// The simulation's only source of elapsed time. Systems never read a clock directly, so a
-    /// test can advance time by whatever amount it needs without waiting for a frame.
-    /// </summary>
+    /// <summary>The only source of elapsed time in the simulation.</summary>
+    /// <remarks>No system reads a clock, so a test can move time forward without a frame.</remarks>
     public interface ITimeService
     {
-        /// <summary>Seconds elapsed since the previous tick.</summary>
+        /// <summary>Seconds since the previous tick.</summary>
         float DeltaSeconds { get; }
     }
 }

@@ -2,28 +2,19 @@ using UnityEngine;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// The one cover-fit for a full-screen demo backdrop.
-    ///
-    /// This used to be a private <c>_CoverFitBackground</c> copied verbatim into all three stage
-    /// systems, and all three carried the same defect: they scaled the sprite but never moved it.
-    /// Scaling alone centres the backdrop on <b>its own origin</b>, while <c>Boot</c>'s camera sits
-    /// at <c>y = 1</c> — so a backdrop authored at <c>y = 0</c> covered world space −5..+5 while the
-    /// camera looked at −4..+6, and every demo showed a one-world-unit band of camera clear colour
-    /// along the top. One bug, three copies; hence one helper.
-    /// </summary>
+    /// <summary>Cover-fit for a full-screen demo backdrop.</summary>
+    /// <remarks>
+    /// Scale is not enough. The camera in <c>Boot</c> sits above the origin, so a backdrop that is
+    /// only scaled leaves a band of clear colour along the top. Always recentre it too.
+    /// </remarks>
     public static class BackgroundFitter
     {
-        /// <summary>
-        /// Scales <paramref name="background"/> to cover the viewport and recentres it on the
-        /// camera. <paramref name="orthographicSize"/> is passed in rather than read from
-        /// <paramref name="camera"/> because the callers already resolve a fallback for a missing
-        /// <c>MainCamera</c> — and still fit as well as they can when there is none.
-        /// </summary>
+        /// <summary>Scales the backdrop to cover the viewport and recentres it on the camera.</summary>
+        /// <remarks>The size is a parameter because a caller can have a fallback for a missing camera.</remarks>
         public static void CoverFit(Transform background, Sprite sprite, Camera camera,
             float orthographicSize, int screenWidth, int screenHeight)
         {
-            // `?.` bypasses Unity's null overload, so destroyed objects have to be checked out loud.
+            // `?.` skips Unity's null overload, so check destroyed objects here.
             if (background == null || sprite == null || screenHeight <= 0)
                 return;
 

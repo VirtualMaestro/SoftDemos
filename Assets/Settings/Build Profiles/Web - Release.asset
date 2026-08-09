@@ -44,7 +44,7 @@ MonoBehaviour:
         m_InsightsSettingsContainer:
           m_BuildProfileEngineDiagnosticsState: 2
         m_AdaptivePerformanceEnabled: 0
-        m_CodeOptimization: 2
+        m_CodeOptimization: 3
         m_WebGLClientBrowserPath: 
         m_WebGLClientBrowserType: 0
         m_WebGLTextureSubtarget: 0

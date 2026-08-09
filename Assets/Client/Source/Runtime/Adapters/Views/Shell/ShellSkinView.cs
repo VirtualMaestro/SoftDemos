@@ -4,13 +4,11 @@ using UnityEngine.UI;
 
 namespace Game.Adapters.Views
 {
-    /// <summary>
-    /// Every sprite target the persistent shell owns, gathered in one serialized place.
-    ///
-    /// The shell's art is loaded by address like all other content, so the scene cannot hold the
-    /// sprites — it holds the <see cref="Image"/> components that will receive them.
-    /// <c>ShellStageSystem</c> is the one writer; this view only says where.
-    /// </summary>
+    /// <summary>Every sprite target of the persistent shell, in one serialized place.</summary>
+    /// <remarks>
+    /// The shell art loads by address, so the scene holds the <see cref="Image"/> components and
+    /// not the sprites. <c>ShellStageSystem</c> is the only writer. This view says where.
+    /// </remarks>
     public sealed class ShellSkinView : MonoBehaviour
     {
         [SerializeField] private Image background;
@@ -27,15 +25,11 @@ namespace Game.Adapters.Views
         public Image BackIcon => backIcon;
         public Image Spinner => spinner;
 
-        /// <summary>How many demo icons this skin can paint. <c>EntryPoint</c> checks it against
-        /// the demo list, so a fourth demo cannot be half-added.</summary>
+        /// <summary>How many demo icons this skin can paint. <c>EntryPoint</c> checks it against the demo list.</summary>
         public int DemoIconCount => demoIcons == null ? 0 : demoIcons.Length;
 
-        /// <summary>
-        /// Reports every unassigned target through <paramref name="log"/> rather than throwing.
-        /// A missing reference means one flat rectangle on screen, not a broken run — so the run
-        /// continues and the console says which one.
-        /// </summary>
+        /// <summary>Reports every unassigned target through <paramref name="log"/>. It does not throw.</summary>
+        /// <remarks>A missing reference gives one flat rectangle on screen. The game keeps running.</remarks>
         public bool HasEveryReference(ILog log)
         {
             var isComplete = true;
@@ -50,7 +44,7 @@ namespace Game.Adapters.Views
 
         private bool _Check(ILog log, UnityEngine.Object reference, string fieldName)
         {
-            // `?.` bypasses Unity's null overload, so a destroyed Image would slip past it.
+            // `?.` skips Unity's null overload, so a destroyed Image would pass the check.
             if (reference != null)
                 return true;
 

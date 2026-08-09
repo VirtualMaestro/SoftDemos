@@ -2,22 +2,17 @@ using UnityEngine;
 
 namespace Game.Adapters.Views
 {
-    /// <summary>
-    /// The animated colour of the fire. <b>Only the Animator writes <c>tint</c></b>; a second writer
-    /// would make the crossfade non-deterministic and unassertable. Every write reaches the flame
-    /// and spark renderers through one cached <see cref="MaterialPropertyBlock"/> each, so particles
-    /// that are already alive retint on the same frame — writing <c>main.startColor</c> instead would
-    /// only reach particles born after the write and read as a wipe, not a blend.
-    ///
-    /// Smoke is deliberately left untinted: grey smoke over a coloured flame is what makes the colour
-    /// legible.
-    /// </summary>
+    /// <summary>Holds the animated colour of the fire.</summary>
+    /// <remarks>
+    /// Only the Animator writes <c>tint</c>. A second writer makes the crossfade non-deterministic.
+    /// Each write goes to the renderers through a cached <see cref="MaterialPropertyBlock"/>, so
+    /// live particles change colour in the same frame. Do not write <c>main.startColor</c>: it
+    /// reaches only new particles and looks like a wipe. Smoke stays grey to keep the colour clear.
+    /// </remarks>
     public sealed class FlameColorView : MonoBehaviour
     {
-        // The animation clips address this field by name (tint.r/g/b/a). Renaming it breaks them
-        // silently — a curve whose binding no longer resolves is simply not applied. The default is
-        // the FlameOrange clip colour so the one frame before the Animator's first write shows the
-        // starting colour rather than a flash of black or magenta.
+        // The animation clips bind to this field by name. Do not rename it: the clips fail silently.
+        // The default is the FlameOrange colour, for the one frame before the Animator writes.
         [SerializeField] private Color tint = new(1f, 0.45f, 0.1f, 1f);
         [SerializeField] private ParticleSystem flameParticles;
         [SerializeField] private ParticleSystem smokeParticles;
@@ -61,21 +56,18 @@ namespace Game.Adapters.Views
             _ApplyTint();
         }
 
-        // Unity calls this after the Animator has written the animated fields for the frame. It is
-        // the only place `tint` becomes visible, and it does not fire on frames the Animator skips —
-        // which is what keeps this view off the per-frame allocation path.
+        // Unity calls this after the Animator writes the animated fields. It does not fire on
+        // frames the Animator skips, which keeps this view off the per-frame path.
         private void OnDidApplyAnimationProperties()
         {
             _ApplyTint();
         }
 
-        /// <summary>
-        /// Hands the atlas sprites to the four systems. The Texture Sheet Animation module resolves
-        /// the packed rect itself, so nothing here depends on the atlas packing flags; the property
-        /// block carries the atlas page the sprite lives on. The glow layer reuses the flame frames
-        /// through its additive material — that is what shapes the hot core like the fire instead
-        /// of a soft ball — so the stage still owns exactly one copy of each sprite.
-        /// </summary>
+        /// <summary>Gives the atlas sprites to the four particle systems.</summary>
+        /// <remarks>
+        /// The Texture Sheet Animation module resolves the packed rect itself. The glow layer
+        /// reuses the flame frames with an additive material, so the stage owns one copy of each.
+        /// </remarks>
         public void SetSprites(Sprite[] flameFrames, Sprite smoke, Sprite spark)
         {
             if (_isWired == false)
@@ -88,12 +80,8 @@ namespace Game.Adapters.Views
             _ApplyTint();
         }
 
-        /// <summary>
-        /// Drops both references to the sprites — the module's slot and the property block's texture.
-        /// The stage calls this <b>before</b> it destroys the atlas sprite copies; the other order
-        /// leaves a particle system pointing at a destroyed sprite, which renders untextured and logs
-        /// one warning per system on the next open.
-        /// </summary>
+        /// <summary>Releases both sprite references: the module slot and the property block texture.</summary>
+        /// <remarks>Call this before you destroy the sprite copies, or the particle systems keep dead references.</remarks>
         public void ClearSprites()
         {
             if (_isWired == false)
@@ -136,8 +124,8 @@ namespace Game.Adapters.Views
         {
             var textureSheet = particles.textureSheetAnimation;
 
-            // SetSprite only writes an existing slot; AddSprite grows the list. Together they make
-            // the call independent of how many slots the scene happens to be authored with.
+            // SetSprite writes an existing slot. AddSprite grows the list. Use both, because the
+            // scene can be authored with any number of slots.
             for (var i = 0; i < frames.Length; i++)
             {
                 if (i < textureSheet.spriteCount)

@@ -31,6 +31,7 @@ namespace Game.Adapters.Bindings
         private readonly AvatarImageRouterService _avatars;
         private readonly DialogueLogChannel _dialogueChannel;
         private readonly TweenPlayer _tweens;
+        private readonly StageReadyChannel _stageReady;
         private readonly Dictionary<string, Sprite> _sprites = new(StringComparer.Ordinal);
 
         private EcsWorld _world;
@@ -52,13 +53,15 @@ namespace Game.Adapters.Bindings
         private bool _loggedMissingCamera;
 
         public MagicWordsStageSystem(AddressablesAssetService assets, AtlasImageLoaderService atlas,
-            AvatarImageRouterService avatars, DialogueLogChannel dialogueChannel, TweenPlayer tweens)
+            AvatarImageRouterService avatars, DialogueLogChannel dialogueChannel, TweenPlayer tweens,
+            StageReadyChannel stageReady)
         {
             _assets = assets;
             _atlas = atlas;
             _avatars = avatars;
             _dialogueChannel = dialogueChannel;
             _tweens = tweens;
+            _stageReady = stageReady;
         }
 
         public void LateRun()
@@ -130,6 +133,8 @@ namespace Game.Adapters.Bindings
             }
 
             _scene.Background.sprite = _backgroundSprite;
+            // The screen is covered from here on, so the shell can hand over.
+            _stageReady.MarkReady();
             _atlas.SetSprites(_sprites);
             _dialogueChannel.SetContent(
                 _GetAsset<TMP_SpriteAsset>(_emojiRequestId),
@@ -280,9 +285,10 @@ namespace Game.Adapters.Bindings
 
             if (resetDialogue)
                 _WriteCommand<ResetDialogueCommand>();
+            _stageReady.Clear();
             _tweens.KillFades();
-            // The dialogue log destroys its own views when it sees the bump — later in this same
-            // LateRun pass (pipeline order), or in its IEcsDestroy on pipeline teardown.
+            // The dialogue log destroys its own views when it sees the change. That happens later
+            // in this same LateRun pass, or in its IEcsDestroy on teardown.
             _dialogueChannel.Reset();
             _atlas.ClearSprites();
             _DestroySpriteCopies();

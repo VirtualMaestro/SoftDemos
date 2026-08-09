@@ -1,29 +1,22 @@
 namespace Game.Simulation.Ports
 {
-    /// <summary>
-    /// Remote image loading as a handle-and-poll port.
-    ///
-    /// <c>speakerName</c> accompanies the URL so adapters and diagnostics can preserve
-    /// request identity when distinct speakers share or repeat an address.
-    /// </summary>
+    /// <summary>Loads a remote image. Handle and poll.</summary>
+    /// <remarks>
+    /// The speaker name goes with the URL, so an adapter can keep the requests apart when two
+    /// speakers share the same address.
+    /// </remarks>
     public interface IImageLoadService
     {
-        /// <summary>Starts loading <paramref name="url"/> for <paramref name="speakerName"/>.</summary>
+        /// <summary>Starts to load <paramref name="url"/> for <paramref name="speakerName"/>.</summary>
         int BeginLoad(string speakerName, string url);
 
-        /// <summary>
-        /// Current status of <paramref name="requestId"/>. An unknown or already released id
-        /// reads as <see cref="AsyncOpStatus.Pending"/> — polling never throws.
-        /// </summary>
+        /// <summary>Status of <paramref name="requestId"/>. An unknown id reads as Pending.</summary>
         AsyncOpStatus Poll(int requestId);
 
-        /// <summary>
-        /// Opaque handle to the loaded image, valid only while the request is
-        /// <see cref="AsyncOpStatus.Done"/>. Returns <c>0</c> in every other case.
-        /// </summary>
+        /// <summary>Handle to the image. Valid only while the request is Done, else <c>0</c>.</summary>
         int ResolveHandle(int requestId);
 
-        /// <summary>Releases the request and the image behind it.</summary>
+        /// <summary>Releases the request and the image.</summary>
         void Release(int requestId);
     }
 }

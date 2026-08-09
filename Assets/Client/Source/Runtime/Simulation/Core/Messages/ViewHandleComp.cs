@@ -2,11 +2,8 @@ using DCFApixels.DragonECS;
 
 namespace Game.Simulation.Messages
 {
-    /// <summary>
-    /// An entity's opaque reference to whatever the adapter is using to display it. The simulation
-    /// stores the number and nothing else — resolving it back to a <c>Transform</c>, a sprite or a
-    /// particle system is the adapter's business.
-    /// </summary>
+    /// <summary>An opaque reference to whatever the adapter uses to show this entity.</summary>
+    /// <remarks>The simulation keeps the number only. The adapter resolves it.</remarks>
     public struct ViewHandleComp : IEcsComponent
     {
         public int Id;

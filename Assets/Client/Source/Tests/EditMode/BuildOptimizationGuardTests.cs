@@ -6,18 +6,11 @@ using UnityEditor.Build;
 
 namespace Game.Simulation.Tests
 {
-    /// <summary>
-    /// Locks in the settings the WebGL Build Optimization milestone chose. Every one of them is a
-    /// value in a settings asset with no code behind it, so nothing else in the project would
-    /// notice if it were reverted — a reverted flag costs megabytes in a build nobody runs until
-    /// release day.
-    ///
-    /// <b>Everything is read through <see cref="SerializedObject"/> over
-    /// <see cref="AssetDatabase"/>, never through a typed reference.</b>
-    /// <c>Game.Simulation.Tests.asmdef</c> is <c>overrideReferences: true</c> and references
-    /// neither URP nor TextMesh Pro; adding either to reach a strongly typed property would widen
-    /// the boundary that <see cref="ArchitectureTests"/> exists to defend.
-    /// </summary>
+    /// <summary>Guards the WebGL size settings. Nothing else fails if one of them reverts.</summary>
+    /// <remarks>
+    /// Read every value through <see cref="SerializedObject"/>, never a typed reference.
+    /// This asmdef must not reference URP or TextMesh Pro.
+    /// </remarks>
     public sealed class BuildOptimizationGuardTests
     {
         private const string UrpAssetPath =
@@ -37,15 +30,8 @@ namespace Game.Simulation.Tests
         private const string QualitySettingsPath = "ProjectSettings/QualitySettings.asset";
         private const string AudioManagerPath = "ProjectSettings/AudioManager.asset";
 
-        /// <summary>
-        /// The precondition every <see cref="PlayerSettings"/> assertion below depends on, which is
-        /// why it comes first. <c>PlayerSettings</c> reads route through the active build profile,
-        /// so a profile carrying serialized overrides makes those assertions describe the profile
-        /// rather than the project — the baseline build shipped a 33 MB wasm exactly that way,
-        /// with Brotli and Release sitting unread in ProjectSettings.asset. With no profile
-        /// overriding anything, the global settings are the single source of truth and a plain
-        /// File > Build and Run cannot miss them.
-        /// </summary>
+        /// <summary>Runs first. <c>PlayerSettings</c> reads go through the active build profile.</summary>
+        /// <remarks>A profile with overrides makes every other test here describe the profile, not the project.</remarks>
         [Test]
         public void BuildProfiles_DoNotOverridePlayerSettings()
         {
@@ -70,13 +56,7 @@ namespace Game.Simulation.Tests
             }
         }
 
-        /// <summary>
-        /// <c>Release</c> rather than <c>Master</c> is deliberate. Master adds link-time
-        /// optimization, which buys a few percent of wasm at the cost of a build slow enough to
-        /// stop anyone from measuring anything; the size work in this milestone is dominated by
-        /// stripping, the splash screen and the font atlas, none of which LTO touches. Master is a
-        /// release-day switch, and if it is ever flipped this assertion is the place to say so.
-        /// </summary>
+        /// <summary><c>Release</c> is intentional. <c>Master</c> adds link-time optimization and a much slower build.</summary>
         [Test]
         public void WebGlPlayerSettings_StayOptimised()
         {
@@ -91,11 +71,7 @@ namespace Game.Simulation.Tests
             Assert.That(PlayerSettings.stripEngineCode, Is.True);
         }
 
-        /// <summary>
-        /// GitHub Pages does not serve <c>Content-Encoding: br</c>, so Brotli without the
-        /// decompression fallback is a build that loads locally and fails on the hosted link.
-        /// The two belong together and are asserted together.
-        /// </summary>
+        /// <summary>GitHub Pages does not send <c>Content-Encoding: br</c>. Brotli needs the fallback.</summary>
         [Test]
         public void WebGlCompression_IsBrotliWithFallback()
         {
@@ -104,7 +80,7 @@ namespace Game.Simulation.Tests
             Assert.That(PlayerSettings.WebGL.decompressionFallback, Is.True);
         }
 
-        /// <summary>2.67 MB of built-in texture — the largest single asset in the baseline.</summary>
+        /// <summary>The splash screen adds 2.67 MB of built-in textures.</summary>
         [Test]
         public void SplashScreen_IsDisabled()
         {
@@ -122,14 +98,11 @@ namespace Game.Simulation.Tests
             Assert.That(_Property(UrpAssetPath, "m_SupportScreenSpaceLensFlare").boolValue, Is.False);
             Assert.That(_Property(UrpAssetPath, "m_UseAdaptivePerformance").boolValue, Is.False);
 
-            // MsaaQuality is a sample count, not an index: Disabled = 1, _2x = 2, _4x = 4, _8x = 8.
+            // MsaaQuality is a sample count, not an index. Disabled is 1.
             Assert.That(_Property(UrpAssetPath, "m_MSAA").intValue, Is.EqualTo(1));
         }
 
-        /// <summary>
-        /// The single reference worth ~2.9 MB: ten FilmGrain textures, the SMAA area texture and
-        /// UberPost enter the build through this field and nothing else.
-        /// </summary>
+        /// <summary>This field alone pulls in FilmGrain, SMAA and UberPost. About 2.9 MB.</summary>
         [Test]
         public void Urp2DRenderer_ShipsNoPostProcessData()
         {
@@ -154,11 +127,7 @@ namespace Game.Simulation.Tests
             }
         }
 
-        /// <summary>
-        /// Lightmap and fog stripping default to Automatic, which keeps every variant. There are no
-        /// lightmaps and no fog in a 2D project, so Custom with every keep flag cleared is the
-        /// honest setting.
-        /// </summary>
+        /// <summary>Automatic keeps every variant. A 2D project has no lightmaps and no fog.</summary>
         [Test]
         public void GraphicsSettings_StripLightmapAndFogVariants()
         {
@@ -179,11 +148,7 @@ namespace Game.Simulation.Tests
                     $"'{flag}' is still keeping a variant set nothing in this project renders.");
         }
 
-        /// <summary>
-        /// Always Included shaders are the ones Unity ships whether or not a material references
-        /// them. Only the sprite and uGUI defaults earn that here; the legacy, cubemap and Android
-        /// ETC1 entries do not apply to a 2D URP project.
-        /// </summary>
+        /// <summary>Unity ships these shaders even if no material uses them. Keep only the 2D defaults.</summary>
         [Test]
         public void GraphicsSettings_AlwaysIncludeOnlyTheSpriteAndUiDefaults()
         {
@@ -197,21 +162,15 @@ namespace Game.Simulation.Tests
                 $"Always Included shaders drifted: [{string.Join(", ", names)}].");
         }
 
-        /// <summary>
-        /// No AudioClip and no AudioSource exists anywhere in the project; with this flag clear the
-        /// whole FMOD runtime ships in the wasm for nothing.
-        /// </summary>
+        /// <summary>The project has no audio. A clear flag ships the full FMOD runtime.</summary>
         [Test]
         public void AudioEngine_IsDisabled()
         {
             Assert.That(_Property(AudioManagerPath, "m_DisableAudio").boolValue, Is.True);
         }
 
-        /// <summary>
-        /// The subset atlas replaced a 2.26 MB asset that lived in <c>Resources/</c> and therefore
-        /// shipped whether or not anything referenced it. Both halves matter: the default font has
-        /// to be the subset, and the old asset has to be gone rather than merely unreferenced.
-        /// </summary>
+        /// <summary>The default font must be the subset. The old atlas must not be in <c>Resources/</c>.</summary>
+        /// <remarks>Unity ships everything in <c>Resources/</c>, referenced or not.</remarks>
         [Test]
         public void TmpDefaultFont_IsTheSubsetAndTheOldAssetIsGone()
         {
@@ -232,11 +191,8 @@ namespace Game.Simulation.Tests
                 $"A LiberationSans asset is back under Resources: [{string.Join(", ", strays)}].");
         }
 
-        /// <summary>
-        /// High stripping removes what the linker cannot see referenced, and the Magic Words DTOs
-        /// are only ever built by JsonUtility. Losing them is silent — an empty dialogue, no
-        /// exception, no log — so the file's existence is worth asserting on its own.
-        /// </summary>
+        /// <summary>JsonUtility builds the Magic Words DTOs by reflection. High stripping removes them.</summary>
+        /// <remarks>The failure is silent: an empty dialogue, no exception, no log.</remarks>
         [Test]
         public void LinkXml_PreservesTheSimulationAssembly()
         {
@@ -244,11 +200,8 @@ namespace Game.Simulation.Tests
             Assert.That(File.ReadAllText(LinkXmlPath), Does.Contain("Game.Simulation"));
         }
 
-        /// <summary>
-        /// Reads one serialized property from an asset by path. Handles both project assets and the
-        /// <c>ProjectSettings/</c> singletons, which hold their single object at index 0 and are not
-        /// reachable through <c>LoadAssetAtPath</c>.
-        /// </summary>
+        /// <summary>Reads one serialized property from an asset path.</summary>
+        /// <remarks>Also handles the <c>ProjectSettings/</c> singletons, which <c>LoadAssetAtPath</c> cannot open.</remarks>
         private static SerializedProperty _Property(string assetPath, string propertyPath)
         {
             var objects = AssetDatabase.LoadAllAssetsAtPath(assetPath);

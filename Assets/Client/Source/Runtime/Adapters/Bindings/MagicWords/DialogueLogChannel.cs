@@ -4,15 +4,12 @@ using UnityEngine;
 
 namespace Game.Adapters.Bindings
 {
-    /// <summary>
-    /// Magic Words dialogue-log content and reset signal, shared between
-    /// <see cref="MagicWordsStageSystem"/> (writer) and <see cref="DialogueLogSystem"/> (reader).
-    /// A plain collaborator rather than direct calls between the two systems, because systems must
-    /// never hold other systems (see SystemIsolationTests). The reset is a version counter, not a
-    /// callback: the stage system bumps it during teardown, and the log system — which runs later
-    /// in the same LateRun pass — destroys its own views when it sees the change, so the clear
-    /// stays same-frame. Sprite and asset lifetimes stay with the stage system.
-    /// </summary>
+    /// <summary>Shared dialogue-log content and reset signal. The stage system writes, the log system reads.</summary>
+    /// <remarks>
+    /// The reset is a counter, not a callback. The stage system increments it during teardown.
+    /// The log system runs later in the same pass and clears its views, so the clear is
+    /// same-frame. The stage system owns the sprites and the assets.
+    /// </remarks>
     public sealed class DialogueLogChannel
     {
         public TMP_SpriteAsset Emoji { get; private set; }
@@ -21,7 +18,7 @@ namespace Game.Adapters.Bindings
         public Sprite Placeholder { get; private set; }
         public MagicWordsScreen Scene { get; private set; }
 
-        /// <summary>Bumped on every teardown; the dialogue log clears its views on change.</summary>
+        /// <summary>Increments on every teardown. The dialogue log then clears its views.</summary>
         public int ResetVersion { get; private set; }
 
         public void SetContent(TMP_SpriteAsset emoji, Sprite bubble, Sprite frame,

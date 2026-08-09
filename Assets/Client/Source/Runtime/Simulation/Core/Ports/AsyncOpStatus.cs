@@ -1,21 +1,19 @@
 namespace Game.Simulation.Ports
 {
-    /// <summary>
-    /// State of an asynchronous port request, shared by every handle-and-poll port.
-    ///
-    /// The simulation never awaits and never receives a callback: it starts work through a port,
-    /// gets back a request id, and polls that id each tick. Failure is a status, never an
-    /// exception — see the "every failure path is a component state" rule in ARCHITECTURE.md.
-    /// </summary>
+    /// <summary>State of an asynchronous port request.</summary>
+    /// <remarks>
+    /// The simulation does not await and does not take callbacks. It starts the work, keeps the
+    /// request id, and polls the id each tick. A failure is a status, not an exception.
+    /// </remarks>
     public enum AsyncOpStatus
     {
-        /// <summary>Still running, or the request id is unknown to the adapter.</summary>
+        /// <summary>Still running, or the adapter does not know this request id.</summary>
         Pending = 0,
 
-        /// <summary>Finished successfully. Terminal — release the request.</summary>
+        /// <summary>Finished with success. Release the request.</summary>
         Done = 1,
 
-        /// <summary>Finished unsuccessfully. Terminal — release the request.</summary>
+        /// <summary>Finished with a failure. Release the request.</summary>
         Failed = 2,
     }
 }

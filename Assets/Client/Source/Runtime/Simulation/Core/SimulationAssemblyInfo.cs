@@ -1,16 +1,13 @@
 namespace Game.Simulation.Core
 {
-    /// <summary>
-    /// Anchor type for the <c>Game.Simulation</c> assembly.
-    ///
-    /// An asmdef with no <c>.cs</c> file produces no DLL, and the architecture test in
-    /// <c>Game.Simulation.Tests</c> reflects over this assembly to assert that it never
-    /// picks up a <c>UnityEngine</c> reference. This type exists so there is always
-    /// something to reflect over, even before the first real port lands.
-    /// </summary>
+    /// <summary>Anchor type for the <c>Game.Simulation</c> assembly.</summary>
+    /// <remarks>
+    /// An asmdef with no <c>.cs</c> file builds no DLL. The architecture test reflects over this
+    /// assembly to check that it has no <c>UnityEngine</c> reference.
+    /// </remarks>
     public static class SimulationAssemblyInfo
     {
-        /// <summary>Name of the assembly this type is compiled into.</summary>
+        /// <summary>Name of the assembly this type compiles into.</summary>
         public const string AssemblyName = "Game.Simulation";
     }
 }

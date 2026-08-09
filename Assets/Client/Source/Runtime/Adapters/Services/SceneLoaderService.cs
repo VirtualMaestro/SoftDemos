@@ -7,17 +7,13 @@ using MyGameDevTools.SceneLoading;
 
 namespace Game.Adapters.Services
 {
-    /// <summary>
-    /// <see cref="ISceneService"/> on top of <c>com.mygamedevtools.scene-loader</c>.
-    ///
-    /// The library is <see cref="Task"/>-based; the simulation is not allowed to await anything.
-    /// This adapter is the translation: it owns the <see cref="Task{TResult}"/> and the
-    /// <see cref="CancellationTokenSource"/>, hands the caller an <see cref="int"/> request id,
-    /// and turns task state into an <see cref="AsyncOpStatus"/> whenever a system polls.
-    ///
-    /// No exception ever leaves a port method. A faulted load is <see cref="AsyncOpStatus.Failed"/>
-    /// plus one logged error — data the simulation reacts to, never a throw into the pipeline.
-    /// </summary>
+    /// <summary><see cref="ISceneService"/> on top of <c>com.mygamedevtools.scene-loader</c>.</summary>
+    /// <remarks>
+    /// The library uses <see cref="Task"/>, but the simulation must not await. This adapter owns
+    /// the task and the <see cref="CancellationTokenSource"/>, gives the caller a request id, and
+    /// reports the task state as an <see cref="AsyncOpStatus"/>. No port method throws. A failed
+    /// load becomes <see cref="AsyncOpStatus.Failed"/> and one logged error.
+    /// </remarks>
     public sealed class SceneLoaderService : ISceneService, IDisposable
     {
         private readonly Dictionary<int, Request> _requests = new();
@@ -39,8 +35,7 @@ namespace Game.Adapters.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            // An unknown or already released id reads as Pending. A system that polls after
-            // releasing is confused, not broken — do not punish it with an exception.
+            // An unknown or released id reads as Pending. Do not throw at a late poll.
             if (_requests.TryGetValue(requestId, out var request) == false)
                 return AsyncOpStatus.Pending;
 
@@ -73,14 +68,11 @@ namespace Game.Adapters.Services
                       $"in state {request.Status}. Open requests: {_requests.Count}.");
         }
 
-        /// <summary>
-        /// Cancels and drops every in-flight request. Called from <c>EntryPoint.OnDestroy</c>
-        /// *after* the pipeline is destroyed — systems stop before their ports do.
-        ///
-        /// This is the scenario the per-request <see cref="CancellationTokenSource"/> exists for:
-        /// leaving play mode, or unloading the boot scene, while a scene load is still running.
-        /// Without the token the loader keeps going and completes into a torn-down game.
-        /// </summary>
+        /// <summary>Cancels and drops every open request. Call it after the pipeline is destroyed.</summary>
+        /// <remarks>
+        /// This is why each request has a <see cref="CancellationTokenSource"/>. Without the token,
+        /// a load that is still running completes into a game that no longer exists.
+        /// </remarks>
         public void Dispose()
         {
             if (_isDisposed)
@@ -125,8 +117,7 @@ namespace Game.Adapters.Services
             }
             catch (Exception exception)
             {
-                // Some loader failures surface synchronously rather than as a faulted task.
-                // Both roads lead to the same place: a Failed status the caller polls for.
+                // Some loader failures throw here instead of faulting the task. Same result.
                 request.Status = AsyncOpStatus.Failed;
                 _log.Error($"Request #{requestId} {request.Operation} address '{sceneId}' failed to start: {exception}");
             }
@@ -162,11 +153,8 @@ namespace Game.Adapters.Services
             }
         }
 
-        /// <summary>
-        /// A completed task is not automatically a success: an addressable load can finish while
-        /// returning an invalid <see cref="UnityEngine.SceneManagement.Scene"/>.
-        /// Only a load is checked — after an unload the scene is legitimately invalid.
-        /// </summary>
+        /// <summary>A completed task is not always a success. A load can return an invalid scene.</summary>
+        /// <remarks>Only a load is checked. After an unload the scene is invalid by design.</remarks>
         private static AsyncOpStatus _ClassifyResult(Request request, out string failureDetail)
         {
             failureDetail = string.Empty;
@@ -198,7 +186,7 @@ namespace Game.Adapters.Services
             }
             catch (ObjectDisposedException)
             {
-                // Already disposed elsewhere — nothing left to cancel.
+                // Already disposed. Nothing to cancel.
             }
         }
 

@@ -8,23 +8,19 @@ namespace Game.Adapters.Bindings
     /// </summary>
     public sealed class StackSlotLayout
     {
-        /// <summary>
-        /// Rise per card in the visible part of the pile, chosen so the sliver each card shows is
-        /// wider than its own dark border: ~10 px landscape, ~17 px portrait. Spreading all 143
-        /// depth steps over a fixed 1.6-unit budget instead gave every card ~2 px, which is border
-        /// and nothing else, so 140 of them merged into one black bar. Deliberately looser than a
-        /// real deck of 144 would be — realism here reads as a smudge.
-        /// </summary>
+        /// <summary>Rise per card in the visible part of the pile.</summary>
+        /// <remarks>
+        /// Each card shows about 10 px in landscape and 17 px in portrait, which is wider than its
+        /// own border. A smaller step merges the cards into one dark bar.
+        /// </remarks>
         public const float PerCardOffset = 0.09f;
 
-        /// <summary>
-        /// Depth steps beyond this one land on the same spot. At this offset a 143-card pile would
-        /// otherwise stand nearly thirteen units tall — the viewport is ten — so only the top of
-        /// the deck spreads out and everything below sits under it, hidden exactly as the cards in
-        /// the middle of a real deck are. The pile therefore holds its height until the last dozen
-        /// cards, which is where the counters carry the progress instead.
-        /// The z step is deliberately left uncapped so draw order still follows depth exactly.
-        /// </summary>
+        /// <summary>Depth steps above this one land on the same spot.</summary>
+        /// <remarks>
+        /// Without the cap a full pile stands about thirteen units tall and the viewport is ten.
+        /// Only the top of the deck spreads out. The z step stays uncapped, so draw order still
+        /// follows depth.
+        /// </remarks>
         public const int VisibleDepth = 12;
 
         private readonly Vector3[] _slots = new Vector3[2];
