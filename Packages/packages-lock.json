@@ -7,6 +7,15 @@
       "dependencies": {},
       "hash": "de55679a25b28fb0b3e368ccdfd70b0022348b4c"
     },
+    "com.dcfa_pixels.dragonecs-unity": {
+      "version": "https://github.com/DCFApixels/DragonECS-Unity.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.dcfa_pixels.dragonecs": "https://github.com/DCFApixels/DragonECS.git"
+      },
+      "hash": "a741e91073fa24e7935eb33ed92ad6126b4cfe4a"
+    },
     "com.mygamedevtools.scene-loader": {
       "version": "https://github.com/mygamedevtools/scene-loader.git#upm",
       "depth": 0,

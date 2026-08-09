@@ -12,7 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3efdd41947995b14ea6378b017ee4784, type: 3}
   m_Name: DefaultSubmoduleStrippingSettings
   m_EditorClassIdentifier: Unity.Web.Stripping.Editor::Unity.Web.Stripping.Editor.SubmoduleStrippingSettings
-  OptimizeCodeAfterStripping: 0
-  RemoveEmbeddedDebugSymbols: 0
+  OptimizeCodeAfterStripping: 1
+  RemoveEmbeddedDebugSymbols: 1
   MissingSubmoduleErrorHandling: 0
-  SubmodulesToStrip: []
+  SubmodulesToStrip:
+  - Advanced Text Generator Support
+  - AndroidJNIModule
+  - Expression Evaluator
+  - GPU Instancing
+  - IMGUI Script Bindings
+  - TetGen
+  - Unity In-App Purchasing
+  - WebGPU Support

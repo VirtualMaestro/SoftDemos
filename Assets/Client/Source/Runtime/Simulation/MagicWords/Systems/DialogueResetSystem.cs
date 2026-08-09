@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using DCFApixels.DragonECS;
-using DCFApixels.DragonECS.Core;
 using Game.Simulation.Ports;
 
 namespace Game.Simulation.MagicWords

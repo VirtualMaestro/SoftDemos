@@ -3,7 +3,6 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Build;
-using UnityEngine;
 
 namespace Game.Simulation.Tests
 {
@@ -23,11 +22,15 @@ namespace Game.Simulation.Tests
     {
         private const string UrpAssetPath =
             "Assets/Client/Settings/Rendering/URP/URP2D_RPAsset.asset";
+
         private const string UrpRendererPath =
             "Assets/Client/Settings/Rendering/URP/URP2D_Renderer.asset";
+
         private const string TmpSettingsPath = "Assets/TextMesh Pro/Resources/TMP Settings.asset";
+
         private const string SubsetFontPath =
             "Assets/Client/Content/Shared/Fonts/LiberationSans-Subset SDF.asset";
+
         private const string BuildProfileFolder = "Assets/Settings/Build Profiles";
         private const string LinkXmlPath = "Assets/Client/Source/Runtime/link.xml";
         private const string GraphicsSettingsPath = "ProjectSettings/GraphicsSettings.asset";
