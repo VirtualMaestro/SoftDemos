@@ -1,0 +1,258 @@
+using System.Collections;
+using DCFApixels.DragonECS;
+using Game.Adapters.Views;
+using Game.Bootstrap;
+using Game.Simulation.Menu;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+
+namespace Game.Adapters.Tests
+{
+    public sealed class MenuShellTests
+    {
+        private const string BootScene = "Boot";
+        private const string DemoScene = "AceOfShadows";
+        private const string MenuButton = "AceOfShadowsButton";
+        private const string BackButton = "BackButton";
+        private const float TimeoutSeconds = 10f;
+
+        [UnityTest]
+        public IEnumerator OpenAndCloseDemo_LoadsAndUnloadsTheAddressableScene()
+        {
+            var baseline = EcsWorld.AllWorldsCount;
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
+            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+            Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
+
+            var world = entryPoint.World;
+            var openEntity = world.NewEntity();
+            world.GetPool<OpenDemoCommand>().Add(openEntity).DemoIndex = 0;
+
+            yield return _WaitForState(world, ScreenId.Demo);
+
+            var opened = world.Get<ScreenStateComp>();
+            Assert.That(opened.ActiveDemoIndex, Is.EqualTo(0), $"{opened}");
+            Assert.That(SceneManager.GetSceneByName(DemoScene).isLoaded, Is.True,
+                $"Addressable scene '{DemoScene}' was not loaded.");
+
+            var closeEntity = world.NewEntity();
+            world.GetPool<CloseDemoCommand>().Add(closeEntity);
+
+            yield return _WaitForState(world, ScreenId.Menu);
+
+            var closed = world.Get<ScreenStateComp>();
+            Assert.That(closed.ActiveDemoIndex, Is.EqualTo(-1), $"{closed}");
+            Assert.That(SceneManager.GetSceneByName(DemoScene).IsValid(), Is.False,
+                $"Addressable scene '{DemoScene}' was not unloaded.");
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+            yield return null;
+
+            Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(baseline),
+                $"Unloading '{BootScene}' leaked a world.");
+        }
+
+        /// <summary>
+        /// The menu panel lays its children out with a <c>VerticalLayoutGroup</c> that has
+        /// <c>childControlHeight</c> off, so the group positions children by the height their own
+        /// <c>RectTransform</c> already carries. A child left at height 0 gets a slot but no box:
+        /// its text overflows into the entry below it. Every child must therefore be taller than
+        /// nothing.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EveryMenuEntry_HasAPositiveHeight()
+        {
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var menu = Object.FindFirstObjectByType<MenuScreen>(FindObjectsInactive.Include);
+            Assert.That(menu, Is.Not.Null, $"'{BootScene}' must contain a MenuScreen.");
+
+            foreach (RectTransform child in (RectTransform)menu.transform)
+                Assert.That(child.rect.height, Is.GreaterThan(0f),
+                    $"'{child.name}' has a zero-height RectTransform; its content spills onto the " +
+                    "next entry.");
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+        }
+
+        /// <summary>
+        /// Unity gives no ordering guarantee between destroying a screen's buttons and running the
+        /// screen's own <c>OnDestroy</c>, and a destroyed <c>UnityEngine.Object</c> is not
+        /// <c>null</c> — it only compares equal to it. A screen that unsubscribes through
+        /// <c>?.</c> therefore reaches a live-looking reference and throws
+        /// <c>MissingReferenceException</c> out of a teardown path, which the Test Framework turns
+        /// into a failing test. Destroy a button first, then the screen: teardown must stay quiet.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Screens_SurviveTheirButtonsBeingDestroyedFirst()
+        {
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
+            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+
+            var menu = Object.FindFirstObjectByType<MenuScreen>(FindObjectsInactive.Include);
+            var demoHud = Object.FindFirstObjectByType<DemoHudView>(FindObjectsInactive.Include);
+            Assert.That(menu, Is.Not.Null, $"'{BootScene}' must contain a MenuScreen.");
+            Assert.That(demoHud, Is.Not.Null, $"'{BootScene}' must contain a DemoHudView.");
+
+            var menuButton = menu.transform.Find(MenuButton);
+            var backButton = demoHud.transform.Find(BackButton);
+            Assert.That(menuButton, Is.Not.Null, $"MenuScreen must hold a '{MenuButton}' child.");
+            Assert.That(backButton, Is.Not.Null, $"DemoHudView must hold a '{BackButton}' child.");
+
+            // The pipeline goes first so no LateRun touches a half-destroyed screen — this test is
+            // about the screens' own teardown, not about presentation surviving it.
+            Object.DestroyImmediate(entryPoint.gameObject);
+
+            Object.DestroyImmediate(menuButton.gameObject);
+            Object.DestroyImmediate(backButton.gameObject);
+            Object.DestroyImmediate(menu.gameObject);
+            Object.DestroyImmediate(demoHud.gameObject);
+            yield return null;
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+        }
+
+        /// <summary>
+        /// The indicator's whole job happens between two steady states, so a test that only looks
+        /// before and after would pass against an indicator that never appeared at all. This one
+        /// samples inside the wait loop: it must be seen while the scene is in flight, and gone
+        /// once the demo is up.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadingIndicator_IsVisibleOnlyWhileALoadIsInFlight()
+        {
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
+            var skin = Object.FindFirstObjectByType<ShellSkinView>(FindObjectsInactive.Include);
+            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+            Assert.That(skin, Is.Not.Null, $"'{BootScene}' must contain a ShellSkinView.");
+
+            var indicator = skin.Spinner.transform.parent.gameObject;
+            var backdrop = skin.Background.gameObject;
+            Assert.That(indicator.activeInHierarchy, Is.False,
+                "The loading indicator must be hidden while the menu is idle.");
+            Assert.That(backdrop.activeInHierarchy, Is.True,
+                "The menu backdrop must be up behind the menu.");
+
+            var world = entryPoint.World;
+            var openEntity = world.NewEntity();
+            world.GetPool<OpenDemoCommand>().Add(openEntity).DemoIndex = 0;
+
+            var sawIndicator = false;
+            var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+            while (world.Get<ScreenStateComp>().Current != ScreenId.Demo)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    "The demo never opened, so the indicator was never exercised.");
+                sawIndicator |= indicator.activeInHierarchy;
+                yield return null;
+            }
+
+            Assert.That(sawIndicator, Is.True,
+                "The loading indicator was never shown while the scene was loading.");
+
+            // Presentation is a LateRun, so the frame that flips the state is not yet the frame
+            // that repaints for it. One tick, then the indicator must be gone.
+            yield return null;
+            Assert.That(indicator.activeInHierarchy, Is.False,
+                "The loading indicator must be hidden once the demo is up.");
+            // The backdrop lives outside SafeArea, so it belongs to no screen and nothing else
+            // would ever hide it — on a Screen Space Overlay canvas it would cover the whole demo.
+            Assert.That(backdrop.activeInHierarchy, Is.False,
+                "The menu backdrop must be gone while a demo is open; it draws over the demo.");
+
+            var closeEntity = world.NewEntity();
+            world.GetPool<CloseDemoCommand>().Add(closeEntity);
+            yield return _WaitForState(world, ScreenId.Menu);
+            yield return null;
+
+            Assert.That(indicator.activeInHierarchy, Is.False,
+                "The loading indicator must be hidden once the menu is back.");
+            Assert.That(backdrop.activeInHierarchy, Is.True,
+                "The menu backdrop must come back with the menu.");
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+        }
+
+        /// <summary>
+        /// The shell's art is loaded by address, so "the menu looks right" is really "every
+        /// <c>Image</c> the skin owns received a sprite, in the order the demo list declares" —
+        /// and the sprites are <c>SpriteAtlas.GetSprite</c> copies, so unloading Boot must leave
+        /// the asset source holding nothing.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ShellSkin_ResolvesEverySpriteTarget()
+        {
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
+            var skin = Object.FindFirstObjectByType<ShellSkinView>(FindObjectsInactive.Include);
+            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+            Assert.That(skin, Is.Not.Null, $"'{BootScene}' must contain a ShellSkinView.");
+
+            var assets = entryPoint.Assets;
+            yield return _WaitUntilSkinned(skin);
+
+            Assert.That(skin.Background.sprite, Is.Not.Null, "The menu backdrop was never applied.");
+            Assert.That(skin.Panel.sprite, Is.Not.Null, "The menu panel was never skinned.");
+            Assert.That(skin.BackIcon.sprite, Is.Not.Null, "The back icon was never applied.");
+            Assert.That(skin.Spinner.sprite, Is.Not.Null, "The spinner was never applied.");
+
+            foreach (var button in skin.Buttons)
+                Assert.That(button.sprite, Is.Not.Null, $"'{button.name}' was never skinned.");
+
+            // demoIcons[i] is painted from demos[i].IconName; a swapped pair is invisible to a
+            // count check and obvious here.
+            var expected = new[]
+            {
+                "ui-icon-ace-of-shadows", "ui-icon-magic-words", "ui-icon-phoenix-flame"
+            };
+            Assert.That(skin.DemoIconCount, Is.EqualTo(expected.Length));
+            for (var i = 0; i < expected.Length; i++)
+                Assert.That(skin.DemoIcons[i].sprite.name, Is.EqualTo(expected[i]),
+                    $"demoIcons[{i}] shows the wrong demo's icon.");
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+            yield return null;
+
+            Assert.That(assets.OpenRequestCount, Is.Zero,
+                "Unloading Boot left an Addressables request open.");
+            Assert.That(assets.HeldAssetCount, Is.Zero,
+                "Unloading Boot left an Addressables asset held.");
+        }
+
+        private static IEnumerator _WaitUntilSkinned(ShellSkinView skin)
+        {
+            var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+            while (skin.Background.sprite == null)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    "The shell skin never finished loading.");
+                yield return null;
+            }
+        }
+
+        private static IEnumerator _WaitForState(EcsWorld world, ScreenId expected)
+        {
+            var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+            while (world.Get<ScreenStateComp>().Current != expected)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    $"Screen did not reach {expected}. Current state: {world.Get<ScreenStateComp>()}.");
+                yield return null;
+            }
+        }
+    }
+}

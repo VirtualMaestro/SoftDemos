@@ -1,0 +1,71 @@
+using DCFApixels.DragonECS;
+using Game.Simulation.Messages;
+using Game.Simulation.Ports;
+
+namespace Game.Simulation.AceOfShadows
+{
+    public sealed class MoveCompletionSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
+    {
+        private EcsWorld _world;
+        private ILog _log;
+
+        public void Run()
+        {
+            ref var state = ref _world.Get<DeckStateComp>();
+
+            foreach (var entityId in _world.Where(out CompletionAspect aspect))
+            {
+                ref var card = ref aspect.Cards.Get(entityId);
+                var targetStack = state.TargetStack;
+                var targetOrder = -1;
+
+                if (aspect.Moving.Has(entityId))
+                {
+                    ref readonly var moving = ref aspect.Moving.Read(entityId);
+                    targetStack = moving.TargetStack;
+                    targetOrder = moving.TargetOrder;
+                }
+                else
+                    _log.Warn($"Entity {entityId}: move completed without MovingComp; treating it as landed.");
+
+                foreach (var stackEntity in _world.Where(out StackAspect stacks))
+                {
+                    ref var stack = ref stacks.Stacks.Get(stackEntity);
+
+                    if (stack.Index != targetStack)
+                        continue;
+
+                    card.StackIndex = targetStack;
+                    card.OrderInStack = targetOrder >= 0 ? targetOrder : stack.Count;
+                    stack.Count++;
+                    break;
+                }
+
+                state.MovesCompleted++;
+                aspect.Completed.TryDel(entityId);
+                aspect.Moving.TryDel(entityId);
+
+                if (state.IsComplete == false && state.MovesCompleted == state.TotalCards)
+                {
+                    state.IsComplete = true;
+                    _log.Info($"All {state.TotalCards} move(s) completed.");
+                }
+            }
+        }
+
+        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(ILog obj) => _log = obj;
+
+        private sealed class CompletionAspect : EcsAspect
+        {
+            public EcsTagPool<MoveCompletedTag> Completed = Inc;
+            public EcsPool<CardComp> Cards = Inc;
+            public EcsPool<MovingComp> Moving = Opt;
+        }
+
+        private sealed class StackAspect : EcsAspect
+        {
+            public EcsPool<StackComp> Stacks = Inc;
+        }
+    }
+}

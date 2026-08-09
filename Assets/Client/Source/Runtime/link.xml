@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Managed stripping for WebGL runs at High, which removes any type the linker cannot see a
+  reference to. Two things in this project are invisible to it.
+
+  1. The Magic Words payload is deserialized reflectively:
+     JsonUtility.FromJson<DialoguePayload> in
+     Assets/Client/Source/Runtime/Adapters/Services/HttpDialogueService.cs.
+     DialoguePayload, DialogueLineDto and AvatarDto are never constructed in code, and their
+     fields are only ever read after JsonUtility has filled them, so High stripping is free to
+     drop the fields — or the whole types. The failure mode is silent: no exception, no log,
+     just an empty dialogue.
+     [Preserve] is the usual answer and is not available here. Game.Simulation is compiled with
+     noEngineReferences: true, so it cannot see UnityEngine.Scripting.PreserveAttribute, and the
+     boundary that forbids that reference is the whole point of the assembly. A link.xml is the
+     only way to protect those types without breaking it.
+
+  2. DragonECS resolves component and system metadata through reflection in
+     DebugUtils/TypeMeta.cs, over the attributes declared on our own component types.
+
+  Both live in Game.Simulation, and that assembly holds nothing but game logic and plain
+  structs — a few tens of KB of IL against a 33 MB wasm. Preserving it whole costs nothing
+  measurable and covers every DTO and component added later, which naming the three types
+  individually would not.
+-->
+<linker>
+  <assembly fullname="Game.Simulation" preserve="all"/>
+</linker>

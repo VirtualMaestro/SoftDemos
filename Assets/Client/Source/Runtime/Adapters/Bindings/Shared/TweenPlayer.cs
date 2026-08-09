@@ -1,0 +1,141 @@
+using System.Collections.Generic;
+using DCFApixels.DragonECS;
+using DG.Tweening;
+using Game.Adapters.Views;
+using Game.Simulation.Messages;
+using Game.Simulation.Ports;
+using UnityEngine;
+
+namespace Game.Adapters.Bindings
+{
+    /// <summary>
+    /// The only place DOTween is spoken to. Deliberately not a system: several systems share this
+    /// tween behaviour, and systems must never hold other systems (see SystemIsolationTests), so
+    /// it lives in a plain collaborator owned by the composition root — exactly like
+    /// <see cref="ViewRegistry"/>. <see cref="TweenPlaybackSystem"/> remains the pipeline block
+    /// that drives the command → tween → completion round-trip through it, and the teardown calls
+    /// (<see cref="KillTweensFor"/>, <see cref="KillFades"/>) stay synchronous on purpose — the
+    /// caller destroys the views in the same frame.
+    /// </summary>
+    public sealed class TweenPlayer
+    {
+        private readonly EcsWorld _world;
+        private readonly ViewRegistry _views;
+        private readonly ILog _log;
+        private readonly List<entlong> _completions = new();
+        private readonly List<CanvasGroup> _fading = new();
+
+        public TweenPlayer(EcsWorld world, ViewRegistry views, ILog log)
+        {
+            _world = world;
+            _views = views;
+            _log = log;
+        }
+
+        /// <summary>Tweens that finished but whose completion has not been applied yet.</summary>
+        public int PendingCompletionCount => _completions.Count;
+        public int ActiveFadeCount => _fading.Count;
+        public IReadOnlyList<entlong> Completions => _completions;
+
+        public void ClearCompletions() => _completions.Clear();
+
+        public void StartMove(Transform view, CardView card, Vector3 target,
+            float duration, entlong entity)
+        {
+            var tween = view.DOMove(target, duration).SetEase(Ease.OutCubic);
+
+            if (card != null)
+            {
+                // Both closures are created once per move; OnUpdate does not allocate per frame.
+                // Translation eases out, but the flip stays linear so its midpoint remains legible at ×8.
+                tween.OnUpdate(() => card.OnMoveProgress(tween.ElapsedPercentage()));
+            }
+
+            tween.OnComplete(() => _completions.Add(entity));
+        }
+
+        public void FadeIn(CanvasGroup group, float duration)
+        {
+            group.alpha = 0f;
+            _fading.Add(group);
+            DOTween.To(() => group.alpha, value => group.alpha = value, 1f, duration)
+                .SetTarget(group)
+                .SetEase(Ease.OutQuad)
+                .OnComplete(() => _fading.Remove(group));
+        }
+
+        public int KillFades()
+        {
+            var killed = 0;
+            foreach (var group in _fading)
+                if (group != null)
+                    killed += DOTween.Kill(group);
+
+            _fading.Clear();
+            return killed;
+        }
+
+        public int KillTweensFor(IReadOnlyList<int> handleIds)
+        {
+            var killed = 0;
+            foreach (var handleId in handleIds)
+                if (_views.TryResolve(handleId, out var view))
+                    killed += DOTween.Kill(view);
+
+            var commands = _world.GetPool<MoveCommand>();
+            var running = _world.GetPool<TweenRunningTag>();
+
+            foreach (var entityId in _world.Where(out KillAspect aspect))
+            {
+                var handleId = aspect.Views.Read(entityId).Id;
+
+                if (_ContainsHandle(handleIds, handleId) == false)
+                    continue;
+
+                _completions.Remove(_world.GetEntityLong(entityId));
+                running.TryDel(entityId);
+                commands.TryDel(entityId);
+            }
+
+            _log.Info($"Killed {killed} tween(s) for {handleIds.Count} view handle(s).");
+            return killed;
+        }
+
+        /// <summary>
+        /// Kills every tween before the world goes away. A tween that outlives its world calls
+        /// back into a destroyed pipeline — this is not a defensive extra.
+        /// </summary>
+        public void KillAll()
+        {
+            var faded = KillFades();
+            var killed = 0;
+            foreach (var view in _views.Views)
+            {
+                if (view == null)
+                    continue;
+
+                killed += DOTween.Kill(view);
+            }
+
+            _completions.Clear();
+            _log.Info(
+                $"Killed {killed} move tween(s) and {faded} fade tween(s) " +
+                $"across {_views.Count} registered view(s).");
+        }
+
+        private static bool _ContainsHandle(IReadOnlyList<int> handleIds, int handleId)
+        {
+            // ponytail: teardown-only O(n²); add a handle-to-entity map if pools grow past hundreds.
+            foreach (var id in handleIds)
+                if (id == handleId)
+                    return true;
+
+            return false;
+        }
+
+        private sealed class KillAspect : EcsAspect
+        {
+            public EcsPool<ViewHandleComp> Views = Inc;
+        }
+    }
+}
