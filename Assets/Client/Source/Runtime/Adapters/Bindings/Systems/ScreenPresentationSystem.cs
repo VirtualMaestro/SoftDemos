@@ -14,8 +14,7 @@ namespace Game.Adapters.Bindings
         private readonly MenuScreen _menu;
         private readonly DemoHudView _demoHud;
         private readonly GameObject _loadingIndicator;
-        /// <summary>The shell backdrop. It sits outside <c>SafeArea</c>, so it belongs to no screen.</summary>
-        /// <remarks>Nothing else hides it. On an overlay canvas it would cover the whole demo.</remarks>
+        /// <summary>The shell backdrop. It sits outside SafeArea, so it belongs to no screen.</summary>
         private readonly GameObject _menuBackground;
         private readonly TweenPlayer _tweens;
         private readonly StageReadyChannel _stageReady;
@@ -27,7 +26,8 @@ namespace Game.Adapters.Bindings
         private ILog _log;
         private ScreenId _lastScreen;
         private int _lastDemoIndex;
-        private bool _lastStageReady;
+        private bool _lastDemoReady;
+        private bool _lastShellReady;
         private bool _hasState;
         private bool _menuWasVisible;
         private bool _demoWasVisible;
@@ -57,23 +57,26 @@ namespace Game.Adapters.Bindings
         public void LateRun()
         {
             ref readonly var state = ref _world.Get<ScreenStateComp>();
-            var stageReady = _stageReady.IsReady;
+            var demoReady = _stageReady.IsDemoReady;
+            var shellReady = _stageReady.IsShellReady;
 
             if (_hasState &&
                 state.Current == _lastScreen &&
                 state.ActiveDemoIndex == _lastDemoIndex &&
-                stageReady == _lastStageReady)
+                demoReady == _lastDemoReady &&
+                shellReady == _lastShellReady)
                 return;
 
-            // `ScreenId.Demo` means only that the scene landed. The stage system paints its
-            // background a few frames later, and the demo draws nothing until then. Keep the
-            // shell up for those frames, or the camera clear colour shows through.
+            // Show nothing before the shell has its own art. The menu panel and its buttons carry
+            // Images that cannot be disabled without losing their raycasts, so they would appear
+            // as white boxes for the whole first load. That is seconds on a real host.
             var demoActive = state.Current == ScreenId.Demo;
-            var menuVisible = state.Current == ScreenId.Menu;
-            var demoVisible = demoActive && stageReady;
-            var loadingVisible = state.Current == ScreenId.Loading ||
-                state.Current == ScreenId.Unloading ||
-                (demoActive && stageReady == false);
+            var menuVisible = shellReady && state.Current == ScreenId.Menu;
+            var demoVisible = shellReady && demoActive && demoReady;
+            var loadingVisible = shellReady &&
+                (state.Current == ScreenId.Loading ||
+                 state.Current == ScreenId.Unloading ||
+                 (demoActive && demoReady == false));
 
             _demoHud.SetDemoIndex(state.ActiveDemoIndex);
             // Keep the backdrop through the load, so the change is not a black flash. Remove it
@@ -86,20 +89,16 @@ namespace Game.Adapters.Bindings
 
             _lastScreen = state.Current;
             _lastDemoIndex = state.ActiveDemoIndex;
-            _lastStageReady = stageReady;
+            _lastDemoReady = demoReady;
+            _lastShellReady = shellReady;
             _hasState = true;
 
             _log.Info($"Screen presentation: menu={menuVisible}, demo={demoVisible}, " +
-                $"loading={loadingVisible}, stageReady={stageReady}, " +
+                $"loading={loadingVisible}, shellReady={shellReady}, demoReady={demoReady}, " +
                 $"demoIndex={state.ActiveDemoIndex}.");
         }
 
         /// <summary>Shows or hides one screen. It fades in only on the rising edge.</summary>
-        /// <remarks>
-        /// The indicator spans two states: <c>Loading</c> and the unpainted part of <c>Demo</c>.
-        /// A second fade at that boundary would add a blink. Only the screen that appears fades.
-        /// A fade-out needs the object to outlive the change that hid it.
-        /// </remarks>
         private void _ApplyVisibility(
             GameObject target, CanvasGroup group, bool isVisible, ref bool wasVisible)
         {
@@ -107,7 +106,6 @@ namespace Game.Adapters.Bindings
             var isRisingEdge = isVisible && wasVisible == false;
             wasVisible = isVisible;
 
-            // `?.` skips Unity's null overload, so a destroyed group would pass the check.
             if (isRisingEdge == false || group == null)
                 return;
 

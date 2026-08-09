@@ -136,7 +136,7 @@ namespace Game.Adapters.Bindings
                 _scene.Background.sprite = _backgroundSprite;
                 // The screen is covered now, so the shell can hand over. The cards still arrive
                 // over the next few frames, on top of the background.
-                _stageReady.MarkReady();
+                _stageReady.MarkDemoReady();
                 _SkinSpeedButton();
                 _RecalculateLayout();
                 _log.Info("Ace of Shadows content loaded.");
@@ -299,7 +299,7 @@ namespace Game.Adapters.Bindings
                 _backgroundRequestId == 0 && _channel.Views.Count == 0)
                 return;
 
-            _stageReady.Clear();
+            _stageReady.ClearDemo();
             _tweens.KillTweensFor(_channel.Handles);
 
             if (resetDeck)

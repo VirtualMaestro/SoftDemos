@@ -133,8 +133,8 @@ namespace Game.Adapters.Bindings
             }
 
             _scene.Background.sprite = _backgroundSprite;
-            // The screen is covered from here on, so the shell can hand over.
-            _stageReady.MarkReady();
+            // The screen is covered now, so the shell can hand over.
+            _stageReady.MarkDemoReady();
             _atlas.SetSprites(_sprites);
             _dialogueChannel.SetContent(
                 _GetAsset<TMP_SpriteAsset>(_emojiRequestId),
@@ -285,7 +285,7 @@ namespace Game.Adapters.Bindings
 
             if (resetDialogue)
                 _WriteCommand<ResetDialogueCommand>();
-            _stageReady.Clear();
+            _stageReady.ClearDemo();
             _tweens.KillFades();
             // The dialogue log destroys its own views when it sees the change. That happens later
             // in this same LateRun pass, or in its IEcsDestroy on teardown.

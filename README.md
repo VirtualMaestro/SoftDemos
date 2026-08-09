@@ -1,4 +1,5 @@
 # SoftDemos
+You can play here: https://play.unity.com/en/games/8f70037a-0774-4f9d-b3df-9aa42691463f/softdemos
 
 A Unity 6 WebGL project with three self-contained demos reachable from a shared in-game menu,
 an always-on FPS counter, and a layout that adapts to portrait and landscape on both mobile and

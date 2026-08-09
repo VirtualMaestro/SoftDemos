@@ -158,7 +158,7 @@ namespace Game.Adapters.Bindings
             _scene.Background.sprite = _backgroundSprite;
             // The screen is covered now, so the shell can hand over. Starting waits only for the
             // simulation to take StartFlameCommand, which changes nothing on screen.
-            _stageReady.MarkReady();
+            _stageReady.MarkDemoReady();
             _scene.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
             _WriteCommand<StartFlameCommand>();
@@ -374,7 +374,7 @@ namespace Game.Adapters.Bindings
                 _backgroundRequestId == 0)
                 return;
 
-            _stageReady.Clear();
+            _stageReady.ClearDemo();
 
             if (resetFlame)
                 _WriteCommand<ResetFlameCommand>();

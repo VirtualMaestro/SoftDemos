@@ -135,10 +135,29 @@ namespace Game.Adapters.Tests
 
             var indicator = skin.Spinner.transform.parent.gameObject;
             var backdrop = skin.Background.gameObject;
+            var menu = Object.FindFirstObjectByType<MenuScreen>(FindObjectsInactive.Include);
+            Assert.That(menu, Is.Not.Null, $"'{BootScene}' must contain a MenuScreen.");
             Assert.That(indicator.activeInHierarchy, Is.False,
                 "The loading indicator must be hidden while the menu is idle.");
             Assert.That(backdrop.activeInHierarchy, Is.True,
                 "The menu backdrop must be up behind the menu.");
+
+            // This is the first screen the player sees. The menu panel and its buttons carry
+            // Images that cannot be disabled without losing their raycasts, so before the shell
+            // atlases land they would draw as white boxes. That is seconds on a real host.
+            var shellDeadline = Time.realtimeSinceStartup + TimeoutSeconds;
+            while (entryPoint.StageReady.IsShellReady == false)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(shellDeadline),
+                    "The shell never finished loading its skin.");
+                Assert.That(menu.gameObject.activeInHierarchy, Is.False,
+                    "The menu must stay hidden until the shell skin is applied.");
+                yield return null;
+            }
+
+            yield return null;
+            Assert.That(menu.gameObject.activeInHierarchy, Is.True,
+                "The menu must appear once the shell skin is applied.");
 
             var world = entryPoint.World;
             var openEntity = world.NewEntity();
@@ -160,7 +179,7 @@ namespace Game.Adapters.Tests
             // A landed scene is not a drawable demo. The stage system starts its atlas and
             // background requests on that frame. The indicator must cover that gap too.
             deadline = Time.realtimeSinceStartup + TimeoutSeconds;
-            while (entryPoint.StageReady.IsReady == false)
+            while (entryPoint.StageReady.IsDemoReady == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     "The demo never painted its background.");

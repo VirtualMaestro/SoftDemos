@@ -76,7 +76,8 @@ namespace Game.Bootstrap
             _stageReady = new StageReadyChannel();
 
             var tweenPlayback = new TweenPlaybackSystem(slotLayout, _tweenPlayer);
-            var shellStage = new ShellStageSystem(shellSkin, demos, _assetSource, uiSprites);
+            var shellStage = new ShellStageSystem(
+                shellSkin, demos, _assetSource, uiSprites, _stageReady);
             var aceStage = new AceOfShadowsStageSystem(aceConfig, _viewRegistry, slotLayout,
                 _assetSource, _tweenPlayer, uiSprites, cardChannel, _stageReady);
             var cardBinding = new CardBindingSystem(_viewRegistry, slotLayout, cardChannel);

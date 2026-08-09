@@ -37,6 +37,7 @@ namespace Game.Adapters.Bindings
         private readonly DemoEntry[] _demos;
         private readonly AddressablesAssetService _assets;
         private readonly SharedUiSprites _uiSprites;
+        private readonly StageReadyChannel _stageReady;
         private readonly List<Sprite> _ownedSprites = new();
 
         private ILog _log;
@@ -46,12 +47,13 @@ namespace Game.Adapters.Bindings
         private int _sharedAtlasRequestId;
 
         public ShellStageSystem(ShellSkinView skin, DemoEntry[] demos,
-            AddressablesAssetService assets, SharedUiSprites uiSprites)
+            AddressablesAssetService assets, SharedUiSprites uiSprites, StageReadyChannel stageReady)
         {
             _skin = skin;
             _demos = demos;
             _assets = assets;
             _uiSprites = uiSprites;
+            _stageReady = stageReady;
         }
 
         /// <summary>Sprite copies this system is holding. Zero after teardown, or it leaked.</summary>
@@ -98,6 +100,9 @@ namespace Game.Adapters.Bindings
             {
                 _log.Error("Shell skin content failed to load; the menu stays unskinned.");
                 _ReleaseRequests();
+                // Release to presentation anyway. A plain menu is playable, a hidden one is not.
+                // This is the only path that ends with white boxes on screen.
+                _stageReady.MarkShellReady();
                 _TransitionTo(StageState.Ready);
                 return;
             }
@@ -109,6 +114,8 @@ namespace Game.Adapters.Bindings
             if (_TryApplySkin())
                 _log.Info($"Shell skin applied from {MenuAtlasAddress}, {SharedAtlasAddress} and {BackgroundAddress}.");
 
+            // The menu has its backdrop, panel, buttons and icons. Presentation can show it now.
+            _stageReady.MarkShellReady();
             _TransitionTo(StageState.Ready);
         }
 
