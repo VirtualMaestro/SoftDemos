@@ -16,11 +16,124 @@ MonoBehaviour:
   RemoveEmbeddedDebugSymbols: 1
   MissingSubmoduleErrorHandling: 0
   SubmodulesToStrip:
+  - 2D Rendering Sprite Tiling
   - Advanced Text Generator Support
   - AndroidJNIModule
   - Expression Evaluator
+  - Freetype2 Base
+  - Freetype2 CFF
+  - Freetype2 OpenType Validation
+  - Freetype2 Postscript
+  - Freetype2 SFNT
+  - Freetype2 TrueType
   - GPU Instancing
-  - IMGUI Script Bindings
+  - GPU Resident Drawer Core
+  - Mesh Async Upload
+  - Mesh Blend Shapes
+  - Mesh Combiner
+  - Mesh Compression
+  - Mesh Optimizer
+  - Mono
+  - ParticleSystem Events
+  - ParticleSystem Gradients
+  - System.ComponentModel Extra
+  - System.DateTimeOffset
+  - System.DateTimeParse
+  - System.Numerics.Vector<T>
+  - System.TimeZoneInfo
   - TetGen
+  - Text Editing Utilities
+  - Text Selecting Utilities
+  - Texture Decompression
+  - UI Toolkit TextEditingManipulator
+  - UI Toolkit TextSelectingManipulator
+  - UI Toolkit Base Fields
+  - UI Toolkit BaseVerticalCollectionView
+  - UI Toolkit BoundsField
+  - UI Toolkit BoundsIntField
+  - UI Toolkit Box
+  - UI Toolkit Button
+  - UI Toolkit Columns
+  - UI Toolkit ContextualMenu
+  - UI Toolkit DoubleField
+  - UI Toolkit DropdownMenu
+  - UI Toolkit EnumField
+  - UI Toolkit FloatField
+  - UI Toolkit Foldout
+  - UI Toolkit GroupBox
+  - UI Toolkit Hash128Field
+  - UI Toolkit HelpBox
+  - UI Toolkit Image
+  - UI Toolkit IMGUIContainer
+  - UI Toolkit IntegerField
+  - UI Toolkit Label
+  - UI Toolkit ListView
+  - UI Toolkit LongField
+  - UI Toolkit MinMaxSlider
+  - UI Toolkit MultiColumnController
+  - UI Toolkit MultiColumnListView
+  - UI Toolkit MultiColumnTreeView
+  - UI Toolkit Painter2D
+  - UI Toolkit PopupField
+  - UI Toolkit PopupWindow
+  - UI Toolkit ProgressBar
+  - UI Toolkit RadioButton
+  - UI Toolkit RadioButtonGroup
+  - UI Toolkit RectField
+  - UI Toolkit RectIntField
+  - UI Toolkit RepeatButton
+  - UI Toolkit Scroller
+  - UI Toolkit ScrollView
+  - UI Toolkit Slider
+  - UI Toolkit SliderInt
+  - UI Toolkit Tab
+  - UI Toolkit TabView
+  - UI Toolkit TemplateContainer
+  - UI Toolkit TextElement
+  - UI Toolkit TextField
+  - UI Toolkit TextInputBaseField<T0>
+  - UI Toolkit TextValueField<T0>
+  - UI Toolkit Toggle
+  - UI Toolkit ToggleButtonGroup
+  - UI Toolkit TreeView
+  - UI Toolkit TwoPaneSplitView
+  - UI Toolkit UIDocument
+  - UI Toolkit UIRenderer
+  - UI Toolkit UnsignedIntegerField
+  - UI Toolkit UnsignedLongField
+  - UI Toolkit Vector2Field
+  - UI Toolkit Vector2IntField
+  - UI Toolkit Vector3Field
+  - UI Toolkit Vector3IntField
+  - UI Toolkit Vector4Field
+  - UI Toolkit VectorImage
+  - UI Toolkit VisualElement
+  - UI Toolkit VisualElementExtensions
+  - UI Toolkit VisualElementFocusChangeDirection
+  - UI Toolkit VisualElementFocusRing
+  - UI Toolkit VisualTreeAsset
+  - Unity Collections - FixedList128Bytes
+  - Unity Collections - FixedList32Bytes
+  - Unity Collections - FixedList4096Bytes
+  - Unity Collections - FixedList512Bytes
+  - Unity Collections - FixedList64Bytes
+  - Unity Collections - NativeBitArray
+  - Unity Collections - NativeHashMap
+  - Unity Collections - NativeHashSet
+  - Unity Collections - NativeParallelHashMap
+  - Unity Collections - NativeParallelMultiHashMap
+  - Unity Collections - NativeQueue
+  - Unity Collections - NativeReference
+  - Unity Collections - NativeRingQueue
+  - Unity Collections - NativeStream
+  - Unity Collections - NativeText
+  - Unity Collections - UnsafeAtomicCounter32
+  - Unity Collections - UnsafeBitArray
+  - Unity Collections - UnsafeHashMap
+  - Unity Collections - UnsafeParallelHashMap
+  - Unity Collections - UnsafeParallelMultiHashMap
+  - Unity Collections - UnsafeRingQueue
+  - Unity Collections - UnsafeStream
+  - Unity Collections - UnsafeText
   - Unity In-App Purchasing
-  - WebGPU Support
+  - WebGPU Rendering

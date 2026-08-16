@@ -16,7 +16,7 @@ namespace Client.Simulation.MagicWords
             "win"
         };
 
-        public MagicWordsConfig(float lineIntervalSeconds = 2f)
+        public MagicWordsConfig(float lineIntervalSeconds = 1f)
             : this(DefaultKnownTokens, lineIntervalSeconds)
         {
         }

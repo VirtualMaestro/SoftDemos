@@ -112,3 +112,6 @@ InitTestScene*.unity*
 # Addressables content-update state (content-update workflow is not used)
 /[Aa]ssets/AddressableAssetsData/WebGL/
 /[Aa]ssets/AddressableAssetsData/WebGL.meta
+.codeboarding/*
+.serena/*
+BuildReport*

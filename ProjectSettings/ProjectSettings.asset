@@ -867,7 +867,7 @@ PlayerSettings:
   scriptingBackend:
     Android: 1
   il2cppCompilerConfiguration:
-    WebGL: 2
+    WebGL: 0
   il2cppCodeGeneration:
     WebGL: 1
   il2cppStacktraceInformation: {}
