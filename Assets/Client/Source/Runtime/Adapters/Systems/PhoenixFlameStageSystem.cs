@@ -56,7 +56,7 @@ namespace Client.Adapters.Systems
         private AddressablesAssetService _assets;
         private StageReadyChannel _stageReady;
         private StageState _state;
-        private PhoenixFlameScreen _scene;
+        private PhoenixFlameScreen _flameScreen;
         private Camera _camera;
         private Sprite[] _flameFrames;
         private Sprite _smokeSprite;
@@ -88,7 +88,7 @@ namespace Client.Adapters.Systems
 
         public void LateRun()
         {
-            if (_scene != null && _state != StageState.Closing &&
+            if (_flameScreen != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  PhoenixFlameScreen.Current == null))
                 _TransitionTo(StageState.Closing);
@@ -120,12 +120,12 @@ namespace Client.Adapters.Systems
             var current = PhoenixFlameScreen.Current;
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (current == null || current == _scene || screen.Current != ScreenId.Demo ||
+            if (current == null || current == _flameScreen || screen.Current != ScreenId.Demo ||
                 screen.ActiveDemoIndex != PhoenixFlameDemoIndex)
                 return;
 
-            _scene = current;
-            _scene.OnAdvancePressed += _OnRequestAdvance;
+            _flameScreen = current;
+            _flameScreen.OnAdvancePressed += _OnRequestAdvance;
             // Disable the button for the whole load. A tap must not queue an advance.
             _ApplyInteractable(false);
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
@@ -154,11 +154,11 @@ namespace Client.Adapters.Systems
             }
 
             _loggedLoadFailure = false;
-            _scene.Background.sprite = _backgroundSprite;
+            _flameScreen.Background.sprite = _backgroundSprite;
             // The screen is covered now, so the shell can hand over. Starting waits only for the
             // simulation to take StartFlameCommand, which changes nothing on screen.
             _stageReady.MarkDemoReady();
-            _scene.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
+            _flameScreen.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
             _WriteCommand<StartFlameCommand>();
             _log.Info("Phoenix Flame content loaded.");
@@ -186,7 +186,7 @@ namespace Client.Adapters.Systems
             _shownPhase = flame.CurrentPhase;
             // Use Play, not a trigger. The start phase must snap, and a trigger would blend.
             _ResetPhaseTriggers();
-            _scene.FlameAnimator.Play(PhaseHashes[(int)flame.CurrentPhase], 0, 0f);
+            _flameScreen.FlameAnimator.Play(PhaseHashes[(int)flame.CurrentPhase], 0, 0f);
 
             if (Mathf.Approximately(flame.TransitionDurationSeconds, AuthoredTransitionSeconds) == false)
                 _log.Error($"The flame transition is {AuthoredTransitionSeconds}s in " +
@@ -225,17 +225,17 @@ namespace Client.Adapters.Systems
             _shownPhase = flame.NextPhase;
             // Triggers latch. Clear the other two before you set the one you want.
             _ResetPhaseTriggers();
-            _scene.FlameAnimator.SetTrigger(PhaseTriggers[(int)flame.NextPhase]);
+            _flameScreen.FlameAnimator.SetTrigger(PhaseTriggers[(int)flame.NextPhase]);
         }
 
         private void _ResetPhaseTriggers()
         {
             // `?.` skips Unity's null overload. Teardown runs while the scene closes.
-            if (_scene == null || _scene.FlameAnimator == null)
+            if (_flameScreen == null || _flameScreen.FlameAnimator == null)
                 return;
 
             foreach (var trigger in PhaseTriggers)
-                _scene.FlameAnimator.ResetTrigger(trigger);
+                _flameScreen.FlameAnimator.ResetTrigger(trigger);
         }
 
         private void _ApplyInteractable(bool interactable)
@@ -244,7 +244,7 @@ namespace Client.Adapters.Systems
                 return;
 
             _shownInteractable = interactable;
-            _scene.AdvanceButton.interactable = interactable;
+            _flameScreen.AdvanceButton.interactable = interactable;
         }
 
         private void _ApplyLabel(FlamePhase phase)
@@ -253,7 +253,7 @@ namespace Client.Adapters.Systems
                 return;
 
             _shownLabelPhase = phase;
-            _scene.PhaseLabel.text = _GetPhaseLabel(phase);
+            _flameScreen.PhaseLabel.text = _GetPhaseLabel(phase);
         }
 
         private static string _GetPhaseLabel(FlamePhase phase)
@@ -272,8 +272,8 @@ namespace Client.Adapters.Systems
         {
             _LogLoadFailureOnce(message);
 
-            if (_scene != null)
-                _scene.PhaseLabel.text = FailedLabel;
+            if (_flameScreen != null)
+                _flameScreen.PhaseLabel.text = FailedLabel;
 
             _Teardown(false);
         }
@@ -360,8 +360,8 @@ namespace Client.Adapters.Systems
                 _log.Error("No MainCamera found for Phoenix Flame layout; using orthographic size 5.");
             }
 
-            if (_scene != null)
-                BackgroundFitter.CoverFit(_scene.Background.transform, _backgroundSprite, _camera,
+            if (_flameScreen != null)
+                BackgroundFitter.CoverFit(_flameScreen.Background.transform, _backgroundSprite, _camera,
                     orthographicSize, _screenWidth, _screenHeight);
             var mode = _screenWidth < _screenHeight ? "portrait" : "landscape";
             _log.Info($"Phoenix Flame layout recalculated for {_screenWidth}×{_screenHeight} ({mode}).");
@@ -369,7 +369,7 @@ namespace Client.Adapters.Systems
 
         private void _Teardown(bool resetFlame)
         {
-            if (_state == StageState.Idle && _scene == null && _atlasRequestId == 0 &&
+            if (_state == StageState.Idle && _flameScreen == null && _atlasRequestId == 0 &&
                 _backgroundRequestId == 0)
                 return;
 
@@ -382,18 +382,18 @@ namespace Client.Adapters.Systems
             // Clear the triggers too. The Animator survives a reopen and a latched trigger fires again.
             _ResetPhaseTriggers();
 
-            if (_scene != null)
+            if (_flameScreen != null)
             {
-                _scene.FlameColor.ClearSprites();
-                _scene.OnAdvancePressed -= _OnRequestAdvance;
-                _scene.Background.sprite = null;
+                _flameScreen.FlameColor.ClearSprites();
+                _flameScreen.OnAdvancePressed -= _OnRequestAdvance;
+                _flameScreen.Background.sprite = null;
             }
 
             _DestroySpriteCopies();
             _DestroyBackgroundCopy();
             _ReleaseRequests();
 
-            _scene = null;
+            _flameScreen = null;
             _camera = null;
             _shownPhase = FlamePhase.Orange;
             _shownLabelPhase = (FlamePhase)(-1);

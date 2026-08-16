@@ -85,10 +85,11 @@ Assets/Client/
 
 ## Building
 
-`File > Build And Run` with the WebGL target. There are no build scripts — every optimization
-lives in `ProjectSettings/`, and neither build profile in `Assets/Settings/Build Profiles/`
-overrides player settings, so the output is the same whichever profile is active. Decompression
-fallback is on, so the compressed payload ships as `.unityweb` and works on a plain static host.
+`File > Build And Run` with the WebGL target, from the **Web - Release** profile in
+`Assets/Settings/Build Profiles/`. There are no build scripts — both profiles carry their own
+player-settings override, so the active profile is what the output describes: Release builds
+IL2CPP `Master`, Development builds `Debug`. Decompression fallback is on, so the compressed
+payload ships as `.unityweb` and works on a plain static host.
 
 `BuildOptimizationGuardTests` locks the size-critical settings in place — if a build suddenly
 grows, run the EditMode suite first; it usually names the setting that was reverted.

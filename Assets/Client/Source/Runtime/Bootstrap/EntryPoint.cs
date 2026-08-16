@@ -28,20 +28,20 @@ namespace Client.Bootstrap
         private EcsPipeline _pipeline;
         private ILog _log;
         private SceneLoaderService _sceneService;
-        private AddressablesAssetService _assetSource;
-        private HttpDialogueService _dialogueSource;
-        private WebImageLoaderService _webImages;
-        private AtlasImageLoaderService _atlasImages;
-        private AvatarImageRouterService _avatarImages;
-        private ViewRegistryService _viewRegistry;
-        private TweenPlayerService _tweenPlayer;
+        private AddressablesAssetService _assetSourceService;
+        private HttpDialogueService _dialogueSourceService;
+        private WebImageLoaderService _webImagesService;
+        private AtlasImageLoaderService _atlasImagesService;
+        private AvatarImageRouterService _avatarImagesService;
+        private ViewRegistryService _viewRegistryService;
+        private TweenPlayerService _tweenPlayerService;
         private StageReadyChannel _stageReady;
 
         public EcsWorld World => _world;
-        public ViewRegistryService Views => _viewRegistry;
-        public AddressablesAssetService Assets => _assetSource;
-        public AvatarImageRouterService Avatars => _avatarImages;
-        public TweenPlayerService Tweens => _tweenPlayer;
+        public ViewRegistryService Views => _viewRegistryService;
+        public AddressablesAssetService Assets => _assetSourceService;
+        public AvatarImageRouterService Avatars => _avatarImagesService;
+        public TweenPlayerService Tweens => _tweenPlayerService;
         public StageReadyChannel StageReady => _stageReady;
 
         private void Start()
@@ -52,27 +52,23 @@ namespace Client.Bootstrap
                 return;
 
             _sceneService = new SceneLoaderService(new UnityLogService("Scenes"));
-            _assetSource = new AddressablesAssetService(new UnityLogService("Assets"));
-            _dialogueSource = new HttpDialogueService(new UnityLogService("Dialogue"));
-            _webImages = new WebImageLoaderService(new UnityLogService("Avatars.Remote"));
-            _atlasImages = new AtlasImageLoaderService(new UnityLogService("Avatars.Local"));
-            _avatarImages = new AvatarImageRouterService(
-                _atlasImages, _webImages, new UnityLogService("Avatars"));
-
-            _viewRegistry = new ViewRegistryService();
-            var slotLayout = new StackSlotLayoutService();
-            var aceConfig = new AceOfShadowsConfig();
+            _assetSourceService = new AddressablesAssetService(new UnityLogService("Assets"));
+            _dialogueSourceService = new HttpDialogueService(new UnityLogService("Dialogue"));
+            _webImagesService = new WebImageLoaderService(new UnityLogService("Avatars.Remote"));
+            _atlasImagesService = new AtlasImageLoaderService(new UnityLogService("Avatars.Local"));
+            _avatarImagesService = new AvatarImageRouterService(
+                _atlasImagesService, _webImagesService, new UnityLogService("Avatars"));
+            _viewRegistryService = new ViewRegistryService();
 
             // Make the world before the collaborators. TweenPlayerService clears move state from its
-            // pools when it kills a tween.
+            // pools when it kills tween.
             _world = new EcsWorld();
 
             // Shared state and behaviour. Systems reach through these instead of holding each other.
-            _tweenPlayer = new TweenPlayerService(_world, _viewRegistry, new UnityLogService("Tweens"));
-            var uiSprites = new SharedUiSprites();
-            var cardChannel = new CardViewChannel();
-            var dialogueChannel = new DialogueLogChannel();
+            _tweenPlayerService = new TweenPlayerService(_world, _viewRegistryService, new UnityLogService("Tweens"));
             _stageReady = new StageReadyChannel();
+
+            var aceConfig = new AceOfShadowsConfig();
 
             // Every shared collaborator is injected; a system's constructor carries only what is
             // unique to that instance. See CLAUDE.md, "Composition root".
@@ -82,7 +78,7 @@ namespace Client.Bootstrap
                 .Inject<IRandomService>(new UnityRandomService())
                 .Inject<ILog>(new UnityLogService("Simulation"))
                 .Inject<ISceneService>(_sceneService)
-                .Inject<IDialogueService>(_dialogueSource)
+                .Inject<IDialogueService>(_dialogueSourceService)
 
                 // One instance behind two types: the port for the simulation, the adapter for the
                 // stage systems that need engine objects. AddNode declares the second node; a
@@ -94,17 +90,17 @@ namespace Client.Bootstrap
                 // also land on the IImageLoadService node and displace the router. The atlas is
                 // reached through AvatarImageRouterService instead.
                 .Injections.AddNode<IAssetService>()
-                .Inject(_assetSource)
+                .Inject(_assetSourceService)
                 .Injections.AddNode<IImageLoadService>()
-                .Inject(_avatarImages)
+                .Inject(_avatarImagesService)
 
-                .Inject(_viewRegistry)
-                .Inject(_tweenPlayer)
-                .Inject(slotLayout)
-                .Inject(uiSprites)
+                .Inject(_viewRegistryService)
+                .Inject(_tweenPlayerService)
+                .Inject(new StackSlotLayoutService())
+                .Inject(new SharedUiSprites())
                 .Inject(_stageReady)
-                .Inject(cardChannel)
-                .Inject(dialogueChannel)
+                .Inject(new CardViewChannel())
+                .Inject(new DialogueLogChannel())
 
                 // The simulation halves are modules because the test fixtures build a headless
                 // pipeline from the same ones. Presentation has no such reuse, so it is a plain
@@ -245,19 +241,19 @@ namespace Client.Bootstrap
             _sceneService?.Dispose();
             _sceneService = null;
 
-            _assetSource?.Dispose();
-            _assetSource = null;
+            _assetSourceService?.Dispose();
+            _assetSourceService = null;
 
-            _dialogueSource?.Dispose();
-            _dialogueSource = null;
+            _dialogueSourceService?.Dispose();
+            _dialogueSourceService = null;
 
-            _avatarImages?.Dispose();
-            _avatarImages = null;
-            _atlasImages = null;
-            _webImages = null;
+            _avatarImagesService?.Dispose();
+            _avatarImagesService = null;
+            _atlasImagesService = null;
+            _webImagesService = null;
 
-            _viewRegistry = null;
-            _tweenPlayer = null;
+            _viewRegistryService = null;
+            _tweenPlayerService = null;
             _stageReady = null;
 
             _world?.Destroy();

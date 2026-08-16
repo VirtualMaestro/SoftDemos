@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -10,6 +11,11 @@ namespace Client.Simulation.Tests
     /// <remarks>
     /// Read every value through <see cref="SerializedObject"/>, never a typed reference.
     /// This asmdef must not reference URP or TextMesh Pro.
+    /// <para>
+    /// The build profiles override player settings on purpose, so a <c>PlayerSettings</c> read
+    /// reports the active profile, not the one that ships. Everything a profile owns is read from
+    /// the shipping profile instead — see <see cref="_ShippingValue"/>.
+    /// </para>
     /// </remarks>
     public sealed class BuildOptimizationGuardTests
     {
@@ -24,68 +30,39 @@ namespace Client.Simulation.Tests
         private const string SubsetFontPath =
             "Assets/Client/Content/Shared/Fonts/LiberationSans-Subset SDF.asset";
 
-        private const string BuildProfileFolder = "Assets/Settings/Build Profiles";
+        /// <summary>The profile the WebGL build ships from. Its overrides are the ones that count.</summary>
+        private const string ShippingProfilePath =
+            "Assets/Settings/Build Profiles/Web - Release.asset";
+
         private const string LinkXmlPath = "Assets/Client/Source/Runtime/link.xml";
         private const string GraphicsSettingsPath = "ProjectSettings/GraphicsSettings.asset";
         private const string QualitySettingsPath = "ProjectSettings/QualitySettings.asset";
         private const string AudioManagerPath = "ProjectSettings/AudioManager.asset";
 
-        /// <summary>Runs first. <c>PlayerSettings</c> reads go through the active build profile.</summary>
-        /// <remarks>A profile with overrides makes every other test here describe the profile, not the project.</remarks>
-        [Test]
-        public void BuildProfiles_DoNotOverridePlayerSettings()
-        {
-            var profiles = AssetDatabase.FindAssets(string.Empty, new[] { BuildProfileFolder })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Distinct()
-                .Where(path => path.EndsWith(".asset"))
-                .ToArray();
-
-            Assert.That(profiles, Is.Not.Empty,
-                $"No build profile found under '{BuildProfileFolder}'.");
-
-            foreach (var path in profiles)
-            {
-                var overrides = _Property(path, "m_PlayerSettingsYaml.m_Settings");
-
-                Assert.That(overrides, Is.Not.Null,
-                    $"'{path}' has no m_PlayerSettingsYaml — is it still a BuildProfile?");
-                Assert.That(overrides.arraySize, Is.Zero,
-                    $"'{path}' overrides player settings ({overrides.arraySize} lines). Remove the " +
-                    "override so the global settings stay the single source of truth.");
-            }
-        }
-
-        /// <summary><c>Release</c> is intentional. <c>Master</c> adds link-time optimization and a much slower build.</summary>
+        /// <summary><c>Master</c> is intentional. It costs build time and gives the smallest player.</summary>
         [Test]
         public void WebGlPlayerSettings_StayOptimised()
         {
-            var web = NamedBuildTarget.WebGL;
-
-            Assert.That(PlayerSettings.GetManagedStrippingLevel(web),
-                Is.EqualTo(ManagedStrippingLevel.High));
-            Assert.That(PlayerSettings.GetIl2CppCompilerConfiguration(web),
-                Is.EqualTo(Il2CppCompilerConfiguration.Release));
-            Assert.That(PlayerSettings.GetIl2CppCodeGeneration(web),
-                Is.EqualTo(Il2CppCodeGeneration.OptimizeSize));
-            Assert.That(PlayerSettings.stripEngineCode, Is.True);
+            _AssertShipping("managedStrippingLevel", (int)ManagedStrippingLevel.High);
+            _AssertShipping("il2cppCompilerConfiguration", (int)Il2CppCompilerConfiguration.Master);
+            _AssertShipping("il2cppCodeGeneration", (int)Il2CppCodeGeneration.OptimizeSize);
+            _AssertShipping("stripEngineCode", 1);
         }
 
         /// <summary>GitHub Pages does not send <c>Content-Encoding: br</c>. Brotli needs the fallback.</summary>
         [Test]
         public void WebGlCompression_IsBrotliWithFallback()
         {
-            Assert.That(PlayerSettings.WebGL.compressionFormat,
-                Is.EqualTo(WebGLCompressionFormat.Brotli));
-            Assert.That(PlayerSettings.WebGL.decompressionFallback, Is.True);
+            _AssertShipping("webGLCompressionFormat", (int)WebGLCompressionFormat.Brotli);
+            _AssertShipping("webGLDecompressionFallback", 1);
         }
 
         /// <summary>The splash screen adds 2.67 MB of built-in textures.</summary>
         [Test]
         public void SplashScreen_IsDisabled()
         {
-            Assert.That(PlayerSettings.SplashScreen.show, Is.False);
-            Assert.That(PlayerSettings.SplashScreen.showUnityLogo, Is.False);
+            _AssertShipping("m_ShowUnitySplashScreen", 0);
+            _AssertShipping("m_ShowUnitySplashLogo", 0);
         }
 
         [Test]
@@ -198,6 +175,57 @@ namespace Client.Simulation.Tests
         {
             Assert.That(File.Exists(LinkXmlPath), Is.True, $"'{LinkXmlPath}' is missing.");
             Assert.That(File.ReadAllText(LinkXmlPath), Does.Contain("Client.Simulation"));
+        }
+
+        /// <summary>Asserts one value of the shipping profile's player-settings override.</summary>
+        private static void _AssertShipping(string key, int expected)
+        {
+            Assert.That(_ShippingValue(key), Is.EqualTo(expected.ToString()),
+                $"'{key}' drifted in '{ShippingProfilePath}'.");
+        }
+
+        /// <summary>Reads one player-settings value out of the shipping build profile.</summary>
+        /// <remarks>
+        /// A profile stores its override as raw YAML lines, each one prefixed with <c>'| '</c>.
+        /// A plain setting sits on its own line; a per-platform setting is a map whose WebGL entry
+        /// sits one indent deeper. Returns the raw text, so the caller compares against the
+        /// serialized number rather than a typed enum the profile never holds.
+        /// </remarks>
+        private static string _ShippingValue(string key)
+        {
+            var overrides = _Property(ShippingProfilePath, "m_PlayerSettingsYaml.m_Settings");
+
+            Assert.That(overrides.arraySize, Is.GreaterThan(0),
+                $"'{ShippingProfilePath}' no longer overrides player settings. Either restore the " +
+                "override or move these guards back onto the PlayerSettings API.");
+
+            var lines = Enumerable.Range(0, overrides.arraySize)
+                .Select(i => overrides.GetArrayElementAtIndex(i).FindPropertyRelative("line")
+                    .stringValue)
+                .Select(line => line.StartsWith("| ", StringComparison.Ordinal)
+                    ? line.Substring(2)
+                    : line)
+                .ToArray();
+
+            var head = Array.FindIndex(lines,
+                line => line.StartsWith($"  {key}:", StringComparison.Ordinal));
+
+            Assert.That(head, Is.GreaterThanOrEqualTo(0),
+                $"'{ShippingProfilePath}' has no '{key}'.");
+
+            var inline = lines[head].Substring(key.Length + 3).Trim();
+
+            if (inline.Length > 0)
+                return inline;
+
+            var webGl = lines.Skip(head + 1)
+                .TakeWhile(line => line.StartsWith("    ", StringComparison.Ordinal))
+                .FirstOrDefault(line => line.TrimStart().StartsWith("WebGL:", StringComparison.Ordinal));
+
+            Assert.That(webGl, Is.Not.Null,
+                $"'{key}' has no WebGL entry in '{ShippingProfilePath}'.");
+
+            return webGl.Trim().Substring("WebGL:".Length).Trim();
         }
 
         /// <summary>Reads one serialized property from an asset path.</summary>

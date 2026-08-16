@@ -55,10 +55,6 @@ namespace Client.Adapters.Systems
             _demos = demos;
         }
 
-        /// <summary>Sprite copies this system is holding. Zero after teardown, or it leaked.</summary>
-        public int HeldSpriteCount => _ownedSprites.Count;
-        public bool IsReady => _state == StageState.Ready;
-
         public void LateRun()
         {
             switch (_state)
