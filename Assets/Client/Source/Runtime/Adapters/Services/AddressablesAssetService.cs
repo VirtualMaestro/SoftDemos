@@ -110,10 +110,9 @@ namespace Client.Adapters.Services
 
         public void Release(int requestId)
         {
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (!_requests.Remove(requestId, out var request))
                 return;
 
-            _requests.Remove(requestId);
             _assets.Remove(request.HandleId);
             _ReleaseHandleQuietly(request);
 

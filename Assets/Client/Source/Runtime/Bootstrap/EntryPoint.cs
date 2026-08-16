@@ -89,11 +89,8 @@ namespace Client.Bootstrap
                 // node its runtime type is assignable to, so injecting _atlasImages here would
                 // also land on the IImageLoadService node and displace the router. The atlas is
                 // reached through AvatarImageRouterService instead.
-                .Injections.AddNode<IAssetService>()
-                .Inject(_assetSourceService)
-                .Injections.AddNode<IImageLoadService>()
-                .Inject(_avatarImagesService)
-
+                .Injections.AddNode<IAssetService>().Inject(_assetSourceService)
+                .Injections.AddNode<IImageLoadService>().Inject(_avatarImagesService)
                 .Inject(_viewRegistryService)
                 .Inject(_tweenPlayerService)
                 .Inject(new StackSlotLayoutService())
