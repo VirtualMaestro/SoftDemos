@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -12,8 +11,6 @@ namespace Client.Simulation.MagicWords
         IEcsInject<IImageLoadService>,
         IEcsInject<ILog>
     {
-        private readonly List<int> _entitiesToDelete = new();
-
         private EcsWorld _world;
         private IDialogueService _dialogueSource;
         private IImageLoadService _imageSource;
@@ -24,19 +21,17 @@ namespace Client.Simulation.MagicWords
             var hasResetCommand = false;
             foreach (var entityId in _world.Where(out ResetCommandAspect _))
             {
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
                 hasResetCommand = true;
             }
 
             if (hasResetCommand == false)
                 return;
 
-            _DeleteCollectedEntities();
             var hadDialogueRequest = _ReleaseDialogueRequest();
             var openRequestCount = _ReleaseOpenRequests();
-            var speakerCount = _CollectSpeakers();
-            var lineCount = _CollectLines();
-            _DeleteCollectedEntities();
+            var speakerCount = _DeleteSpeakers();
+            var lineCount = _DeleteLines();
 
             ref var playback = ref _world.Get<DialoguePlaybackComp>();
             var revealedLineCount = playback.VisibleLineCount;
@@ -98,36 +93,28 @@ namespace Client.Simulation.MagicWords
             return releasedCount;
         }
 
-        private int _CollectSpeakers()
+        private int _DeleteSpeakers()
         {
             var count = 0;
             foreach (var entityId in _world.Where(out SpeakerAspect _))
             {
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
                 count++;
             }
 
             return count;
         }
 
-        private int _CollectLines()
+        private int _DeleteLines()
         {
             var count = 0;
             foreach (var entityId in _world.Where(out LineAspect _))
             {
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
                 count++;
             }
 
             return count;
-        }
-
-        private void _DeleteCollectedEntities()
-        {
-            foreach (var entityId in _entitiesToDelete)
-                _world.DelEntity(entityId);
-
-            _entitiesToDelete.Clear();
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

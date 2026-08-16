@@ -38,7 +38,7 @@ namespace Client.Adapters.Systems
         private CardViewChannel _channel;
         private StageReadyChannel _stageReady;
         private StageState _state;
-        private AceOfShadowsScreen _scene;
+        private AceOfShadowsScreen _aosScreen;
         private Camera _camera;
         private Sprite _cardBack;
         private Sprite _backgroundSprite;
@@ -59,7 +59,7 @@ namespace Client.Adapters.Systems
 
         public void LateRun()
         {
-            if (_scene != null && _state != StageState.Closing &&
+            if (_aosScreen != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  AceOfShadowsScreen.Current == null))
                 _TransitionTo(StageState.Closing);
@@ -91,14 +91,16 @@ namespace Client.Adapters.Systems
             var current = AceOfShadowsScreen.Current;
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (current == null || current == _scene || screen.Current != ScreenId.Demo ||
+            if (current == null || current == _aosScreen || screen.Current != ScreenId.Demo ||
                 screen.ActiveDemoIndex != 0)
                 return;
 
-            _scene = current;
-            _scene.OnSpeedButtonPressed += _OnRequestSpeedChange;
+            _aosScreen = current;
+            _aosScreen.OnSpeedButtonPressed += _OnRequestSpeedChange;
+
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
             _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
+
             _TransitionTo(StageState.Loading);
         }
 
@@ -127,7 +129,7 @@ namespace Client.Adapters.Systems
 
                 _contentReady = true;
                 _channel.SetSprites(_cardBack, _faces);
-                _scene.Background.sprite = _backgroundSprite;
+                _aosScreen.Background.sprite = _backgroundSprite;
                 // The screen is covered now, so the shell can hand over. The cards still arrive
                 // over the next few frames, on top of the background.
                 _stageReady.MarkDemoReady();
@@ -141,7 +143,7 @@ namespace Client.Adapters.Systems
             for (var index = 0; index < spawnCount; index++)
             {
                 var poolIndex = _channel.Views.Count;
-                var cardView = UnityEngine.Object.Instantiate(_scene.CardPrefab, _scene.CardRoot);
+                var cardView = UnityEngine.Object.Instantiate(_aosScreen.CardPrefab, _aosScreen.CardRoot);
                 cardView.name = $"Card {poolIndex:000}";
                 _channel.Add(cardView, _views.Register(cardView.transform, cardView));
             }
@@ -163,7 +165,7 @@ namespace Client.Adapters.Systems
         /// </remarks>
         private void _SkinSpeedButton()
         {
-            var image = _scene.SpeedButtonImage;
+            var image = _aosScreen.SpeedButtonImage;
 
             if (image == null || _uiSprites.Button == null)
                 return;
@@ -280,8 +282,8 @@ namespace Client.Adapters.Systems
 
             _layout.Recalculate(_screenWidth, _screenHeight, orthographicSize);
 
-            if (_scene != null)
-                BackgroundFitter.CoverFit(_scene.Background.transform, _backgroundSprite, _camera,
+            if (_aosScreen != null)
+                BackgroundFitter.CoverFit(_aosScreen.Background.transform, _backgroundSprite, _camera,
                     orthographicSize, _screenWidth, _screenHeight);
             var mode = _screenWidth < _screenHeight ? "portrait" : "landscape";
             _log.Info($"Ace of Shadows layout recalculated for {_screenWidth}×{_screenHeight} ({mode}).");
@@ -289,7 +291,7 @@ namespace Client.Adapters.Systems
 
         private void _Teardown(bool resetDeck)
         {
-            if (_state == StageState.Idle && _scene == null && _atlasRequestId == 0 &&
+            if (_state == StageState.Idle && _aosScreen == null && _atlasRequestId == 0 &&
                 _backgroundRequestId == 0 && _channel.Views.Count == 0)
                 return;
 
@@ -310,11 +312,11 @@ namespace Client.Adapters.Systems
             _DestroySpriteCopies();
             _DestroyBackgroundCopy();
 
-            if (_scene != null)
+            if (_aosScreen != null)
             {
-                _scene.OnSpeedButtonPressed -= _OnRequestSpeedChange;
-                _scene.Background.sprite = null;
-                var speedButtonImage = _scene.SpeedButtonImage;
+                _aosScreen.OnSpeedButtonPressed -= _OnRequestSpeedChange;
+                _aosScreen.Background.sprite = null;
+                var speedButtonImage = _aosScreen.SpeedButtonImage;
 
                 if (speedButtonImage != null)
                     speedButtonImage.sprite = null;
@@ -322,7 +324,7 @@ namespace Client.Adapters.Systems
 
             _ReleaseRequests();
 
-            _scene = null;
+            _aosScreen = null;
             _camera = null;
             _backgroundSprite = null;
             _contentReady = false;

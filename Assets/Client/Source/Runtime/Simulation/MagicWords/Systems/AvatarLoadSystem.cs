@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -10,8 +9,6 @@ namespace Client.Simulation.MagicWords
         IEcsInject<IImageLoadService>,
         IEcsInject<ILog>
     {
-        private readonly List<int> _commandsToDelete = new();
-
         private EcsWorld _world;
         private IImageLoadService _imageSource;
         private ILog _log;
@@ -24,13 +21,9 @@ namespace Client.Simulation.MagicWords
             var reload = false;
             foreach (var entityId in _world.Where(out ReloadCommandAspect _))
             {
-                _commandsToDelete.Add(entityId);
+                _reloads.Del(entityId);
                 reload = true;
             }
-
-            foreach (var entityId in _commandsToDelete)
-                _reloads.Del(entityId);
-            _commandsToDelete.Clear();
 
             if (reload)
             {
@@ -65,12 +58,8 @@ namespace Client.Simulation.MagicWords
                     load.State = AvatarLoadState.Loading;
                 }
 
-                _commandsToDelete.Add(entityId);
-            }
-
-            foreach (var entityId in _commandsToDelete)
                 _requests.Del(entityId);
-            _commandsToDelete.Clear();
+            }
 
             foreach (var entityId in _world.Where(out LoadingAspect aspect))
             {

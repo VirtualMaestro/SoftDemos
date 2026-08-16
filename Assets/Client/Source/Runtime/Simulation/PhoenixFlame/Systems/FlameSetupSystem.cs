@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -7,7 +6,6 @@ namespace Client.Simulation.PhoenixFlame
     public sealed class FlameSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private readonly PhoenixFlameConfig _config;
-        private readonly List<int> _entitiesToDelete = new();
 
         private EcsWorld _world;
         private ILog _log;
@@ -31,9 +29,8 @@ namespace Client.Simulation.PhoenixFlame
                 if (state.IsActive)
                     _Reset(ref state);
 
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
             }
-            _DeleteCollectedEntities();
 
             foreach (var entityId in _world.Where(out StartCommandAspect _))
             {
@@ -44,9 +41,8 @@ namespace Client.Simulation.PhoenixFlame
                 }
 
                 _Start(ref state);
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
             }
-            _DeleteCollectedEntities();
         }
 
         private void _Start(ref FlameStateComp state)
@@ -68,14 +64,6 @@ namespace Client.Simulation.PhoenixFlame
             state = default;
 
             _log.Info($"Flame reset from {previousPhase} after {phaseChangeCount} phase change(s).");
-        }
-
-        private void _DeleteCollectedEntities()
-        {
-            foreach (var entityId in _entitiesToDelete)
-                _world.DelEntity(entityId);
-
-            _entitiesToDelete.Clear();
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

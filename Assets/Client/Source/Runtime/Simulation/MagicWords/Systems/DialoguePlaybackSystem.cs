@@ -11,7 +11,6 @@ namespace Client.Simulation.MagicWords
         IEcsInject<ILog>
     {
         private readonly MagicWordsConfig _config;
-        private readonly List<int> _commandsToDelete = new();
         private readonly List<int> _pendingLines = new();
 
         private EcsWorld _world;
@@ -84,13 +83,13 @@ namespace Client.Simulation.MagicWords
 
         private bool _DrainSkipCommands()
         {
+            var skip = false;
             foreach (var entityId in _world.Where(out SkipAspect _))
-                _commandsToDelete.Add(entityId);
-
-            var skip = _commandsToDelete.Count > 0;
-            foreach (var entityId in _commandsToDelete)
+            {
                 _skipCommands.Del(entityId);
-            _commandsToDelete.Clear();
+                skip = true;
+            }
+
             return skip;
         }
 

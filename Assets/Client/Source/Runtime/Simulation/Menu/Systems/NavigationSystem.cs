@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -8,7 +7,6 @@ namespace Client.Simulation.Menu
         IEcsInject<ISceneService>, IEcsInject<ILog>
     {
         private readonly DemoCatalog _catalog;
-        private readonly List<int> _consumedCommands = new();
 
         private EcsWorld _world;
         private ISceneService _scenes;
@@ -24,11 +22,7 @@ namespace Client.Simulation.Menu
             ref var state = ref _world.Get<ScreenStateComp>();
 
             _ConsumeOpenCommands(ref state);
-            _DeleteConsumedCommands();
-
             _ConsumeCloseCommands(ref state);
-            _DeleteConsumedCommands();
-
             _PollPendingOperation(ref state);
         }
 
@@ -37,11 +31,11 @@ namespace Client.Simulation.Menu
             foreach (var entityId in _world.Where(out OpenCommandAspect aspect))
             {
                 ref readonly var command = ref aspect.Commands.Read(entityId);
+                _world.DelEntity(entityId);
 
                 if (state.Current != ScreenId.Menu)
                 {
                     _log.Warn($"OpenDemoCommand({command.DemoIndex}) ignored in {state.Current}.");
-                    _consumedCommands.Add(entityId);
                     continue;
                 }
 
@@ -49,7 +43,6 @@ namespace Client.Simulation.Menu
                 {
                     _log.Error($"OpenDemoCommand index {command.DemoIndex} is outside " +
                         $"the demo catalog range [0, {_catalog.Count}).");
-                    _consumedCommands.Add(entityId);
                     continue;
                 }
 
@@ -59,8 +52,6 @@ namespace Client.Simulation.Menu
                 state.PendingRequestId = _scenes.BeginLoad(address);
 
                 _Transition(ref state, ScreenId.Loading, address);
-
-                _consumedCommands.Add(entityId);
             }
         }
 
@@ -68,17 +59,17 @@ namespace Client.Simulation.Menu
         {
             foreach (var entityId in _world.Where(out CloseCommandAspect _))
             {
+                _world.DelEntity(entityId);
+
                 if (state.Current != ScreenId.Demo)
                 {
                     _log.Warn($"CloseDemoCommand ignored in {state.Current}.");
-                    _consumedCommands.Add(entityId);
                     continue;
                 }
 
                 var address = _catalog[state.ActiveDemoIndex];
                 state.PendingRequestId = _scenes.BeginUnload(address);
                 _Transition(ref state, ScreenId.Unloading, address);
-                _consumedCommands.Add(entityId);
             }
         }
 
@@ -134,14 +125,6 @@ namespace Client.Simulation.Menu
 
             _log.Info($"Navigation {previous} -> {next}; demo={state.ActiveDemoIndex}, " +
                 $"address='{address}', request=#{requestId}.");
-        }
-
-        private void _DeleteConsumedCommands()
-        {
-            foreach (var entityId in _consumedCommands)
-                _world.DelEntity(entityId);
-
-            _consumedCommands.Clear();
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

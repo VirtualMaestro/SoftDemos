@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -7,7 +6,6 @@ namespace Client.Simulation.AceOfShadows
     public sealed class DeckSpeedSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private readonly AceOfShadowsConfig _config;
-        private readonly List<int> _entitiesToDelete = new();
 
         private EcsWorld _world;
         private ILog _log;
@@ -32,13 +30,8 @@ namespace Client.Simulation.AceOfShadows
                 else
                     _Apply(ref state, requestedMultiplier);
 
-                _entitiesToDelete.Add(entityId);
-            }
-
-            foreach (var entityId in _entitiesToDelete)
                 _world.DelEntity(entityId);
-
-            _entitiesToDelete.Clear();
+            }
         }
 
         private void _Apply(ref DeckStateComp state, float requestedMultiplier)

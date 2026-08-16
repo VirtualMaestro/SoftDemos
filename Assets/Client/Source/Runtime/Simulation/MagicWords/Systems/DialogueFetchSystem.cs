@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -10,8 +9,6 @@ namespace Client.Simulation.MagicWords
         IEcsInject<IDialogueService>,
         IEcsInject<ILog>
     {
-        private readonly List<int> _entitiesToDelete = new();
-
         private EcsWorld _world;
         private IDialogueService _dialogueSource;
         private ILog _log;
@@ -34,9 +31,8 @@ namespace Client.Simulation.MagicWords
                     _log.Info("Dialogue fetch started.");
                 }
 
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
             }
-            _DeleteCollectedEntities();
 
             if (state.State != DialogueLoadState.Loading || state.RequestId == 0)
                 return;
@@ -69,14 +65,6 @@ namespace Client.Simulation.MagicWords
             state.RequestId = 0;
             _dialogueSource.Release(requestId);
             _log.Error($"Dialogue fetch request {requestId} failed.");
-        }
-
-        private void _DeleteCollectedEntities()
-        {
-            foreach (var entityId in _entitiesToDelete)
-                _world.DelEntity(entityId);
-
-            _entitiesToDelete.Clear();
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

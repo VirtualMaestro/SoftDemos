@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
@@ -7,7 +6,6 @@ namespace Client.Simulation.AceOfShadows
     public sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private readonly AceOfShadowsConfig _config;
-        private readonly List<int> _entitiesToDelete = new();
 
         private EcsWorld _world;
         private ILog _log;
@@ -31,9 +29,8 @@ namespace Client.Simulation.AceOfShadows
                 else
                     _log.Warn("ResetDeckCommand ignored because the deck is not dealt.");
 
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
             }
-            _DeleteCollectedEntities();
 
             foreach (var entityId in _world.Where(out DealCommandAspect _))
             {
@@ -44,9 +41,8 @@ namespace Client.Simulation.AceOfShadows
                 }
 
                 _Deal(ref state);
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
             }
-            _DeleteCollectedEntities();
         }
 
         private void _Deal(ref DeckStateComp state)
@@ -88,24 +84,15 @@ namespace Client.Simulation.AceOfShadows
             var deletedCardCount = 0;
             foreach (var entityId in _world.Where(out CardAspect _))
             {
-                _entitiesToDelete.Add(entityId);
+                _world.DelEntity(entityId);
                 deletedCardCount++;
             }
 
             foreach (var entityId in _world.Where(out StackAspect _))
-                _entitiesToDelete.Add(entityId);
-
-            _DeleteCollectedEntities();
-            state = default;
-            _log.Info($"Deck reset; {deletedCardCount} card entities deleted.");
-        }
-
-        private void _DeleteCollectedEntities()
-        {
-            foreach (var entityId in _entitiesToDelete)
                 _world.DelEntity(entityId);
 
-            _entitiesToDelete.Clear();
+            state = default;
+            _log.Info($"Deck reset; {deletedCardCount} card entities deleted.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
