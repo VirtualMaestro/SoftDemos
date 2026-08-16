@@ -16,8 +16,6 @@ namespace Client.Adapters.Views
         [SerializeField] private TMP_Text speedLabel;
         [SerializeField] private CardView cardPrefab;
 
-        public static AceOfShadowsScreen Current { get; private set; }
-
         public Transform CardRoot => cardRoot;
         public SpriteRenderer Background => background;
         public TMP_Text SourceCounter => sourceCounter;
@@ -41,16 +39,12 @@ namespace Client.Adapters.Views
                 return;
 
             speedButton.onClick.AddListener(_OnSpeedButtonPressed);
-            Current = this;
         }
 
         private void OnDestroy()
         {
             if (speedButton != null)
                 speedButton.onClick.RemoveListener(_OnSpeedButtonPressed);
-
-            if (Current == this)
-                Current = null;
         }
 
         private void _OnSpeedButtonPressed()

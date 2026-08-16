@@ -17,8 +17,6 @@ namespace Client.Adapters.Views
         [SerializeField] private Button advanceButton;
         [SerializeField] private TMP_Text phaseLabel;
 
-        public static PhoenixFlameScreen Current { get; private set; }
-
         public SpriteRenderer Background => background;
         public Animator FlameAnimator => flameAnimator;
         public FlameColorView FlameColor => flameColor;
@@ -33,7 +31,6 @@ namespace Client.Adapters.Views
                 return;
 
             advanceButton.onClick.AddListener(_OnAdvancePressed);
-            Current = this;
         }
 
         private void OnDestroy()
@@ -41,9 +38,6 @@ namespace Client.Adapters.Views
             // `?.` bypasses Unity's null overload, so a destroyed button would slip past it.
             if (advanceButton != null)
                 advanceButton.onClick.RemoveListener(_OnAdvancePressed);
-
-            if (Current == this)
-                Current = null;
         }
 
         private void _OnAdvancePressed()

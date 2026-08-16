@@ -43,14 +43,14 @@ namespace Client.Adapters.Tests
 
             yield return _Open(entryPoint.World);
             yield return _WaitUntil(
-                () => MagicWordsScreen.Current != null &&
+                () => _Screen() != null &&
                       entryPoint.World.Get<DialogueStateComp>().State == DialogueLoadState.Loading &&
-                      MagicWordsScreen.Current.StatusLabel.gameObject.activeSelf &&
-                      MagicWordsScreen.Current.StatusLabel.text == "Loading dialogue…",
+                      _Screen().StatusLabel.gameObject.activeSelf &&
+                      _Screen().StatusLabel.text == "Loading dialogue…",
                 "Magic Words did not publish its view and show the loading status.",
                 LoadTimeoutSeconds);
 
-            var sceneView = MagicWordsScreen.Current;
+            var sceneView = _Screen();
             yield return _WaitUntil(
                 () => entryPoint.World.Get<DialogueStateComp>().State == DialogueLoadState.Ready,
                 "The live dialogue payload did not reach Ready.", LoadTimeoutSeconds);
@@ -141,10 +141,10 @@ namespace Client.Adapters.Tests
 
             yield return _Open(entryPoint.World);
             yield return _WaitUntil(
-                () => MagicWordsScreen.Current != null &&
+                () => _Screen() != null &&
                       entryPoint.World.Get<DialogueStateComp>().State == DialogueLoadState.Ready,
                 "Reopened Magic Words did not load a fresh dialogue.", LoadTimeoutSeconds);
-            sceneView = MagicWordsScreen.Current;
+            sceneView = _Screen();
             yield return _WaitForViewCount(sceneView, 1, 1f);
             Assert.That(_ViewCount(sceneView), Is.EqualTo(1));
             Assert.That(_FindLine(sceneView, "Sheldon"), Is.Not.Null);
@@ -223,6 +223,9 @@ namespace Client.Adapters.Tests
 
             return true;
         }
+
+        private static MagicWordsScreen _Screen() =>
+            UnityEngine.Object.FindFirstObjectByType<MagicWordsScreen>();
 
         private static IEnumerator _Open(EcsWorld world)
         {

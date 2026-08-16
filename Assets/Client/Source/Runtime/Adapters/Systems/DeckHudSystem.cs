@@ -8,13 +8,14 @@ using UnityEngine;
 namespace Client.Adapters.Systems
 {
     public sealed class DeckHudSystem : IEcsLateRun, IEcsInject<EcsWorld>, IEcsInject<ILog>,
-        IEcsInject<StackSlotLayoutService>
+        IEcsInject<StackSlotLayoutService>, IEcsInject<ScreenRegistryService>
     {
         private static readonly Vector3 _counterOffset = new(0f, 1.5f, 0f);
 
         private EcsWorld _world;
         private ILog _log;
         private StackSlotLayoutService _layout;
+        private ScreenRegistryService _screens;
         private AceOfShadowsScreen _scene;
         private int _sourceCount = int.MinValue;
         private int _targetCount = int.MinValue;
@@ -25,9 +26,7 @@ namespace Client.Adapters.Systems
 
         public void LateRun()
         {
-            var current = AceOfShadowsScreen.Current;
-
-            if (current == null)
+            if (_screens.TryGet(out AceOfShadowsScreen current) == false)
             {
                 _scene = null;
                 return;
@@ -111,6 +110,7 @@ namespace Client.Adapters.Systems
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILog obj) => _log = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
 
         private sealed class StackAspect : EcsAspect
         {

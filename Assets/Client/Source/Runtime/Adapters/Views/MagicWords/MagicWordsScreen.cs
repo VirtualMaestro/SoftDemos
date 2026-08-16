@@ -16,8 +16,6 @@ namespace Client.Adapters.Views
         [SerializeField] private TMP_Text avatarModeLabel;
         [SerializeField] private TMP_Text statusLabel;
 
-        public static MagicWordsScreen Current { get; private set; }
-
         public SpriteRenderer Background => background;
         public ScrollRect LogScroll => logScroll;
         public RectTransform LogContent => logContent;
@@ -35,16 +33,12 @@ namespace Client.Adapters.Views
                 return;
 
             avatarModeButton.onClick.AddListener(_OnAvatarModePressed);
-            Current = this;
         }
 
         private void OnDestroy()
         {
             if (avatarModeButton != null)
                 avatarModeButton.onClick.RemoveListener(_OnAvatarModePressed);
-
-            if (Current == this)
-                Current = null;
         }
 
         public void RaiseSkipPressed()

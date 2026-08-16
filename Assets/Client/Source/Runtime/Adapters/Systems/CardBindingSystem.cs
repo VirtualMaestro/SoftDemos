@@ -10,7 +10,8 @@ using DCFApixels.DragonECS;
 namespace Client.Adapters.Systems
 {
     public sealed class CardBindingSystem : IEcsLateRun, IEcsInject<EcsWorld>, IEcsInject<ILog>,
-        IEcsInject<ViewRegistryService>, IEcsInject<StackSlotLayoutService>, IEcsInject<CardViewChannel>
+        IEcsInject<ViewRegistryService>, IEcsInject<StackSlotLayoutService>, IEcsInject<CardViewChannel>,
+        IEcsInject<ScreenRegistryService>
     {
         private const int InFlightSortingBase = 500;
 
@@ -19,6 +20,7 @@ namespace Client.Adapters.Systems
         private ViewRegistryService _views;
         private StackSlotLayoutService _layout;
         private CardViewChannel _channel;
+        private ScreenRegistryService _screens;
         private int _bindCursor;
         private int _bindingResetVersion;
         private int _seatingVersion;
@@ -27,7 +29,7 @@ namespace Client.Adapters.Systems
 
         public void LateRun()
         {
-            if (AceOfShadowsScreen.Current == null)
+            if (_screens.TryGet<AceOfShadowsScreen>(out _) == false)
                 return;
 
             if (_bindingResetVersion != _channel.BindingResetVersion)
@@ -128,6 +130,7 @@ namespace Client.Adapters.Systems
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(CardViewChannel obj) => _channel = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
 
         private sealed class UnboundAspect : EcsAspect
         {

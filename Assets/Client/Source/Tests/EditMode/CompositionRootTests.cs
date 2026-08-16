@@ -70,6 +70,7 @@ namespace Client.Simulation.Tests
             "Client.Adapters.Shared.SharedUiSprites",
             "Client.Adapters.Shared.StageReadyChannel",
             "Client.Adapters.Shared.CardViewChannel",
+            "Client.Adapters.Services.ScreenRegistryService",
             "Client.Adapters.Shared.DialogueLogChannel",
         };
 

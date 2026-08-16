@@ -36,6 +36,7 @@ namespace Client.Bootstrap
         private ViewRegistryService _viewRegistryService;
         private TweenPlayerService _tweenPlayerService;
         private StageReadyChannel _stageReady;
+        private ScreenRegistryService _screens;
 
         public EcsWorld World => _world;
         public ViewRegistryService Views => _viewRegistryService;
@@ -67,6 +68,8 @@ namespace Client.Bootstrap
             // Shared state and behaviour. Systems reach through these instead of holding each other.
             _tweenPlayerService = new TweenPlayerService(_world, _viewRegistryService, new UnityLogService("Tweens"));
             _stageReady = new StageReadyChannel();
+            _screens = new ScreenRegistryService(
+                typeof(AceOfShadowsScreen), typeof(MagicWordsScreen), typeof(PhoenixFlameScreen));
 
             var aceConfig = new AceOfShadowsConfig();
 
@@ -96,6 +99,7 @@ namespace Client.Bootstrap
                 .Inject(new StackSlotLayoutService())
                 .Inject(new SharedUiSprites())
                 .Inject(_stageReady)
+                .Inject(_screens)
                 .Inject(new CardViewChannel())
                 .Inject(new DialogueLogChannel())
 
@@ -252,6 +256,9 @@ namespace Client.Bootstrap
             _viewRegistryService = null;
             _tweenPlayerService = null;
             _stageReady = null;
+
+            _screens?.Dispose();
+            _screens = null;
 
             _world?.Destroy();
             _world = null;

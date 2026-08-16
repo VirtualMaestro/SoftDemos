@@ -18,7 +18,7 @@ namespace Client.Adapters.Systems
     /// </remarks>
     public sealed class PhoenixFlameStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<AddressablesAssetService>,
-        IEcsInject<StageReadyChannel>
+        IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/phoenix-flame/atlas";
         private const string BackgroundAddress = "art/phoenix-flame/background";
@@ -55,6 +55,7 @@ namespace Client.Adapters.Systems
         private ILog _log;
         private AddressablesAssetService _assets;
         private StageReadyChannel _stageReady;
+        private ScreenRegistryService _screens;
         private StageState _state;
         private PhoenixFlameScreen _flameScreen;
         private Camera _camera;
@@ -90,7 +91,7 @@ namespace Client.Adapters.Systems
         {
             if (_flameScreen != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
-                 PhoenixFlameScreen.Current == null))
+                 _screens.TryGet<PhoenixFlameScreen>(out _) == false))
                 _TransitionTo(StageState.Closing);
 
             switch (_state)
@@ -117,11 +118,10 @@ namespace Client.Adapters.Systems
 
         private void _BeginLoadingIfNeeded()
         {
-            var current = PhoenixFlameScreen.Current;
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (current == null || current == _flameScreen || screen.Current != ScreenId.Demo ||
-                screen.ActiveDemoIndex != PhoenixFlameDemoIndex)
+            if (_screens.TryGet(out PhoenixFlameScreen current) == false || current == _flameScreen ||
+                screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != PhoenixFlameDemoIndex)
                 return;
 
             _flameScreen = current;
@@ -469,6 +469,7 @@ namespace Client.Adapters.Systems
         public void Inject(ILog obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
 
         private enum StageState
         {

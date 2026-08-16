@@ -16,7 +16,7 @@ namespace Client.Adapters.Systems
         IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<TweenPlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
-        IEcsInject<StageReadyChannel>
+        IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/ace-of-shadows/atlas";
         private const string BackgroundAddress = "art/ace-of-shadows/background";
@@ -37,6 +37,7 @@ namespace Client.Adapters.Systems
         private SharedUiSprites _uiSprites;
         private CardViewChannel _channel;
         private StageReadyChannel _stageReady;
+        private ScreenRegistryService _screens;
         private StageState _state;
         private AceOfShadowsScreen _aosScreen;
         private Camera _camera;
@@ -61,7 +62,7 @@ namespace Client.Adapters.Systems
         {
             if (_aosScreen != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
-                 AceOfShadowsScreen.Current == null))
+                 !_screens.TryGet<AceOfShadowsScreen>(out _)))
                 _TransitionTo(StageState.Closing);
 
             switch (_state)
@@ -88,11 +89,10 @@ namespace Client.Adapters.Systems
 
         private void _BeginLoadingIfNeeded()
         {
-            var current = AceOfShadowsScreen.Current;
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (current == null || current == _aosScreen || screen.Current != ScreenId.Demo ||
-                screen.ActiveDemoIndex != 0)
+            if (!_screens.TryGet(out AceOfShadowsScreen current) || current == _aosScreen ||
+                screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != 0)
                 return;
 
             _aosScreen = current;
@@ -396,6 +396,7 @@ namespace Client.Adapters.Systems
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
         public void Inject(CardViewChannel obj) => _channel = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
 
         private enum StageState
         {

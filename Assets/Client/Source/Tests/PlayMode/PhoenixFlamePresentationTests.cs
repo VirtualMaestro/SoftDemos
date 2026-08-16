@@ -65,10 +65,10 @@ namespace Client.Adapters.Tests
             // The stage writes StartFlameCommand in LateRun and the simulation consumes it one frame
             // later, so this needs a wait rather than a single `yield return null`.
             yield return _WaitUntil(
-                () => PhoenixFlameScreen.Current != null && world.Get<FlameStateComp>().IsActive,
+                () => _Screen() != null && world.Get<FlameStateComp>().IsActive,
                 "Phoenix Flame did not publish its view and start the flame.", LoadTimeoutSeconds);
 
-            var scene = PhoenixFlameScreen.Current;
+            var scene = _Screen();
             var flameState = world.Get<FlameStateComp>();
             Assert.That(flameState.CurrentPhase, Is.EqualTo(FlamePhase.Orange));
             Assert.That(flameState.IsTransitioning, Is.False);
@@ -188,7 +188,7 @@ namespace Client.Adapters.Tests
 
             yield return _Open(world);
             yield return _WaitUntil(
-                () => PhoenixFlameScreen.Current != null && world.Get<FlameStateComp>().IsActive,
+                () => _Screen() != null && world.Get<FlameStateComp>().IsActive,
                 "Reopened Phoenix Flame did not start again.", LoadTimeoutSeconds);
             Assert.That(world.Get<FlameStateComp>().CurrentPhase, Is.EqualTo(FlamePhase.Orange));
             Assert.That(world.Get<FlameStateComp>().PhaseChangeCount, Is.Zero);
@@ -233,6 +233,9 @@ namespace Client.Adapters.Tests
                 $"The press towards {expected} did not start a transition.", 5f);
             yield return _WaitForPhase(world, expected, transitionSeconds + 5f);
         }
+
+        private static PhoenixFlameScreen _Screen() =>
+            UnityEngine.Object.FindFirstObjectByType<PhoenixFlameScreen>();
 
         private static IEnumerator _Open(EcsWorld world)
         {

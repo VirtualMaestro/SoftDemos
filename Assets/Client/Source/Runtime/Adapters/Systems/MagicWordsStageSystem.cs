@@ -16,7 +16,8 @@ namespace Client.Adapters.Systems
     public sealed class MagicWordsStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
-        IEcsInject<DialogueLogChannel>, IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>
+        IEcsInject<DialogueLogChannel>, IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>,
+        IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/magic-words/atlas";
         private const string BackgroundAddress = "art/magic-words/background";
@@ -38,6 +39,7 @@ namespace Client.Adapters.Systems
         private DialogueLogChannel _dialogueChannel;
         private TweenPlayerService _tweens;
         private StageReadyChannel _stageReady;
+        private ScreenRegistryService _screens;
         private StageState _state;
         private MagicWordsScreen _scene;
         private Camera _camera;
@@ -58,7 +60,7 @@ namespace Client.Adapters.Systems
         {
             if (_scene != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
-                 MagicWordsScreen.Current == null))
+                 _screens.TryGet<MagicWordsScreen>(out _) == false))
                 _TransitionTo(StageState.Closing);
 
             switch (_state)
@@ -82,11 +84,10 @@ namespace Client.Adapters.Systems
 
         private void _BeginLoadingIfNeeded()
         {
-            var current = MagicWordsScreen.Current;
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (current == null || current == _scene || screen.Current != ScreenId.Demo ||
-                screen.ActiveDemoIndex != 1)
+            if (_screens.TryGet(out MagicWordsScreen current) == false || current == _scene ||
+                screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != 1)
                 return;
 
             _scene = current;
@@ -363,6 +364,7 @@ namespace Client.Adapters.Systems
         public void Inject(DialogueLogChannel obj) => _dialogueChannel = obj;
         public void Inject(TweenPlayerService obj) => _tweens = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
 
         private enum StageState
         {

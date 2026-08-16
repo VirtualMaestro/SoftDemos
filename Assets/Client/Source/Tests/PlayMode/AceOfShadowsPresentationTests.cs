@@ -81,13 +81,13 @@ namespace Client.Adapters.Tests
 
             yield return _Open(entryPoint.World);
             yield return _WaitUntil(
-                () => AceOfShadowsScreen.Current != null &&
-                      AceOfShadowsScreen.Current.CardRoot.childCount == 144 &&
-                      AceOfShadowsScreen.Current.SourceCounter.text == "144",
+                () => _Screen() != null &&
+                      _Screen().CardRoot.childCount == 144 &&
+                      _Screen().SourceCounter.text == "144",
                 "Ace of Shadows did not publish its scene view and spawn 144 cards.",
                 LoadTimeoutSeconds);
 
-            var sceneView = AceOfShadowsScreen.Current;
+            var sceneView = _Screen();
             var cardViews = sceneView.CardRoot.GetComponentsInChildren<CardView>();
             Assert.That(cardViews, Has.Length.EqualTo(144));
             var ownedSprites = new HashSet<Sprite> { sceneView.Background.sprite };
@@ -104,7 +104,7 @@ namespace Client.Adapters.Tests
             entryPoint.World.GetPool<SetDeckSpeedCommand>().Add(entryPoint.World.NewEntity()).Multiplier = 8f;
             yield return _WaitUntil(
                 () => entryPoint.World.Get<DeckStateComp>().IsComplete &&
-                      AceOfShadowsScreen.Current.CompletionLabel.gameObject.activeSelf,
+                      _Screen().CompletionLabel.gameObject.activeSelf,
                 "The ×8 deck did not complete.",
                 CompletionTimeoutSeconds);
             Assert.That(sceneView.CompletionLabel.gameObject.activeSelf, Is.True);
@@ -130,13 +130,13 @@ namespace Client.Adapters.Tests
 
             yield return _Open(entryPoint.World);
             yield return _WaitUntil(
-                () => AceOfShadowsScreen.Current != null &&
-                      AceOfShadowsScreen.Current.CardRoot.childCount == 144 &&
+                () => _Screen() != null &&
+                      _Screen().CardRoot.childCount == 144 &&
                       entryPoint.World.Get<DeckStateComp>().IsDealt &&
-                      AceOfShadowsScreen.Current.SourceCounter.text == "144",
+                      _Screen().SourceCounter.text == "144",
                 "Reopening did not create and bind a clean deck.",
                 LoadTimeoutSeconds);
-            Assert.That(AceOfShadowsScreen.Current.SourceCounter.text, Is.EqualTo("144"));
+            Assert.That(_Screen().SourceCounter.text, Is.EqualTo("144"));
             Assert.That(entryPoint.Views.Count, Is.EqualTo(144));
 
             yield return _Close(entryPoint.World);
@@ -144,6 +144,9 @@ namespace Client.Adapters.Tests
             yield return null;
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(baselineWorlds));
         }
+
+        private static AceOfShadowsScreen _Screen() =>
+            UnityEngine.Object.FindFirstObjectByType<AceOfShadowsScreen>();
 
         private static IEnumerator _Open(EcsWorld world)
         {
