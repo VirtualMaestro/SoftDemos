@@ -1,0 +1,28 @@
+{
+    "name": "Client.Adapters.Tests",
+    "rootNamespace": "Client.Adapters.Tests",
+    "references": [
+        "Client.Bootstrap",
+        "Client.Adapters.Unity",
+        "Client.Simulation",
+        "DCFApixels.DragonECS",
+        "DCFApixels.DragonECS.Unity",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.TextMeshPro",
+        "Unity.Addressables.Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Game.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame
 {
     public sealed class PhoenixFlameModule : IEcsModule
     {

@@ -768,7 +768,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56178afa135d4464697c49468f40a96e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.AceOfShadowsSceneView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.AceOfShadowsScreen
   cardRoot: {fileID: 656532270}
   background: {fileID: 1414807889}
   sourceCounter: {fileID: 951658333}

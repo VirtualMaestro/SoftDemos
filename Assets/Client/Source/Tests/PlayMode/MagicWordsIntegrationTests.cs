@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using Client.Adapters.Services;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Adapters.Services;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class MagicWordsIntegrationTests
     {

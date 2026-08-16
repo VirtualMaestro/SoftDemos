@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 using MyGameDevTools.SceneLoading;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     /// <summary><see cref="ISceneService"/> on top of <c>com.mygamedevtools.scene-loader</c>.</summary>
     /// <remarks>

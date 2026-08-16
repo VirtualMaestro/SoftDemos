@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Simulation.Ports;
 
-namespace Game.Simulation.Menu
+namespace Client.Simulation.Menu
 {
     public sealed class NavigationSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ISceneService>, IEcsInject<ILog>

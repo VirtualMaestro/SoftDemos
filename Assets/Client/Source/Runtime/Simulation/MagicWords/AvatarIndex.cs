@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
     public sealed class AvatarIndex
     {

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Ports;
+using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Ports;
-using Game.Simulation.Tests.Fakes;
 using NUnit.Framework;
 
-namespace Game.Simulation.Tests.MagicWords
+namespace Client.Simulation.Tests.MagicWords
 {
     public sealed class AvatarLoadSystemTests : MagicWordsTestFixture
     {

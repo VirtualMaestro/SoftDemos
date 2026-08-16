@@ -1,6 +1,6 @@
 using System;
 
-namespace Game.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame
 {
     /// <summary>
     /// Immutable setup values for the Phoenix Flame simulation. The transition duration is copied

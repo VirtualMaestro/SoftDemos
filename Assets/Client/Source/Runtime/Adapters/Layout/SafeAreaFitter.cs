@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Game.Adapters.Layout
+namespace Client.Adapters.Layout
 {
     /// <summary>Keeps a <see cref="RectTransform"/> inside <see cref="Screen.safeArea"/>.</summary>
     /// <remarks>

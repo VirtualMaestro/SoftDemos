@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 using UnityEngine;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     public sealed class AtlasImageLoaderService : IImageLoadService, IDisposable
     {

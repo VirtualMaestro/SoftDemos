@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Ports;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary><see cref="IDialogueService"/> backed by <see cref="FakeAsyncRequests"/>.</summary>
     public sealed class FakeDialogueService : IDialogueService

@@ -1,4 +1,4 @@
-namespace Game.Adapters.Layout
+namespace Client.Adapters.Layout
 {
     public enum LayoutMode
     {

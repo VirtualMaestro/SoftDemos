@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Bindings
+namespace Client.Adapters.Vendor
 {
     /// <summary>
     /// VList uses Unity's version of the ScrollRect.

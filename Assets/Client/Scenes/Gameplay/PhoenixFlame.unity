@@ -5006,7 +5006,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 890f086c604d1ef49bdfc5351fa74d0e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.ResponsiveCanvas
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.ResponsiveCanvas
   scaler: {fileID: 0}
 --- !u!114 &331028451
 MonoBehaviour:
@@ -10294,7 +10294,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: caea0b7f03fbd614ca7b14abdc5636a9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.FlameColorView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.FlameColorView
   tint: {r: 1, g: 0.45, b: 0.1, a: 1}
   flameParticles: {fileID: 2141601421}
   smokeParticles: {fileID: 271326669}
@@ -15205,7 +15205,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 099dac1cfc28a6f4e8418118798816cb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.PhoenixFlameSceneView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.PhoenixFlameScreen
   background: {fileID: 775514442}
   flameAnimator: {fileID: 1577839890}
   flameColor: {fileID: 1577839888}

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     /// <summary>
     /// <see cref="IAssetService"/> on top of Addressables, in the same handle-and-poll shape as
@@ -13,7 +13,7 @@ namespace Game.Adapters.Services
     ///
     /// The loaded <see cref="Object"/> never crosses the port: it stays in this adapter's table
     /// and the simulation only ever sees the opaque handle id that indexes it. That is what lets
-    /// a system decide *which* asset a view shows without <c>Game.Simulation</c> knowing that
+    /// a system decide *which* asset a view shows without <c>Client.Simulation</c> knowing that
     /// <c>UnityEngine.Object</c> exists.
     /// </summary>
     public sealed class AddressablesAssetService : IAssetService, IDisposable

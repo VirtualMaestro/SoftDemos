@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Game.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows
 {
     public sealed class AceOfShadowsModule : IEcsModule
     {

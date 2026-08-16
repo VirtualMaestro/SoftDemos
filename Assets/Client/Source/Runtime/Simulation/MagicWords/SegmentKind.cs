@@ -1,4 +1,4 @@
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
     public enum SegmentKind
     {

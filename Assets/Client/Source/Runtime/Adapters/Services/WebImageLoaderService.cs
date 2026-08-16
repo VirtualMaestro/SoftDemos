@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     public sealed class WebImageLoaderService : IImageLoadService, IDisposable
     {

@@ -1,4 +1,4 @@
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>Loads an asset by address. Handle and poll.</summary>
     /// <remarks>

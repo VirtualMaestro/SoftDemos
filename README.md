@@ -38,21 +38,21 @@ Ports and adapters, split across three assemblies. All source lives under
 `Assets/Client/Source/`.
 
 ```
-Game.Simulation          pure game logic — DragonECS components and systems, plain structs.
+Client.Simulation                pure game logic — DragonECS components and systems, plain structs.
   (noEngineReferences)   Declares what it needs from the outside world as port interfaces
         |                (time, randomness, logging, scenes, assets, dialogue, images).
         |                Never references UnityEngine.
         v
-Game.Adapters.Unity      MonoBehaviours, views, and the implementations that fill those ports:
+Client.Adapters.Unity      MonoBehaviours, views, and the implementations that fill those ports:
         |                Addressables, UnityWebRequest, DOTween, the scene loader, uGUI.
         v
-Game.Bootstrap           the composition root — builds the EcsWorld and EcsPipeline, constructs
+Client.Bootstrap                 the composition root — builds the EcsWorld and EcsPipeline, constructs
                          and injects the ports, ticks from the player loop, tears down in order.
 ```
 
 Two rules hold the whole thing together, and both are enforced by tests rather than convention:
 
-- `Game.Simulation` never references `UnityEngine`. The asmdef sets `noEngineReferences: true`,
+- `Client.Simulation` never references `UnityEngine`. The asmdef sets `noEngineReferences: true`,
   so `using UnityEngine;` fails to compile; `ArchitectureTests` additionally checks the compiled
   reference set.
 - A system never holds, receives, or is passed another system. Cross-system communication goes

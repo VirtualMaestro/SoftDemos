@@ -4,7 +4,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Build;
 
-namespace Game.Simulation.Tests
+namespace Client.Simulation.Tests
 {
     /// <summary>Guards the WebGL size settings. Nothing else fails if one of them reverts.</summary>
     /// <remarks>
@@ -197,7 +197,7 @@ namespace Game.Simulation.Tests
         public void LinkXml_PreservesTheSimulationAssembly()
         {
             Assert.That(File.Exists(LinkXmlPath), Is.True, $"'{LinkXmlPath}' is missing.");
-            Assert.That(File.ReadAllText(LinkXmlPath), Does.Contain("Game.Simulation"));
+            Assert.That(File.ReadAllText(LinkXmlPath), Does.Contain("Client.Simulation"));
         }
 
         /// <summary>Reads one serialized property from an asset path.</summary>

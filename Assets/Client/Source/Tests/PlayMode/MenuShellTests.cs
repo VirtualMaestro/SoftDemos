@@ -1,14 +1,14 @@
 using System.Collections;
+using Client.Adapters.Views;
+using Client.Bootstrap;
+using Client.Simulation.Menu;
 using DCFApixels.DragonECS;
-using Game.Adapters.Views;
-using Game.Bootstrap;
-using Game.Simulation.Menu;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class MenuShellTests
     {

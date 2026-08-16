@@ -1,10 +1,10 @@
 using System;
+using Client.Simulation.Ports;
+using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
-using Game.Simulation.Ports;
-using Game.Simulation.Tests.Fakes;
 using NUnit.Framework;
 
-namespace Game.Simulation.Tests
+namespace Client.Simulation.Tests
 {
     /// <summary>
     /// Pins the one mechanism every future system depends on: a port implementation reaching an

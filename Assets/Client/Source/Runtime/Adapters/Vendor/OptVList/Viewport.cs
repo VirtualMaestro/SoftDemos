@@ -1,7 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Game.Adapters.Bindings
+namespace Client.Adapters.Vendor
 {
     internal sealed class Viewport
     {

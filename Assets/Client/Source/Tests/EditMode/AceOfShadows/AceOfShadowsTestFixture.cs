@@ -1,10 +1,10 @@
+using Client.Simulation.AceOfShadows;
+using Client.Simulation.Ports;
+using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
-using Game.Simulation.AceOfShadows;
-using Game.Simulation.Ports;
-using Game.Simulation.Tests.Fakes;
 using NUnit.Framework;
 
-namespace Game.Simulation.Tests.AceOfShadows
+namespace Client.Simulation.Tests.AceOfShadows
 {
     public abstract class AceOfShadowsTestFixture
     {

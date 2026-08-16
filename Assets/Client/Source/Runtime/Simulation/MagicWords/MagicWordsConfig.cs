@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
     public sealed class MagicWordsConfig
     {

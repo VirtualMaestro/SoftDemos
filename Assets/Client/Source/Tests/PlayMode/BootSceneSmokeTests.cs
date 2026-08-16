@@ -1,12 +1,12 @@
 using System.Collections;
+using Client.Bootstrap;
 using DCFApixels.DragonECS;
-using Game.Bootstrap;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     /// <summary>
     /// Smoke test for the boot scene lifecycle. Runs the load → tick → unload cycle twice on

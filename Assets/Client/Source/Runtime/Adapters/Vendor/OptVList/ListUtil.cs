@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Game.Adapters.Bindings
+namespace Client.Adapters.Vendor
 {
     public static class ListUtil
     {

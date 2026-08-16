@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Simulation.Ports;
 
-namespace Game.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows
 {
     public sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {

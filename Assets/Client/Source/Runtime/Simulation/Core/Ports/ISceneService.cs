@@ -1,4 +1,4 @@
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>Loads and unloads scenes. Handle and poll.</summary>
     /// <remarks>The adapter owns the async primitive. The simulation sees a request id and a status.</remarks>

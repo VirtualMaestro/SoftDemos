@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Text.RegularExpressions;
-using Game.Adapters.Services;
-using Game.Simulation.Ports;
+using Client.Adapters.Services;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     /// <summary>
     /// Proves the Task → poll translation end to end: the library's asynchronous API never leaks
@@ -70,7 +70,7 @@ namespace Game.Adapters.Tests
             // wording: a bare `.*<address>.*` also matches the adapter's line, so the pair would
             // still "pass" if Addressables ever stopped reporting at all.
             LogAssert.Expect(LogType.Error, new Regex($@"No Location found for Key={MissingScene}"));
-            LogAssert.Expect(LogType.Error, new Regex($@"\[Game\]\[Test\.Scenes\].*{MissingScene}"));
+            LogAssert.Expect(LogType.Error, new Regex($@"\[Client\]\[Test\.Scenes\].*{MissingScene}"));
 
             var requestId = _service.BeginLoad(MissingScene);
             yield return _PollUntilSettled(requestId);

@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Game.Simulation.Menu
+namespace Client.Simulation.Menu
 {
     public struct OpenDemoCommand : IEcsComponent
     {

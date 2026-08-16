@@ -1,7 +1,7 @@
-using Game.Adapters.Layout;
+using Client.Adapters.Layout;
 using NUnit.Framework;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class LayoutModeTests
     {

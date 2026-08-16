@@ -1,4 +1,4 @@
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>The logging contract of the simulation. Three levels are enough.</summary>
     public interface ILog

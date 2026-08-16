@@ -1,4 +1,4 @@
-namespace Game.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame
 {
     /// <summary>The three colours of the flame. The cycle follows this order.</summary>
     /// <remarks>Keep the values contiguous from zero. A new value in the middle changes the cycle.</remarks>

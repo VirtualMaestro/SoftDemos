@@ -1,18 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Client.Adapters.Systems;
+using Client.Adapters.Views;
+using Client.Bootstrap;
+using Client.Simulation.AceOfShadows;
+using Client.Simulation.Menu;
 using DCFApixels.DragonECS;
-using Game.Adapters.Bindings;
-using Game.Adapters.Views;
-using Game.Bootstrap;
-using Game.Simulation.AceOfShadows;
-using Game.Simulation.Menu;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class AceOfShadowsPresentationTests
     {

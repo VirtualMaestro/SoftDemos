@@ -1,10 +1,11 @@
-using Game.Adapters.Bindings;
-using Game.Simulation.MagicWords;
+using Client.Adapters.Shared;
+using Client.Adapters.Vendor;
+using Client.Simulation.MagicWords;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     public sealed class DialogueLineView : MonoBehaviour, IItemVisual
     {

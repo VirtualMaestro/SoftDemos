@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Game.Simulation.Messages
+namespace Client.Simulation.Messages
 {
     /// <summary>Asks the adapter to move this entity to a slot in a given time.</summary>
     /// <remarks>

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary>
     /// <see cref="ISceneService"/> backed by <see cref="FakeAsyncRequests"/>. Records what was

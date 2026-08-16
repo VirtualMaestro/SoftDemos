@@ -1,10 +1,10 @@
 using System;
+using Client.Simulation.PhoenixFlame;
+using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
-using Game.Simulation.PhoenixFlame;
-using Game.Simulation.Tests.Fakes;
 using NUnit.Framework;
 
-namespace Game.Simulation.Tests.PhoenixFlame
+namespace Client.Simulation.Tests.PhoenixFlame
 {
     public sealed class PhoenixFlameSimulationTests : PhoenixFlameTestFixture
     {

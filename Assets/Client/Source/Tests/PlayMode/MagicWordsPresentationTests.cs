@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
+using Client.Adapters.Services;
+using Client.Adapters.Shared;
+using Client.Adapters.Systems;
+using Client.Adapters.Views;
+using Client.Bootstrap;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Menu;
 using DCFApixels.DragonECS;
-using Game.Adapters.Bindings;
-using Game.Adapters.Services;
-using Game.Adapters.Views;
-using Game.Bootstrap;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Menu;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -14,7 +15,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class MagicWordsPresentationTests
     {
@@ -134,7 +135,7 @@ namespace Game.Adapters.Tests
             // Returning to the menu starts the shell's own screen fade, so this cannot be sampled
             // the instant the demo closes — the claim is that every fade finishes and unregisters,
             // not that none was ever running.
-            yield return _WaitUntil(() => entryPoint.TweenPlayer.ActiveFadeCount == 0,
+            yield return _WaitUntil(() => entryPoint.Tweens.ActiveFadeCount == 0,
                 "A fade tween outlived the screens it was fading.", 2f);
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(bootWorldBaseline));
 

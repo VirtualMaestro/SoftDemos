@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary>
     /// The handle-and-poll bookkeeping shared by <see cref="FakeSceneService"/> and

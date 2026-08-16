@@ -1,7 +1,7 @@
 using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
-namespace Game.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows
 {
     public struct DeckStateComp : IEcsWorldComponent<DeckStateComp>
     {

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary>
     /// <see cref="ILog"/> that records every message with its level, so a test can assert that a

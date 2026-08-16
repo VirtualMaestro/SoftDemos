@@ -1,8 +1,8 @@
+using Client.Simulation.Messages;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Simulation.Messages;
-using Game.Simulation.Ports;
 
-namespace Game.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows
 {
     public sealed class CardCadenceSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILog>

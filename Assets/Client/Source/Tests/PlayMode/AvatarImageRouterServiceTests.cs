@@ -2,14 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Game.Adapters.Services;
-using Game.Simulation.Ports;
+using Client.Adapters.Services;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class AvatarImageRouterServiceTests
     {

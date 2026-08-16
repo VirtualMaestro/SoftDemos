@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
     public struct ReloadAvatarsCommand : IEcsComponent
     {

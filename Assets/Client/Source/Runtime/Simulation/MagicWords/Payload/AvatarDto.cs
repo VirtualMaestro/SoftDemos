@@ -1,6 +1,6 @@
 using System;
 
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
 #pragma warning disable IDE1006 // Naming rule violation — field names are the JSON keys.
     [Serializable]

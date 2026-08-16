@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 using UnityEngine;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     public sealed class AvatarImageRouterService : IImageLoadService, IDisposable
     {
@@ -26,6 +26,23 @@ namespace Game.Adapters.Services
         public int OpenRequestCount => _routes.Count;
         public AtlasImageLoaderService Local => _local;
         public WebImageLoaderService Remote => _remote;
+
+        /// <summary>Hands the local loader the sprite table it resolves speaker names against.</summary>
+        /// <remarks>
+        /// The atlas loader is reached through the router, never injected on its own. It also
+        /// implements <see cref="IImageLoadService"/>, so injecting it would attach it to that
+        /// port's injection node and displace this router there — the simulation would then talk
+        /// to the atlas directly and the router would never see the request.
+        /// </remarks>
+        public void SetLocalSprites(IReadOnlyDictionary<string, Sprite> sprites)
+        {
+            _local.SetSprites(sprites);
+        }
+
+        public void ClearLocalSprites()
+        {
+            _local.ClearSprites();
+        }
 
         public void SetMode(AvatarMode mode)
         {

@@ -1,4 +1,4 @@
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     public enum AvatarMode
     {

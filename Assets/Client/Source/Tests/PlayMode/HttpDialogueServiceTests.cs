@@ -2,13 +2,13 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
-using Game.Adapters.Services;
-using Game.Simulation.Ports;
+using Client.Adapters.Services;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class HttpDialogueServiceTests
     {
@@ -67,7 +67,7 @@ namespace Game.Adapters.Tests
         {
             _IgnoreIfOffline();
             _ReplaceSource(HangingUrl, 3f);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Game\]\[Test\.Dialogue\].*failed in timeout; HTTP"));
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in timeout; HTTP"));
 
             var startedAt = Time.realtimeSinceStartup;
             var requestId = _source.BeginLoad();
@@ -87,7 +87,7 @@ namespace Game.Adapters.Tests
         {
             _IgnoreIfOffline();
             _ReplaceSource(UnreachableUrl);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Game\]\[Test\.Dialogue\].*failed in transport; HTTP"));
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in transport; HTTP"));
 
             var requestId = _source.BeginLoad();
             yield return _PollUntilSettled(requestId);
@@ -103,7 +103,7 @@ namespace Game.Adapters.Tests
         public IEnumerator MalformedBody_ReachesFailed_WithoutThrowingFromPoll()
         {
             _ReplaceSource(new Uri(_malformedPath).AbsoluteUri);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Game\]\[Test\.Dialogue\].*failed in parse; HTTP"));
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in parse; HTTP"));
 
             var requestId = _source.BeginLoad();
             yield return _PollUntilSettledWithoutThrowing(requestId);
@@ -117,7 +117,7 @@ namespace Game.Adapters.Tests
         public IEnumerator EmptyBody_ReachesFailed()
         {
             _ReplaceSource(new Uri(_emptyPath).AbsoluteUri);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Game\]\[Test\.Dialogue\].*failed in empty body; HTTP"));
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in empty body; HTTP"));
 
             var requestId = _source.BeginLoad();
             yield return _PollUntilSettled(requestId);
@@ -133,7 +133,7 @@ namespace Game.Adapters.Tests
         {
             _ReplaceSource("not a url");
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Dialogue\].*failed in (start|transport); HTTP"));
+                new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in (start|transport); HTTP"));
 
             var requestId = 0;
             Assert.DoesNotThrow(() => requestId = _source.BeginLoad());
@@ -157,7 +157,7 @@ namespace Game.Adapters.Tests
             Assert.That(_source.OpenRequestCount, Is.Zero);
 
             _source.Dispose();
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Game\]\[Test\.Dialogue\].*failed in disposed; HTTP"));
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in disposed; HTTP"));
             requestId = _source.BeginLoad();
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
             Assert.That(_source.OpenRequestCount, Is.EqualTo(1));

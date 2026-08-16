@@ -1,7 +1,7 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 
-namespace Game.Adapters.Bindings
+namespace Client.Adapters.Vendor
 {
     public class Binder<T1, T2> : IEnumerable<KeyValuePair<T1, T2>>
     {

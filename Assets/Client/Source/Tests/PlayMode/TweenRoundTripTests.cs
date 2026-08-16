@@ -1,15 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using Client.Adapters.Services;
+using Client.Adapters.Systems;
+using Client.Simulation.Messages;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Adapters.Bindings;
-using Game.Adapters.Services;
-using Game.Simulation.Messages;
-using Game.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     /// <summary>Proves the command, tween and completion cycle on a throwaway object.</summary>
     /// <remarks>
@@ -26,27 +26,29 @@ namespace Game.Adapters.Tests
 
         private EcsWorld _world;
         private EcsPipeline _pipeline;
-        private ViewRegistry _registry;
-        private StackSlotLayout _layout;
+        private ViewRegistryService _registry;
+        private StackSlotLayoutService _layout;
         private GameObject _view;
 
         [SetUp]
         public void SetUp()
         {
             _view = new GameObject("TweenRoundTripView");
-            _registry = new ViewRegistry();
+            _registry = new ViewRegistryService();
             // A portrait recalculation puts slot 1 away from the origin, so "the view moved"
             // and "the view arrived" both assert against a non-zero target.
-            _layout = new StackSlotLayout();
+            _layout = new StackSlotLayoutService();
             _layout.Recalculate(1080, 1920, 5f);
 
             _world = new EcsWorld();
-            var player = new TweenPlayer(_world, _registry, new UnityLogService("Test.Tween"));
+            var player = new TweenPlayerService(_world, _registry, new UnityLogService("Test.Tween"));
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ILog>(new UnityLogService("Test.Tween"))
-                .Inject<ViewRegistry>(_registry)
-                .Add(new TweenPlaybackSystem(_layout, player))
+                .Inject<ViewRegistryService>(_registry)
+                .Inject(_layout)
+                .Inject(player)
+                .Add(new TweenPlaybackSystem())
                 .BuildAndInit();
         }
 

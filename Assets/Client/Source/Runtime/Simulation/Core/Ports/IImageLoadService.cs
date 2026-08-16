@@ -1,4 +1,4 @@
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>Loads a remote image. Handle and poll.</summary>
     /// <remarks>

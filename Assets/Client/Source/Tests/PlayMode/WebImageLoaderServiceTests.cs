@@ -2,13 +2,13 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
-using Game.Adapters.Services;
-using Game.Simulation.Ports;
+using Client.Adapters.Services;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class WebImageLoaderServiceTests
     {
@@ -93,7 +93,7 @@ namespace Game.Adapters.Tests
         public IEnumerator InvalidImageBody_ReachesFailed_WithoutAHandle()
         {
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in (transport|decode); HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in (transport|decode); HTTP"));
 
             var requestId = _source.BeginLoad("Nobody", _invalidImageUrl);
             yield return _PollUntilSettled(requestId);
@@ -110,7 +110,7 @@ namespace Game.Adapters.Tests
         {
             _IgnoreIfOffline();
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in transport; HTTP 400"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in transport; HTTP 400"));
 
             var requestId = _source.BeginLoad("Nobody", JsonUrl);
             yield return _PollUntilSettled(requestId);
@@ -128,7 +128,7 @@ namespace Game.Adapters.Tests
             _IgnoreIfOffline();
             _ReplaceSource(3f);
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in timeout; HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in timeout; HTTP"));
 
             var startedAt = Time.realtimeSinceStartup;
             var requestId = _source.BeginLoad("Sheldon", HangingUrl);
@@ -146,7 +146,7 @@ namespace Game.Adapters.Tests
         {
             _IgnoreIfOffline();
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in transport; HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in transport; HTTP"));
 
             var requestId = _source.BeginLoad("Sheldon", UnreachableUrl);
             yield return _PollUntilSettled(requestId);
@@ -192,7 +192,7 @@ namespace Game.Adapters.Tests
             _AssertTablesEmpty();
 
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in disposed; HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in disposed; HTTP"));
             var lateRequestId = _source.BeginLoad("Sheldon", _localImageUrl);
             Assert.That(_source.Poll(lateRequestId), Is.EqualTo(AsyncOpStatus.Failed));
             Assert.That(_source.OpenRequestCount, Is.EqualTo(1));
@@ -206,7 +206,7 @@ namespace Game.Adapters.Tests
         public IEnumerator UnparseableUrl_BeginLoadDoesNotThrow_AndReachesFailed()
         {
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in (start|transport); HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in (start|transport); HTTP"));
 
             var requestId = 0;
             Assert.DoesNotThrow(() => requestId = _source.BeginLoad("Nobody", "not a url"));
@@ -221,14 +221,14 @@ namespace Game.Adapters.Tests
         public IEnumerator ContractEdges_AreSafe_AndReleaseEverything()
         {
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in url; HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in url; HTTP"));
             var nullUrlRequest = _source.BeginLoad("Nobody", null);
             Assert.That(_source.Poll(nullUrlRequest), Is.EqualTo(AsyncOpStatus.Failed));
             _source.Release(nullUrlRequest);
             _AssertTablesEmpty();
 
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[Game\]\[Test\.Avatars\].*failed in url; HTTP"));
+                new Regex(@"\[Client\]\[Test\.Avatars\].*failed in url; HTTP"));
             var whitespaceUrlRequest = _source.BeginLoad("Nobody", "   ");
             Assert.That(_source.Poll(whitespaceUrlRequest), Is.EqualTo(AsyncOpStatus.Failed));
             _source.Release(whitespaceUrlRequest);

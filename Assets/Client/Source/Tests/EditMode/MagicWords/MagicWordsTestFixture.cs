@@ -1,14 +1,14 @@
 // Captured payload: 17 dialogue lines and 5 avatar entries.
 
 using System.IO;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Ports;
+using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Ports;
-using Game.Simulation.Tests.Fakes;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace Game.Simulation.Tests.MagicWords
+namespace Client.Simulation.Tests.MagicWords
 {
     public abstract class MagicWordsTestFixture
     {

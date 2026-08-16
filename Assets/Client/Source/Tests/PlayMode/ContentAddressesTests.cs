@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Linq;
-using Game.Adapters.Services;
-using Game.Simulation.Ports;
+using Client.Adapters.Services;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor.AddressableAssets;
@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.U2D;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     public sealed class ContentAddressesTests
     {

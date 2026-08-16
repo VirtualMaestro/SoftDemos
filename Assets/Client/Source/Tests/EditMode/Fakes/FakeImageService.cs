@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary><see cref="IImageLoadService"/> backed by <see cref="FakeAsyncRequests"/>.</summary>
     public sealed class FakeImageService : IImageLoadService

@@ -1,6 +1,6 @@
 using System;
 
-namespace Game.Adapters
+namespace Client.Adapters
 {
     /// <summary>One menu entry: the scene it opens and the name the button and the HUD show.</summary>
     /// <remarks>Author the list once, on <c>EntryPoint</c>. One ordered list cannot disagree with itself.</remarks>

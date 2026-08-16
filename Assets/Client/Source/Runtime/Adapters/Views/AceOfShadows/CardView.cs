@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     [RequireComponent(typeof(SpriteRenderer))]
     public sealed class CardView : MonoBehaviour

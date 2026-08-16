@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     [RequireComponent(typeof(Graphic))]
     public sealed class DialogueTapArea : MonoBehaviour, IPointerClickHandler

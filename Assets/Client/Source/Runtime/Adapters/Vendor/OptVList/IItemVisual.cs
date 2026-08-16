@@ -1,4 +1,5 @@
-﻿namespace Game.Adapters.Bindings
+using Client.Adapters.Vendor;
+﻿namespace Client.Adapters.Vendor
 {
     public interface IItemVisual
     {

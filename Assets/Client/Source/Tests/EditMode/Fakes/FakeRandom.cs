@@ -1,7 +1,7 @@
 using System.Linq;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary>
     /// <see cref="IRandomService"/> that replays a scripted sequence and then degenerates to

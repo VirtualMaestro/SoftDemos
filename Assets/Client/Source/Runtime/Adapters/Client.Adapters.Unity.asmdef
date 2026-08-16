@@ -1,0 +1,23 @@
+{
+    "name": "Client.Adapters.Unity",
+    "rootNamespace": "Client.Adapters",
+    "references": [
+        "Client.Simulation",
+        "DCFApixels.DragonECS",
+        "DCFApixels.DragonECS.Unity",
+        "MyGameDevTools.SceneLoading",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

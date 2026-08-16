@@ -1,12 +1,12 @@
 using System;
 using System.Collections;
 using System.Text.RegularExpressions;
+using Client.Adapters.Systems;
+using Client.Adapters.Views;
+using Client.Bootstrap;
+using Client.Simulation.Menu;
+using Client.Simulation.PhoenixFlame;
 using DCFApixels.DragonECS;
-using Game.Adapters.Bindings;
-using Game.Adapters.Views;
-using Game.Bootstrap;
-using Game.Simulation.Menu;
-using Game.Simulation.PhoenixFlame;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -14,7 +14,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     /// <summary>
     /// Drives the Phoenix Flame demo through the shell: open, press, cycle, close, reopen. Offline

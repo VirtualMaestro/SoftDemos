@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Simulation.Ports;
 
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
     public sealed class DialogueFetchSystem :
         IEcsRun,

@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Text.RegularExpressions;
-using Game.Adapters.Services;
-using Game.Simulation.Ports;
+using Client.Adapters.Services;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Game.Adapters.Tests
+namespace Client.Adapters.Tests
 {
     /// <summary>
     /// Proves the Addressables adapter honours the port contract: a handle-and-poll surface with
@@ -67,7 +67,7 @@ namespace Game.Adapters.Tests
         public IEnumerator UnknownAddress_ReachesFailed_WithoutThrowing()
         {
             LogAssert.Expect(LogType.Error, new Regex(MissingAddress));
-            LogAssert.Expect(LogType.Error, new Regex($@"\[Game\]\[Test\.Assets\].*{MissingAddress}"));
+            LogAssert.Expect(LogType.Error, new Regex($@"\[Client\]\[Test\.Assets\].*{MissingAddress}"));
 
             var requestId = _source.BeginLoad(MissingAddress);
             yield return _PollUntilSettled(requestId);

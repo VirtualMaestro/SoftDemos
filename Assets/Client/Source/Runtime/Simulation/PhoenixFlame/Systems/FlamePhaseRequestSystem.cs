@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Simulation.Ports;
 
-namespace Game.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame
 {
     public sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {

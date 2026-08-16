@@ -1,6 +1,6 @@
 using System;
 
-namespace Game.Simulation.Menu
+namespace Client.Simulation.Menu
 {
     public sealed class DemoCatalog
     {

@@ -1,15 +1,15 @@
 using System;
 using System.IO;
 using System.Linq;
-using Game.Simulation.Core;
+using Client.Simulation.Core;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 
-namespace Game.Simulation.Tests
+namespace Client.Simulation.Tests
 {
-    /// <summary>Guards the main boundary: <c>Game.Simulation</c> must not use Unity.</summary>
+    /// <summary>Guards the main boundary: <c>Client.Simulation</c> must not use Unity.</summary>
     /// <remarks>
     /// Both checks are necessary. The asmdef check finds a new reference that no code uses yet,
     /// because the compiler drops those and reflection cannot see them. The reflection check
@@ -17,9 +17,9 @@ namespace Game.Simulation.Tests
     /// </remarks>
     public sealed class ArchitectureTests
     {
-        private const string SimulationAssembly = "Game.Simulation";
+        private const string SimulationAssembly = "Client.Simulation";
 
-        /// <summary>The only assembly <c>Game.Simulation</c> is allowed to declare.</summary>
+        /// <summary>The only assembly <c>Client.Simulation</c> is allowed to declare.</summary>
         private static readonly string[] AllowedAsmdefReferences = { "DCFApixels.DragonECS" };
 
         /// <summary>Assemblies whose presence means the boundary is already broken.</summary>
@@ -75,7 +75,7 @@ namespace Game.Simulation.Tests
 
             Assert.That(declared, Is.EqualTo(AllowedAsmdefReferences),
                 $"'{SimulationAssembly}' must declare exactly one reference, 'DCFApixels.DragonECS'. " +
-                $"Anything else belongs behind a port in Game.Adapters.Unity.{context}");
+                $"Anything else belongs behind a port in Client.Adapters.Unity.{context}");
 
             Assert.That(asmdef.autoReferenced, Is.False,
                 $"'{SimulationAssembly}' must not be auto-referenced by the predefined assemblies.{context}");
@@ -101,7 +101,7 @@ namespace Game.Simulation.Tests
         {
             var assembly = typeof(SimulationAssemblyInfo).Assembly;
             Assert.That(assembly.GetName().Name, Is.EqualTo(SimulationAssembly),
-                "SimulationAssemblyInfo moved out of the Game.Simulation assembly.");
+                "SimulationAssemblyInfo moved out of the Client.Simulation assembly.");
 
             var referenced = assembly.GetReferencedAssemblies()
                 .Select(a => a.Name)

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     /// <summary>Holds the animated colour of the fire.</summary>
     /// <remarks>

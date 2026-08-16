@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Ports;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Ports;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     public sealed class HttpDialogueService : IDialogueService, IDisposable
     {
-        public const string DefaultUrl =
+        private const string DefaultUrl =
             "https://private-624120-softgamesassignment.apiary-mock.com/v3/magicwords";
         public const float DefaultTimeoutSeconds = 10f;
 

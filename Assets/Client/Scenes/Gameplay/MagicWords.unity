@@ -426,7 +426,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6bea39d951354a189bf312b4511ab56b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Bindings.VList
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Vendor.VList
   prototypeItem: {fileID: 211377998711175720, guid: 4b20635e4aa5a514188368d71ead0626, type: 3}
   prototypeSize: {x: 0, y: 210}
   isAutoGap: 0
@@ -560,7 +560,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 890f086c604d1ef49bdfc5351fa74d0e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.ResponsiveCanvas
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.ResponsiveCanvas
   scaler: {fileID: 0}
 --- !u!114 &835153654
 MonoBehaviour:
@@ -676,7 +676,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba281758270641c4abafcb74db932dc0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.DialogueTapArea
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.DialogueTapArea
   screen: {fileID: 1728802462}
 --- !u!114 &867770198
 MonoBehaviour:
@@ -895,7 +895,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d677b2cceb52caf4c8f9dac04c266cb4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.MagicWordsSceneView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.MagicWordsScreen
   background: {fileID: 308291917}
   logScroll: {fileID: 363233023}
   logContent: {fileID: 1767432372}
@@ -1029,7 +1029,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6fa131c117311b468f98a99a7ae0047, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.SafeAreaFitter
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.SafeAreaFitter
   responsiveCanvas: {fileID: 835153653}
 --- !u!1 &1899671549
 GameObject:

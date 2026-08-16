@@ -340,7 +340,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Softgames Demos
+  m_text: Soft Demos
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc281e0400cb3184bb66ac75301fec90, type: 2}
   m_sharedMaterial: {fileID: -2529842904814077383, guid: dc281e0400cb3184bb66ac75301fec90, type: 2}
@@ -470,7 +470,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9604a4f2beb835d4b94bf1ead9392ba4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.DemoHudScreen
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.DemoHudView
   backButton: {fileID: 5417968}
   title: {fileID: 1874874046}
 --- !u!225 &136082467
@@ -739,7 +739,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 890f086c604d1ef49bdfc5351fa74d0e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.ResponsiveCanvas
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.ResponsiveCanvas
   scaler: {fileID: 301205482}
 --- !u!114 &301205481
 MonoBehaviour:
@@ -836,7 +836,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 372b8dc8894effd49b18f53cbf0c5491, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.ShellSkinView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.ShellSkinView
   background: {fileID: 2120037027}
   panel: {fileID: 683594482}
   buttons:
@@ -1172,7 +1172,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ee16500bb78d1a44a07686e12fd265d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.MenuScreen
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.MenuScreen
   demoButtons:
   - {fileID: 1971625334}
   - {fileID: 268936846}
@@ -1338,7 +1338,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f17518326b31a0840b51bcc41d1ef862, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.FpsView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.FpsView
   label: {fileID: 788400409}
 --- !u!1 &933051087
 GameObject:
@@ -1475,7 +1475,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 127af8c19a1af80498906cb041617cd5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.LoadingSpinnerView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.LoadingSpinnerView
   degreesPerSecond: -180
 --- !u!222 &1042248219
 CanvasRenderer:
@@ -1843,7 +1843,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6fa131c117311b468f98a99a7ae0047, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Ui.SafeAreaFitter
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.SafeAreaFitter
   responsiveCanvas: {fileID: 301205480}
 --- !u!1 &1589290908
 GameObject:
@@ -2297,7 +2297,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d34e7eb4c6ac11438e876e04571e432, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EntryPoint
+  m_EditorClassIdentifier: Client.Bootstrap::Client.Bootstrap.EntryPoint
   menuScreen: {fileID: 683594484}
   demoHud: {fileID: 136082466}
   loadingIndicator: {fileID: 1334372830}

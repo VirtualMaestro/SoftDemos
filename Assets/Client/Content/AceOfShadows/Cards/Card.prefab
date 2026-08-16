@@ -103,4 +103,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ff4807b8c730f249a29f67fee59e79d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Adapters.Unity::Game.Adapters.Views.CardView
+  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Views.CardView

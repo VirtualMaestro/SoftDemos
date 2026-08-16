@@ -1,6 +1,6 @@
 using System;
 
-namespace Game.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows
 {
     /// <summary>
     /// Immutable setup values for the Ace of Shadows simulation. At the default one-second

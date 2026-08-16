@@ -1,4 +1,4 @@
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>State of an asynchronous port request.</summary>
     /// <remarks>

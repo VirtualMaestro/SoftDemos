@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Game.Simulation.Messages
+namespace Client.Simulation.Messages
 {
     /// <summary>An opaque reference to whatever the adapter uses to show this entity.</summary>
     /// <remarks>The simulation keeps the number only. The adapter resolves it.</remarks>

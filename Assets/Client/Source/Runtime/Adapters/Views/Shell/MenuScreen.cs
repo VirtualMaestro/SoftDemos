@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using Client.Simulation.Menu;
 using DCFApixels.DragonECS;
-using Game.Simulation.Menu;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     public sealed class MenuScreen : MonoBehaviour
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     /// <summary>Rotates the loading indicator.</summary>
     /// <remarks>

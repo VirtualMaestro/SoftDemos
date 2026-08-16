@@ -1,9 +1,9 @@
 using System.Linq;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Tests.Fakes;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Tests.Fakes;
 using NUnit.Framework;
 
-namespace Game.Simulation.Tests.MagicWords
+namespace Client.Simulation.Tests.MagicWords
 {
     public sealed class AvatarIndexTests
     {

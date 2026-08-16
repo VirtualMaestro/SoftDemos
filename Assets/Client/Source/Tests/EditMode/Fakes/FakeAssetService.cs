@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes
 {
     /// <summary>
     /// <see cref="IAssetService"/> backed by <see cref="FakeAsyncRequests"/>. Hands out an opaque

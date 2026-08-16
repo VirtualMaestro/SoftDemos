@@ -1,17 +1,18 @@
+using Client.Adapters;
+using Client.Adapters.Services;
+using Client.Adapters.Shared;
+using Client.Adapters.Systems;
+using Client.Adapters.Views;
+using Client.Simulation.AceOfShadows;
+using Client.Simulation.MagicWords;
+using Client.Simulation.Menu;
+using Client.Simulation.PhoenixFlame;
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Adapters;
-using Game.Adapters.Bindings;
-using Game.Adapters.Services;
-using Game.Adapters.Views;
-using Game.Simulation.AceOfShadows;
-using Game.Simulation.MagicWords;
-using Game.Simulation.Menu;
-using Game.Simulation.PhoenixFlame;
-using Game.Simulation.Ports;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Game.Bootstrap
+namespace Client.Bootstrap
 {
     public class EntryPoint : MonoBehaviour
     {
@@ -32,15 +33,15 @@ namespace Game.Bootstrap
         private WebImageLoaderService _webImages;
         private AtlasImageLoaderService _atlasImages;
         private AvatarImageRouterService _avatarImages;
-        private ViewRegistry _viewRegistry;
-        private TweenPlayer _tweenPlayer;
+        private ViewRegistryService _viewRegistry;
+        private TweenPlayerService _tweenPlayer;
         private StageReadyChannel _stageReady;
 
         public EcsWorld World => _world;
-        public ViewRegistry Views => _viewRegistry;
+        public ViewRegistryService Views => _viewRegistry;
         public AddressablesAssetService Assets => _assetSource;
         public AvatarImageRouterService Avatars => _avatarImages;
-        public TweenPlayer TweenPlayer => _tweenPlayer;
+        public TweenPlayerService Tweens => _tweenPlayer;
         public StageReadyChannel StageReady => _stageReady;
 
         private void Start()
@@ -50,8 +51,6 @@ namespace Game.Bootstrap
             if (_HasEveryInspectorReference() == false)
                 return;
 
-            var timeSource = new UnityTimeService();
-            var randomSource = new UnityRandomService();
             _sceneService = new SceneLoaderService(new UnityLogService("Scenes"));
             _assetSource = new AddressablesAssetService(new UnityLogService("Assets"));
             _dialogueSource = new HttpDialogueService(new UnityLogService("Dialogue"));
@@ -60,59 +59,73 @@ namespace Game.Bootstrap
             _avatarImages = new AvatarImageRouterService(
                 _atlasImages, _webImages, new UnityLogService("Avatars"));
 
-            _viewRegistry = new ViewRegistry();
-            var slotLayout = new StackSlotLayout();
+            _viewRegistry = new ViewRegistryService();
+            var slotLayout = new StackSlotLayoutService();
             var aceConfig = new AceOfShadowsConfig();
 
-            // Make the world before the collaborators. TweenPlayer clears move state from its
+            // Make the world before the collaborators. TweenPlayerService clears move state from its
             // pools when it kills a tween.
             _world = new EcsWorld();
 
             // Shared state and behaviour. Systems reach through these instead of holding each other.
-            _tweenPlayer = new TweenPlayer(_world, _viewRegistry, new UnityLogService("Tweens"));
+            _tweenPlayer = new TweenPlayerService(_world, _viewRegistry, new UnityLogService("Tweens"));
             var uiSprites = new SharedUiSprites();
             var cardChannel = new CardViewChannel();
             var dialogueChannel = new DialogueLogChannel();
             _stageReady = new StageReadyChannel();
 
-            var tweenPlayback = new TweenPlaybackSystem(slotLayout, _tweenPlayer);
-            var shellStage = new ShellStageSystem(
-                shellSkin, demos, _assetSource, uiSprites, _stageReady);
-            var aceStage = new AceOfShadowsStageSystem(aceConfig, _viewRegistry, slotLayout,
-                _assetSource, _tweenPlayer, uiSprites, cardChannel, _stageReady);
-            var cardBinding = new CardBindingSystem(_viewRegistry, slotLayout, cardChannel);
-            var deckHud = new DeckHudSystem(slotLayout);
-            var dialogueLog = new DialogueLogSystem(_avatarImages, _tweenPlayer, dialogueChannel);
-            var magicWordsStage = new MagicWordsStageSystem(_assetSource, _atlasImages,
-                _avatarImages, dialogueChannel, _tweenPlayer, _stageReady);
-            var phoenixFlameStage = new PhoenixFlameStageSystem(_assetSource, _stageReady);
-
+            // Every shared collaborator is injected; a system's constructor carries only what is
+            // unique to that instance. See CLAUDE.md, "Composition root".
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
-                .Inject<ITimeService>(timeSource)
-                .Inject<IRandomService>(randomSource)
+                .Inject<ITimeService>(new UnityTimeService())
+                .Inject<IRandomService>(new UnityRandomService())
                 .Inject<ILog>(new UnityLogService("Simulation"))
                 .Inject<ISceneService>(_sceneService)
-                .Inject<IAssetService>(_assetSource)
                 .Inject<IDialogueService>(_dialogueSource)
-                .Inject<IImageLoadService>(_avatarImages)
-                .Inject<ViewRegistry>(_viewRegistry)
 
+                // One instance behind two types: the port for the simulation, the adapter for the
+                // stage systems that need engine objects. AddNode declares the second node; a
+                // second Inject call cannot, because it finds the branch already registered under
+                // the runtime type and skips node creation.
+                //
+                // Only one implementation of each port may be injected. A branch attaches every
+                // node its runtime type is assignable to, so injecting _atlasImages here would
+                // also land on the IImageLoadService node and displace the router. The atlas is
+                // reached through AvatarImageRouterService instead.
+                .Injections.AddNode<IAssetService>()
+                .Inject(_assetSource)
+                .Injections.AddNode<IImageLoadService>()
+                .Inject(_avatarImages)
+
+                .Inject(_viewRegistry)
+                .Inject(_tweenPlayer)
+                .Inject(slotLayout)
+                .Inject(uiSprites)
+                .Inject(_stageReady)
+                .Inject(cardChannel)
+                .Inject(dialogueChannel)
+
+                // The simulation halves are modules because the test fixtures build a headless
+                // pipeline from the same ones. Presentation has no such reuse, so it is a plain
+                // list; a module around Add(new X()) would only hide the order.
                 .AddModule(new MenuModule(new DemoCatalog(_GetDemoAddresses(demos))))
                 .AddModule(new AceOfShadowsModule(aceConfig))
                 .AddModule(new MagicWordsModule(new MagicWordsConfig()))
                 .AddModule(new PhoenixFlameModule(new PhoenixFlameConfig()))
 
-                .Add(aceStage)
-                .Add(cardBinding)
-                .Add(deckHud)
-                .Add(magicWordsStage)
-                .Add(dialogueLog)
-                .Add(phoenixFlameStage)
-                .Add(tweenPlayback)
-                .Add(shellStage)
-                .Add(new ScreenPresentationSystem(
-                    menuScreen, demoHud, loadingIndicator, shellSkin, _tweenPlayer, _stageReady))
+                // Presentation, in run order. These are IEcsLateRun, the simulation is IEcsRun,
+                // and a runner only ever collects its own interface — so the two lists above and
+                // below never interleave at run time.
+                .Add(new AceOfShadowsStageSystem(aceConfig))
+                .Add(new CardBindingSystem())
+                .Add(new DeckHudSystem())
+                .Add(new MagicWordsStageSystem())
+                .Add(new DialogueLogSystem())
+                .Add(new PhoenixFlameStageSystem())
+                .Add(new TweenPlaybackSystem())
+                .Add(new ShellStageSystem(shellSkin, demos))
+                .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
                 .BuildAndInit();
 
             menuScreen.Bind(_world, demos);

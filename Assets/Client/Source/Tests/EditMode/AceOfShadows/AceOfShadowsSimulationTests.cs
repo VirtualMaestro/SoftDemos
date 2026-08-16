@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Client.Simulation.AceOfShadows;
+using Client.Simulation.Messages;
+using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
-using Game.Simulation.AceOfShadows;
-using Game.Simulation.Messages;
-using Game.Simulation.Tests.Fakes;
 using NUnit.Framework;
 
-namespace Game.Simulation.Tests.AceOfShadows
+namespace Client.Simulation.Tests.AceOfShadows
 {
     public sealed class AceOfShadowsSimulationTests : AceOfShadowsTestFixture
     {

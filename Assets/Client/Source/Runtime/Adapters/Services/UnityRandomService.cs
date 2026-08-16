@@ -1,6 +1,6 @@
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 
-namespace Game.Adapters.Services
+namespace Client.Adapters.Services
 {
     /// <summary><see cref="IRandomService"/> on <see cref="UnityEngine.Random"/>.</summary>
     public sealed class UnityRandomService : IRandomService

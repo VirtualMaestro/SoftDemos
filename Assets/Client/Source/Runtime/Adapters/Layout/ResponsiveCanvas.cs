@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Layout
+namespace Client.Adapters.Layout
 {
     [RequireComponent(typeof(CanvasScaler))]
     public sealed class ResponsiveCanvas : MonoBehaviour

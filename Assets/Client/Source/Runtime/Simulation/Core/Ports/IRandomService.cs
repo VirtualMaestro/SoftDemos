@@ -1,4 +1,4 @@
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>The only source of randomness in the simulation.</summary>
     /// <remarks>A fake returns a fixed sequence, so a shuffle or a spawn becomes testable.</remarks>

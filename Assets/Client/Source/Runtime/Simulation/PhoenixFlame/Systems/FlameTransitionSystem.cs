@@ -1,7 +1,7 @@
+using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
-using Game.Simulation.Ports;
 
-namespace Game.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame
 {
     public sealed class FlameTransitionSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILog>

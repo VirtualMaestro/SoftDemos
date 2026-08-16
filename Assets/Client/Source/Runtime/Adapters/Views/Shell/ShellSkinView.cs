@@ -1,8 +1,8 @@
-using Game.Simulation.Ports;
+using Client.Simulation.Ports;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Game.Adapters.Views
+namespace Client.Adapters.Views
 {
     /// <summary>Every sprite target of the persistent shell, in one serialized place.</summary>
     /// <remarks>

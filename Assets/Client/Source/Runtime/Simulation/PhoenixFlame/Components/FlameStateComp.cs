@@ -1,7 +1,7 @@
 using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
-namespace Game.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame
 {
     public struct FlameStateComp : IEcsWorldComponent<FlameStateComp>
     {

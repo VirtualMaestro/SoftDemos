@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Game.Simulation.MagicWords
+namespace Client.Simulation.MagicWords
 {
     public static class DialogueTokenizer
     {

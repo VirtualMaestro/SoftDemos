@@ -1,6 +1,6 @@
-using Game.Simulation.MagicWords;
+using Client.Simulation.MagicWords;
 
-namespace Game.Simulation.Ports
+namespace Client.Simulation.Ports
 {
     /// <summary>Loads the dialogue payload. Handle and poll.</summary>
     /// <remarks>The port returns plain simulation types, never an engine or transport object.</remarks>
