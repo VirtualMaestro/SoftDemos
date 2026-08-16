@@ -415,13 +415,13 @@ namespace Client.Adapters.Systems
             if (_flameFrames != null)
                 foreach (var frame in _flameFrames)
                     if (frame != null)
-                        UnityEngine.Object.Destroy(frame);
+                        Object.Destroy(frame);
 
             if (_smokeSprite != null)
-                UnityEngine.Object.Destroy(_smokeSprite);
+                Object.Destroy(_smokeSprite);
 
             if (_sparkSprite != null)
-                UnityEngine.Object.Destroy(_sparkSprite);
+                Object.Destroy(_sparkSprite);
 
             _flameFrames = null;
             _smokeSprite = null;
@@ -431,7 +431,7 @@ namespace Client.Adapters.Systems
         private void _DestroyBackgroundCopy()
         {
             if (_ownsBackgroundSprite && _backgroundSprite != null)
-                UnityEngine.Object.Destroy(_backgroundSprite);
+                Object.Destroy(_backgroundSprite);
 
             _ownsBackgroundSprite = false;
             _backgroundSprite = null;
@@ -470,14 +470,5 @@ namespace Client.Adapters.Systems
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
-
-        private enum StageState
-        {
-            Idle,
-            Loading,
-            Starting,
-            Ready,
-            Closing,
-        }
     }
 }

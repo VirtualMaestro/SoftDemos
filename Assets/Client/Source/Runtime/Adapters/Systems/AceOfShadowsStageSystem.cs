@@ -398,12 +398,5 @@ namespace Client.Adapters.Systems
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 
-        private enum StageState
-        {
-            Idle,
-            Loading,
-            Ready,
-            Closing,
-        }
     }
 }

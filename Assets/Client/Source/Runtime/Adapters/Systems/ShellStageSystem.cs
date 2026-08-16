@@ -297,11 +297,5 @@ namespace Client.Adapters.Systems
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
 
-        private enum StageState
-        {
-            Idle,
-            Loading,
-            Ready,
-        }
     }
 }
