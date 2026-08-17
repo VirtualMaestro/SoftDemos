@@ -72,7 +72,7 @@ namespace Client.Adapters.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (!_requests.TryGetValue(requestId, out var request))
                 return AsyncOpStatus.Pending;
 
             if (request.Status != AsyncOpStatus.Pending)
@@ -99,7 +99,7 @@ namespace Client.Adapters.Services
 
         public DialoguePayload Resolve(int requestId)
         {
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (!_requests.TryGetValue(requestId, out var request))
                 return null;
 
             return request.Status == AsyncOpStatus.Done ? request.Payload : null;
@@ -107,10 +107,9 @@ namespace Client.Adapters.Services
 
         public void Release(int requestId)
         {
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (!_requests.Remove(requestId, out var request))
                 return;
 
-            _requests.Remove(requestId);
             _ReleaseTransport(request);
         }
 

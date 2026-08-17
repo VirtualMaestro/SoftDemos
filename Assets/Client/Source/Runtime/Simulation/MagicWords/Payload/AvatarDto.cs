@@ -2,7 +2,6 @@ using System;
 
 namespace Client.Simulation.MagicWords
 {
-#pragma warning disable IDE1006 // Naming rule violation — field names are the JSON keys.
     [Serializable]
     public sealed class AvatarDto
     {
@@ -10,5 +9,4 @@ namespace Client.Simulation.MagicWords
         public string url;
         public string position;
     }
-#pragma warning restore IDE1006
 }

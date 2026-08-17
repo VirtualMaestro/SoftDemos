@@ -41,7 +41,7 @@ namespace Client.Adapters.Systems
         private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
         private StageState _state;
-        private MagicWordsScreen _scene;
+        private MagicWordsScreen _mwScreen;
         private Camera _camera;
         private Sprite[] _atlasSprites = Array.Empty<Sprite>();
         private Sprite _backgroundSprite;
@@ -58,7 +58,7 @@ namespace Client.Adapters.Systems
 
         public void LateRun()
         {
-            if (_scene != null && _state != StageState.Closing &&
+            if (_mwScreen != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  _screens.TryGet<MagicWordsScreen>(out _) == false))
                 _TransitionTo(StageState.Closing);
@@ -86,13 +86,13 @@ namespace Client.Adapters.Systems
         {
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (_screens.TryGet(out MagicWordsScreen current) == false || current == _scene ||
+            if (_screens.TryGet(out MagicWordsScreen current) == false || current == _mwScreen ||
                 screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != 1)
                 return;
 
-            _scene = current;
-            _scene.OnSkipPressed += _OnRequestSkip;
-            _scene.OnAvatarModePressed += _OnRequestModeChange;
+            _mwScreen = current;
+            _mwScreen.OnSkipPressed += _OnRequestSkip;
+            _mwScreen.OnAvatarModePressed += _OnRequestModeChange;
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
             _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
             _emojiRequestId = _assets.BeginLoad(EmojiAddress);
@@ -123,7 +123,7 @@ namespace Client.Adapters.Systems
                 return;
             }
 
-            _scene.Background.sprite = _backgroundSprite;
+            _mwScreen.Background.sprite = _backgroundSprite;
             // The screen is covered now, so the shell can hand over.
             _stageReady.MarkDemoReady();
             _avatars.SetLocalSprites(_sprites);
@@ -132,7 +132,7 @@ namespace Client.Adapters.Systems
                 _sprites[BubbleSpriteName],
                 _sprites[FrameSpriteName],
                 _sprites[PlaceholderSpriteName],
-                _scene);
+                _mwScreen);
             _UpdateAvatarModeLabel();
             _RecalculateLayout();
             _WriteCommand<LoadDialogueCommand>();
@@ -232,13 +232,13 @@ namespace Client.Adapters.Systems
 
             _shownDialogueState = dialogue.State;
             var failed = dialogue.State == DialogueLoadState.Failed;
-            _scene.StatusLabel.gameObject.SetActive(dialogue.State != DialogueLoadState.Ready);
-            _scene.StatusLabel.text = failed ? FailedStatus : LoadingStatus;
+            _mwScreen.StatusLabel.gameObject.SetActive(dialogue.State != DialogueLoadState.Ready);
+            _mwScreen.StatusLabel.text = failed ? FailedStatus : LoadingStatus;
         }
 
         private void _UpdateAvatarModeLabel()
         {
-            _scene.AvatarModeLabel.text = _avatars.Mode == AvatarMode.Local
+            _mwScreen.AvatarModeLabel.text = _avatars.Mode == AvatarMode.Local
                 ? LocalModeLabel
                 : RemoteModeLabel;
         }
@@ -261,8 +261,8 @@ namespace Client.Adapters.Systems
                 _log.Error("No MainCamera found for Magic Words layout; using orthographic size 5.");
             }
 
-            if (_scene != null)
-                BackgroundFitter.CoverFit(_scene.Background.transform, _backgroundSprite, _camera,
+            if (_mwScreen != null)
+                BackgroundFitter.CoverFit(_mwScreen.Background.transform, _backgroundSprite, _camera,
                     orthographicSize, _screenWidth, _screenHeight);
             var mode = _screenWidth < _screenHeight ? "portrait" : "landscape";
             _log.Info($"Magic Words layout recalculated for {_screenWidth}×{_screenHeight} ({mode}).");
@@ -270,7 +270,7 @@ namespace Client.Adapters.Systems
 
         private void _Teardown(bool resetDialogue)
         {
-            if (_state == StageState.Idle && _scene == null && _atlasRequestId == 0 &&
+            if (_state == StageState.Idle && _mwScreen == null && _atlasRequestId == 0 &&
                 _backgroundRequestId == 0 && _emojiRequestId == 0)
                 return;
 
@@ -285,16 +285,16 @@ namespace Client.Adapters.Systems
             _DestroySpriteCopies();
             _DestroyBackgroundCopy();
 
-            if (_scene != null)
+            if (_mwScreen != null)
             {
-                _scene.OnSkipPressed -= _OnRequestSkip;
-                _scene.OnAvatarModePressed -= _OnRequestModeChange;
-                _scene.Background.sprite = null;
+                _mwScreen.OnSkipPressed -= _OnRequestSkip;
+                _mwScreen.OnAvatarModePressed -= _OnRequestModeChange;
+                _mwScreen.Background.sprite = null;
             }
 
             _ReleaseRequests();
 
-            _scene = null;
+            _mwScreen = null;
             _camera = null;
             _shownDialogueState = (DialogueLoadState)(-1);
             _screenWidth = -1;

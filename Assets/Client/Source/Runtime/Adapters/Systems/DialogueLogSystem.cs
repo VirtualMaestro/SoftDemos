@@ -110,7 +110,7 @@ namespace Client.Adapters.Systems
 
         private void _SpawnVisibleLines()
         {
-            var scene = _channel.Scene;
+            var mwScreen = _channel.Scene;
 
             foreach (var entityId in _world.Where(out VisibleLineAspect _))
                 _pendingLines.Add(entityId);
@@ -149,7 +149,7 @@ namespace Client.Adapters.Systems
             {
                 Canvas.ForceUpdateCanvases();
                 _list.RefreshViewport();
-                _ScrollToNewest(scene.LogScroll);
+                _ScrollToNewest(mwScreen.LogScroll);
                 _list.ForEachVisual(_fadeInJustAdded);
                 _justAddedItemIds.Clear();
                 ref readonly var state = ref _world.Get<DialogueStateComp>();
