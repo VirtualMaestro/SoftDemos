@@ -719,7 +719,6 @@ GameObject:
   - component: {fileID: 301205483}
   - component: {fileID: 301205482}
   - component: {fileID: 301205481}
-  - component: {fileID: 301205480}
   - component: {fileID: 301205485}
   m_Layer: 0
   m_Name: ShellCanvas
@@ -728,19 +727,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &301205480
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 301205479}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 890f086c604d1ef49bdfc5351fa74d0e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.ResponsiveCanvas
-  scaler: {fileID: 301205482}
 --- !u!114 &301205481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -773,8 +759,8 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1080, y: 1920}
-  m_ScreenMatchMode: 0
+  m_ReferenceResolution: {x: 1080, y: 1080}
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
@@ -1844,7 +1830,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6fa131c117311b468f98a99a7ae0047, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Client.Adapters.Unity::Client.Adapters.Layout.SafeAreaFitter
-  responsiveCanvas: {fileID: 301205480}
 --- !u!1 &1589290908
 GameObject:
   m_ObjectHideFlags: 0
