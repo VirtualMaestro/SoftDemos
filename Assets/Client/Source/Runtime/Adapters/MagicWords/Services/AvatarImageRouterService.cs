@@ -9,17 +9,15 @@ namespace Client.Adapters.MagicWords
     {
         private readonly AtlasImageLoaderService _local;
         private readonly WebImageLoaderService _remote;
-        private readonly ILog _log;
         private readonly Dictionary<int, Route> _routes = new();
 
         private int _nextRequestId;
         private bool _isDisposed;
 
-        public AvatarImageRouterService(AtlasImageLoaderService local, WebImageLoaderService remote, ILog log)
+        public AvatarImageRouterService(AtlasImageLoaderService local, WebImageLoaderService remote)
         {
             _local = local ?? throw new ArgumentNullException(nameof(local));
             _remote = remote ?? throw new ArgumentNullException(nameof(remote));
-            _log = log ?? throw new ArgumentNullException(nameof(log));
         }
 
         public AvatarMode Mode { get; private set; } = AvatarMode.Local;
@@ -44,14 +42,7 @@ namespace Client.Adapters.MagicWords
             _local.ClearSprites();
         }
 
-        public void SetMode(AvatarMode mode)
-        {
-            if (Mode == mode)
-                return;
-
-            Mode = mode;
-            _log.Info($"Avatar mode changed to {mode}.");
-        }
+        public void SetMode(AvatarMode mode) => Mode = mode;
 
         public int BeginLoad(string speakerName, string url)
         {

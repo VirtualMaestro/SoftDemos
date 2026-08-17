@@ -58,8 +58,6 @@ namespace Client.Adapters.MagicWords
                 return requestId;
             }
 
-            _log.Info($"Request #{requestId} avatar '{request.SpeakerName}' GET '{url}' started.");
-
             try
             {
                 request.Transport = UnityWebRequestTexture.GetTexture(url, true);
@@ -100,8 +98,6 @@ namespace Client.Adapters.MagicWords
 
             request.HandleId = ++_nextHandleId;
             _textures.Add(request.HandleId, texture);
-            _log.Info($"Request #{requestId} avatar '{request.SpeakerName}' GET '{request.Url}' completed: " +
-                      $"handle #{request.HandleId}, {texture.width}x{texture.height}.");
             return status;
         }
 

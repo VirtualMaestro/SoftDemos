@@ -156,7 +156,6 @@ namespace Client.Adapters.PhoenixFlame
             _flameScreen.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
             _world.WriteCommand<StartFlameCommand>();
-            _log.Info("Phoenix Flame content loaded.");
             _TransitionTo(StageState.Starting);
         }
 
@@ -182,7 +181,6 @@ namespace Client.Adapters.PhoenixFlame
                     "simulation; the phase label and the colour will disagree.");
             _ApplyInteractable(true);
             _ApplyLabel(flame.CurrentPhase);
-            _log.Info($"Phoenix Flame started in {flame.CurrentPhase}.");
             _TransitionTo(StageState.Ready);
         }
 
@@ -208,8 +206,6 @@ namespace Client.Adapters.PhoenixFlame
             if (flame.IsTransitioning == false || _shownPhase == flame.NextPhase)
                 return;
 
-            _log.Info($"Flame animator triggering {flame.CurrentPhase} -> {flame.NextPhase} " +
-                $"over {AuthoredTransitionSeconds}s.");
             _shownPhase = flame.NextPhase;
             // Triggers latch. Clear the other two before you set the one you want.
             _ResetPhaseTriggers();
@@ -370,14 +366,7 @@ namespace Client.Adapters.PhoenixFlame
 
         private void _OnRequestAdvance() => _advanceRequested = true;
 
-        private void _TransitionTo(StageState next)
-        {
-            if (_state == next)
-                return;
-
-            _log.Info($"Phoenix Flame stage: {_state} -> {next}.");
-            _state = next;
-        }
+        private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILog obj) => _log = obj;

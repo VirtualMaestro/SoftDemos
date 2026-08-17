@@ -51,8 +51,6 @@ namespace Client.Adapters.Services
 
             if (status == AsyncOpStatus.Failed)
                 _log.Error($"Request #{requestId} {request.Operation} address '{request.Address}': Pending -> Failed. {failureDetail}");
-            else
-                _log.Info($"Request #{requestId} {request.Operation} address '{request.Address}': Pending -> Done.");
 
             return status;
         }
@@ -63,9 +61,6 @@ namespace Client.Adapters.Services
                 return;
 
             request.Cancellation.Dispose();
-
-            _log.Info($"Request #{requestId} {request.Operation} address '{request.Address}' released " +
-                      $"in state {request.Status}. Open requests: {_requests.Count}.");
         }
 
         /// <summary>Cancels and drops every open request. Call it after the pipeline is destroyed.</summary>
@@ -80,14 +75,11 @@ namespace Client.Adapters.Services
 
             _isDisposed = true;
 
-            _log.Info($"Disposing. Cancelling {_requests.Count} in-flight scene request(s).");
-
             foreach (var entry in _requests)
             {
                 var request = entry.Value;
                 _CancelQuietly(request);
                 request.Cancellation.Dispose();
-                _log.Info($"Request #{entry.Key} {request.Operation} address '{request.Address}' cancelled on dispose.");
             }
 
             _requests.Clear();
@@ -105,8 +97,6 @@ namespace Client.Adapters.Services
                 _log.Error($"Request #{requestId} {request.Operation} address '{sceneId}' rejected: the service is disposed.");
                 return requestId;
             }
-
-            _log.Info($"Request #{requestId} {request.Operation} address '{sceneId}' started. Open requests: {_requests.Count}.");
 
             try
             {

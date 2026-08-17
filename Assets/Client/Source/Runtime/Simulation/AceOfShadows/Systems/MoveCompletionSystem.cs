@@ -50,10 +50,7 @@ namespace Client.Simulation.AceOfShadows
                 aspect.Moving.TryDel(entityId);
 
                 if (state.IsComplete == false && state.MovesCompleted == state.TotalCards)
-                {
                     state.IsComplete = true;
-                    _log.Info($"All {state.TotalCards} move(s) completed.");
-                }
             }
         }
 

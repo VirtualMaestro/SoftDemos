@@ -28,7 +28,6 @@ namespace Client.Simulation.Tests.MagicWords
 
             Assert.That(ImageSource.LoadCalls, Has.Count.EqualTo(2));
             Assert.That(ImageSource.LoadCalls[1], Is.EqualTo(("Leonard", expectedUrl)));
-            Assert.That(Log.CountOf(FakeLog.Level.Info), Is.EqualTo(4));
         }
 
         [Test]

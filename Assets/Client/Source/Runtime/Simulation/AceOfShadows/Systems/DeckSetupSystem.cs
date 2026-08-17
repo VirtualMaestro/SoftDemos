@@ -25,7 +25,7 @@ namespace Client.Simulation.AceOfShadows
 
             // Reset is consumed before Deal so that a close-then-open in the same tick leaves the
             // deck dealt. The reverse order would deal and then wipe it, and the demo would open
-            // empty with nothing to log.
+            // empty.
             foreach (var entityId in _world.Where(out ResetCommandAspect _))
             {
                 if (state.IsDealt)
@@ -39,10 +39,7 @@ namespace Client.Simulation.AceOfShadows
             foreach (var entityId in _world.Where(out DealCommandAspect _))
             {
                 if (state.IsDealt)
-                {
-                    _log.Info("Deal requested while the deck is already dealt; restarting.");
                     _Reset(ref state);
-                }
 
                 _Deal(ref state);
                 _world.DelEntity(entityId);
@@ -78,9 +75,6 @@ namespace Client.Simulation.AceOfShadows
             }
 
             state.IsDealt = true;
-            _log.Info($"Dealt {_config.CardCount} card(s) across {_config.StackCount} stack(s); " +
-                $"source={_config.SourceStack}, target={_config.TargetStack}, " +
-                $"interval={_config.MoveIntervalSeconds:0.###}s.");
         }
 
         private void _Reset(ref DeckStateComp state)
@@ -92,7 +86,6 @@ namespace Client.Simulation.AceOfShadows
                 _world.DelEntity(entityId);
 
             state = default;
-            _log.Info("Deck reset.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

@@ -142,7 +142,6 @@ namespace Client.Adapters.AceOfShadows
                 _stageReady.MarkDemoReady();
                 _SkinSpeedButton();
                 _RecalculateLayout();
-                _log.Info("Ace of Shadows content loaded.");
             }
 
             var remaining = _config.CardCount - _channel.Views.Count;
@@ -161,7 +160,6 @@ namespace Client.Adapters.AceOfShadows
             _channel.BumpBindingReset();
             _channel.BumpSeating();
             _world.WriteCommand<DealDeckCommand>();
-            _log.Info($"Spawned {_channel.Views.Count} card view(s).");
             _TransitionTo(StageState.Ready);
         }
 
@@ -197,7 +195,6 @@ namespace Client.Adapters.AceOfShadows
             var multiplier = SpeedCycle[_speedIndex];
             var commandEntity = _world.NewEntity();
             _world.GetPool<SetDeckSpeedCommand>().Add(commandEntity).Multiplier = multiplier;
-            _log.Info($"Ace of Shadows speed button requested ×{multiplier:0}.");
         }
 
         private bool _ResolveContent()
@@ -333,14 +330,7 @@ namespace Client.Adapters.AceOfShadows
             _speedRequested = true;
         }
 
-        private void _TransitionTo(StageState next)
-        {
-            if (_state == next)
-                return;
-
-            _log.Info($"Ace of Shadows stage: {_state} -> {next}.");
-            _state = next;
-        }
+        private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILog obj) => _log = obj;

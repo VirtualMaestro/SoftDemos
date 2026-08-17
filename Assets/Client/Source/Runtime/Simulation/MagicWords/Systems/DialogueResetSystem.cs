@@ -12,13 +12,11 @@ namespace Client.Simulation.MagicWords
         IEcsDestroy,
         IEcsInject<EcsWorld>,
         IEcsInject<IDialogueService>,
-        IEcsInject<IImageLoadService>,
-        IEcsInject<ILog>
+        IEcsInject<IImageLoadService>
     {
         private EcsWorld _world;
         private IDialogueService _dialogueSource;
         private IImageLoadService _imageSource;
-        private ILog _log;
 
         public void Run()
         {
@@ -47,7 +45,6 @@ namespace Client.Simulation.MagicWords
             state = default;
             ref var payload = ref _world.Get<DialoguePayloadComp>();
             payload = default;
-            _log.Info("Dialogue reset.");
         }
 
         void IEcsDestroy.Destroy()
@@ -94,7 +91,6 @@ namespace Client.Simulation.MagicWords
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(IDialogueService obj) => _dialogueSource = obj;
         public void Inject(IImageLoadService obj) => _imageSource = obj;
-        public void Inject(ILog obj) => _log = obj;
 
         private sealed class ResetCommandAspect : EcsAspect
         {

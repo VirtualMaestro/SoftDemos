@@ -44,7 +44,6 @@ namespace Client.Simulation.MagicWords
             var linePool = _world.GetPool<DialogueLineComp>();
             var textPool = _world.GetPool<DialogueTextComp>();
             var lineCount = 0;
-            var missingAvatarCount = 0;
             var dialogue = payload.dialogue;
 
             if (dialogue != null)
@@ -80,10 +79,7 @@ namespace Client.Simulation.MagicWords
                             avatarLoad.State = AvatarLoadState.NotRequested;
                         }
                         else
-                        {
                             avatarLoad.State = AvatarLoadState.Missing;
-                            missingAvatarCount++;
-                        }
 
                         speaker = _world.GetEntityLong(speakerEntityId);
                         speakers.Add(line.name, speaker);
@@ -108,9 +104,6 @@ namespace Client.Simulation.MagicWords
             state.LineCount = lineCount;
             state.SpeakerCount = speakers.Count;
             payloadComp = default;
-            _log.Info(
-                $"Ingested {lineCount} line(s) across {speakers.Count} speaker(s); " +
-                $"{missingAvatarCount} without an avatar.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

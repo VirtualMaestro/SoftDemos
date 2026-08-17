@@ -51,8 +51,6 @@ namespace Client.Adapters.MagicWords
                 return requestId;
             }
 
-            _log.Info($"Request #{requestId} GET '{_url}' started.");
-
             try
             {
                 request.Transport = UnityWebRequest.Get(_url);
@@ -91,9 +89,6 @@ namespace Client.Adapters.MagicWords
                 return status;
             }
 
-            _log.Info($"Request #{requestId} GET '{_url}' completed: " +
-                      $"{request.Payload.dialogue?.Length ?? 0} line(s), " +
-                      $"{request.Payload.avatars?.Length ?? 0} avatar(s).");
             return status;
         }
 

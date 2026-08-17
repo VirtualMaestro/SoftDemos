@@ -55,7 +55,6 @@ namespace Client.Adapters.AceOfShadows
 
         private void _BindUnboundCards()
         {
-            var cursorBefore = _bindCursor;
             foreach (var entityId in _world.Where(out UnboundAspect aspect))
             {
                 if (_bindCursor >= _channel.Views.Count || _bindCursor >= _channel.Handles.Count)
@@ -80,10 +79,6 @@ namespace Client.Adapters.AceOfShadows
                 aspect.Seated.TryAdd(entityId);
                 _bindCursor++;
             }
-
-            // Logs once: only on the frame the last view was bound.
-            if (_bindCursor > cursorBefore && _bindCursor == _channel.Views.Count)
-                _log.Info($"Bound {_bindCursor}/{_channel.Views.Count} card view(s).");
         }
 
         private void _RaiseMovingCards()
@@ -140,7 +135,7 @@ namespace Client.Adapters.AceOfShadows
         private sealed class MovingAspect : EcsAspect
         {
             public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> Moving = Inc;
+            public EcsPool<MovingComp> _ = Inc;
             public EcsPool<ViewHandleComp> Views = Inc;
             public EcsTagPool<CardSeatedTag> Seated = Inc;
         }
@@ -148,7 +143,7 @@ namespace Client.Adapters.AceOfShadows
         private sealed class RestingAspect : EcsAspect
         {
             public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> Moving = Exc;
+            public EcsPool<MovingComp> _ = Exc;
             public EcsPool<ViewHandleComp> Views = Inc;
             public EcsTagPool<CardSeatedTag> Seated = Exc;
         }

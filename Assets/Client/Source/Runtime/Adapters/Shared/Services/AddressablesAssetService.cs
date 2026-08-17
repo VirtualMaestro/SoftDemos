@@ -49,8 +49,6 @@ namespace Client.Adapters.Services
                 return requestId;
             }
 
-            _log.Info($"Request #{requestId} load '{address}' started. Open requests: {_requests.Count}.");
-
             try
             {
                 request.Handle = Addressables.LoadAssetAsync<Object>(address);
@@ -88,9 +86,6 @@ namespace Client.Adapters.Services
 
             request.HandleId = ++_nextHandleId;
             _assets.Add(request.HandleId, request.Handle.Result);
-            _log.Info($"Request #{requestId} load '{request.Address}': Pending -> Done, " +
-                      $"handle #{request.HandleId}. Held assets: {_assets.Count}.");
-
             return status;
         }
 
@@ -115,9 +110,6 @@ namespace Client.Adapters.Services
 
             _assets.Remove(request.HandleId);
             _ReleaseHandleQuietly(request);
-
-            _log.Info($"Request #{requestId} load '{request.Address}' released in state {request.Status}. " +
-                      $"Open requests: {_requests.Count}, held assets: {_assets.Count}.");
         }
 
         /// <summary>
@@ -131,13 +123,8 @@ namespace Client.Adapters.Services
 
             _isDisposed = true;
 
-            _log.Info($"Disposing. Releasing {_requests.Count} asset request(s).");
-
             foreach (var entry in _requests)
-            {
                 _ReleaseHandleQuietly(entry.Value);
-                _log.Info($"Request #{entry.Key} load '{entry.Value.Address}' released on dispose.");
-            }
 
             _requests.Clear();
             _assets.Clear();

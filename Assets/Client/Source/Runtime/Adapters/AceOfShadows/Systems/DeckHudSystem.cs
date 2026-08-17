@@ -1,6 +1,5 @@
 using Client.Adapters.Services;
 using Client.Simulation.AceOfShadows;
-using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 
@@ -10,13 +9,12 @@ namespace Client.Adapters.AceOfShadows
     /// Mirrors deck state onto the HUD: stack counters, speed label, completion message, and
     /// counter positions after a layout change.
     /// </summary>
-    public sealed class DeckHudSystem : IEcsLateRun, IEcsInject<EcsWorld>, IEcsInject<ILog>,
+    public sealed class DeckHudSystem : IEcsLateRun, IEcsInject<EcsWorld>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<ScreenRegistryService>
     {
-        private static readonly Vector3 _counterOffset = new(0f, 1.5f, 0f);
+        private static readonly Vector3 CounterOffset = new(0f, 1.5f, 0f);
 
         private EcsWorld _world;
-        private ILog _log;
         private StackSlotLayoutService _layout;
         private ScreenRegistryService _screens;
         private AceOfShadowsScreen _scene;
@@ -67,7 +65,7 @@ namespace Client.Adapters.AceOfShadows
                 _scene.TargetCounter.SetText("{0}", targetCount);
             }
 
-            if (_speedMultiplier != state.SpeedMultiplier)
+            if (!Mathf.Approximately(_speedMultiplier, state.SpeedMultiplier))
             {
                 _speedMultiplier = state.SpeedMultiplier;
                 _scene.SpeedLabel.SetText("×{0:0}", _speedMultiplier);
@@ -79,10 +77,7 @@ namespace Client.Adapters.AceOfShadows
                 _scene.CompletionLabel.gameObject.SetActive(_isComplete);
 
                 if (_isComplete)
-                {
                     _scene.CompletionLabel.SetText("All {0} cards moved.", state.TotalCards);
-                    _log.Info("Completion message shown.");
-                }
             }
 
             if (_layoutVersion == _layout.Version && _totalCards == state.TotalCards)
@@ -91,9 +86,9 @@ namespace Client.Adapters.AceOfShadows
             _layoutVersion = _layout.Version;
             _totalCards = state.TotalCards;
             _scene.SourceCounter.transform.position =
-                _layout.SlotPosition(state.SourceStack, state.TotalCards) + _counterOffset;
+                _layout.SlotPosition(state.SourceStack, state.TotalCards) + CounterOffset;
             _scene.TargetCounter.transform.position =
-                _layout.SlotPosition(state.TargetStack, state.TotalCards) + _counterOffset;
+                _layout.SlotPosition(state.TargetStack, state.TotalCards) + CounterOffset;
         }
 
         private void _ResetFor(AceOfShadowsScreen scene)
@@ -109,7 +104,6 @@ namespace Client.Adapters.AceOfShadows
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 

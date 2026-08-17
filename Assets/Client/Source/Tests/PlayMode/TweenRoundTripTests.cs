@@ -41,7 +41,7 @@ namespace Client.Adapters.Tests
             _layout.Recalculate(1080, 1920, 5f);
 
             _world = new EcsWorld();
-            var player = new TweenPlayerService(_world, _registry, new UnityLogService("Test.Tween"));
+            var player = new TweenPlayerService(_world, _registry);
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ILog>(new UnityLogService("Test.Tween"))

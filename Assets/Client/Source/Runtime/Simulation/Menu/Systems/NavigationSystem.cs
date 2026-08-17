@@ -115,12 +115,8 @@ namespace Client.Simulation.Menu
             _Transition(ref state, ScreenId.Menu);
         }
 
-        private void _Transition(ref ScreenStateComp state, ScreenId next)
-        {
-            var previous = state.Current;
+        private static void _Transition(ref ScreenStateComp state, ScreenId next) =>
             state.Current = next;
-            _log.Info($"Navigation {previous} -> {next}; demo={state.ActiveDemoIndex}.");
-        }
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ISceneService obj) => _scenes = obj;

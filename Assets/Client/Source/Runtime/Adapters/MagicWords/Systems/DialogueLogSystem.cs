@@ -71,10 +71,6 @@ namespace Client.Adapters.MagicWords
 
         private void _ClearViews()
         {
-            if (_bindings.Count > 0)
-                _log.Info($"Dialogue log cleared {_bindings.Count} line(s) " +
-                          $"(channel reset #{_resetVersion}).");
-
             foreach (var entityId in _bindings.Keys)
                 _bound.TryDel(entityId);
 
@@ -105,7 +101,6 @@ namespace Client.Adapters.MagicWords
 
                 var data = new DialogueLineItemData
                 {
-                    EntityId = entityId,
                     SpeakerId = speakerId,
                     SpeakerName = speakerId >= 0 && _speakers.Has(speakerId)
                         ? _speakers.Read(speakerId).Name
@@ -133,11 +128,6 @@ namespace Client.Adapters.MagicWords
                 _ScrollToNewest(mwScreen.LogScroll);
                 _list.ForEachVisual(_FadeInJustAdded);
                 _justAddedItemIds.Clear();
-                ref readonly var state = ref _world.Get<DialogueStateComp>();
-
-                // Fires once: bindings only grow on frames that add lines.
-                if (state.LineCount > 0 && _bindings.Count == state.LineCount)
-                    _log.Info($"Bound all {state.LineCount} dialogue line view(s).");
             }
 
             _pendingLines.Clear();

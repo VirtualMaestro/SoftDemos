@@ -32,7 +32,7 @@ namespace Client.Adapters.Tests
             var log = new UnityLogService("Test.AvatarRouter");
             _local = new AtlasImageLoaderService(log);
             _remote = new WebImageLoaderService(log);
-            _router = new AvatarImageRouterService(_local, _remote, log);
+            _router = new AvatarImageRouterService(_local, _remote);
             _CreateAtlasSprites();
             _local.SetSprites(_sprites);
             _CreatePng();

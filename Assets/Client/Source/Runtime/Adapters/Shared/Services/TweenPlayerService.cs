@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Client.Adapters.AceOfShadows;
 using Client.Simulation.Messages;
-using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 using DG.Tweening;
 using UnityEngine;
@@ -20,15 +19,13 @@ namespace Client.Adapters.Services
     {
         private readonly EcsWorld _world;
         private readonly ViewRegistryService _views;
-        private readonly ILog _log;
         private readonly List<entlong> _completedTweens = new();
         private readonly List<CanvasGroup> _fading = new();
 
-        public TweenPlayerService(EcsWorld world, ViewRegistryService views, ILog log)
+        public TweenPlayerService(EcsWorld world, ViewRegistryService views)
         {
             _world = world;
             _views = views;
-            _log = log;
         }
 
         /// <summary>Tweens that finished but whose completion has not been applied yet.</summary>
@@ -63,23 +60,20 @@ namespace Client.Adapters.Services
                 .OnComplete(() => _fading.Remove(group));
         }
 
-        public int KillFades()
+        public void KillFades()
         {
-            var killed = 0;
             foreach (var group in _fading)
                 if (group != null)
-                    killed += DOTween.Kill(group);
+                    DOTween.Kill(group);
 
             _fading.Clear();
-            return killed;
         }
 
-        public int KillTweensFor(IReadOnlyList<int> handleIds)
+        public void KillTweensFor(IReadOnlyList<int> handleIds)
         {
-            var killed = 0;
             foreach (var handleId in handleIds)
                 if (_views.TryResolve(handleId, out var view))
-                    killed += DOTween.Kill(view);
+                    DOTween.Kill(view);
 
             var commands = _world.GetPool<MoveCommand>();
             var running = _world.GetPool<TweenRunningTag>();
@@ -95,29 +89,22 @@ namespace Client.Adapters.Services
                 running.TryDel(entityId);
                 commands.TryDel(entityId);
             }
-
-            _log.Info($"Killed {killed} tween(s) for {handleIds.Count} view handle(s).");
-            return killed;
         }
 
         /// <summary>Kills every tween before the world goes away.</summary>
         /// <remarks>A tween that outlives its world calls back into a destroyed pipeline.</remarks>
         public void KillAll()
         {
-            var faded = KillFades();
-            var killed = 0;
+            KillFades();
             foreach (var view in _views.Views)
             {
                 if (view == null)
                     continue;
 
-                killed += DOTween.Kill(view);
+                DOTween.Kill(view);
             }
 
             _completedTweens.Clear();
-            _log.Info(
-                $"Killed {killed} move tween(s) and {faded} fade tween(s) " +
-                $"across {_views.Count} registered view(s).");
         }
 
         private static bool _ContainsHandle(IReadOnlyList<int> handleIds, int handleId)

@@ -81,8 +81,6 @@ namespace Client.Adapters.MagicWords
             request.HandleId = ++_nextHandleId;
             request.Status = AsyncOpStatus.Done;
             _handles.Add(request.HandleId, sprite);
-            _log.Info(
-                $"Resolved local avatar for '{request.SpeakerName}' to sprite '{spriteKey}'.");
             return request.Status;
         }
 

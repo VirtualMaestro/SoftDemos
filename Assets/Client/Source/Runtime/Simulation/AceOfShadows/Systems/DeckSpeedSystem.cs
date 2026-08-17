@@ -58,8 +58,6 @@ namespace Client.Simulation.AceOfShadows
             if (state.SecondsUntilNextMove > interval)
                 state.SecondsUntilNextMove = interval;
             state.SpeedMultiplier = multiplier;
-
-            _log.Info($"Deck speed ×{multiplier:0.###}: interval {interval:0.###}s, duration {duration:0.###}s.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

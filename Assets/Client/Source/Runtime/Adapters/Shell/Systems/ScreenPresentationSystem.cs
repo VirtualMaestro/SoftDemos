@@ -1,7 +1,6 @@
 using Client.Adapters.Services;
 using Client.Adapters.Stage;
 using Client.Simulation.Menu;
-using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 
@@ -12,7 +11,7 @@ namespace Client.Adapters.Shell
     /// flags, with a fade-in when a panel appears.
     /// </summary>
     public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsInject<EcsWorld>,
-        IEcsInject<ILog>, IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>
+        IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>
     {
         private const float FadeSeconds = 0.18f;
 
@@ -26,7 +25,6 @@ namespace Client.Adapters.Shell
         private readonly CanvasGroup _loadingGroup;
 
         private EcsWorld _world;
-        private ILog _log;
         private TweenPlayerService _tweens;
         private StageReadyChannel _stageReady;
         private ScreenId _lastScreen;
@@ -93,10 +91,6 @@ namespace Client.Adapters.Shell
             _lastDemoReady = demoReady;
             _lastShellReady = shellReady;
             _hasState = true;
-
-            _log.Info($"Screen presentation: menu={menuVisible}, demo={demoVisible}, " +
-                $"loading={loadingVisible}, shellReady={shellReady}, demoReady={demoReady}, " +
-                $"demoIndex={state.ActiveDemoIndex}.");
         }
 
         /// <summary>Shows or hides one screen. It fades in only on the rising edge.</summary>
@@ -114,7 +108,6 @@ namespace Client.Adapters.Shell
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
         public void Inject(TweenPlayerService obj) => _tweens = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
     }

@@ -46,9 +46,6 @@ namespace Client.Simulation.PhoenixFlame
             state.IsTransitioning = true;
             state.SecondsRemaining = state.TransitionDurationSeconds;
             state.Progress = 0f;
-
-            _log.Info($"Flame transition {state.CurrentPhase} -> {state.NextPhase} over " +
-                $"{state.TransitionDurationSeconds:0.###}s.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

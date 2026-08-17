@@ -19,7 +19,6 @@ namespace Client.Bootstrap
     {
         // Serialized fields use no leading underscore. The inspector shows the field name.
         [SerializeField] private MenuScreen menuScreen;
-        [FormerlySerializedAs("demoHudScreen")]
         [SerializeField] private DemoHudView demoHud;
         [SerializeField] private GameObject loadingIndicator;
         [SerializeField] private ShellSkinView shellSkin;
@@ -58,8 +57,7 @@ namespace Client.Bootstrap
             _dialogueSourceService = new HttpDialogueService(new UnityLogService("Dialogue"));
             _webImagesService = new WebImageLoaderService(new UnityLogService("Avatars.Remote"));
             _atlasImagesService = new AtlasImageLoaderService(new UnityLogService("Avatars.Local"));
-            _avatarImagesService = new AvatarImageRouterService(
-                _atlasImagesService, _webImagesService, new UnityLogService("Avatars"));
+            _avatarImagesService = new AvatarImageRouterService(_atlasImagesService, _webImagesService);
             _viewRegistryService = new ViewRegistryService();
 
             // Make the world before the collaborators. TweenPlayerService clears move state from its
@@ -67,7 +65,7 @@ namespace Client.Bootstrap
             _world = new EcsWorld();
 
             // Shared state and behaviour. Systems reach through these instead of holding each other.
-            _tweenPlayerService = new TweenPlayerService(_world, _viewRegistryService, new UnityLogService("Tweens"));
+            _tweenPlayerService = new TweenPlayerService(_world, _viewRegistryService);
             _stageReady = new StageReadyChannel();
             _screens = new ScreenRegistryService(
                 typeof(AceOfShadowsScreen), typeof(MagicWordsScreen), typeof(PhoenixFlameScreen));
@@ -84,15 +82,6 @@ namespace Client.Bootstrap
                 .Inject<ISceneService>(_sceneService)
                 .Inject<IDialogueService>(_dialogueSourceService)
 
-                // One instance behind two types: the port for the simulation, the adapter for the
-                // stage systems that need engine objects. AddNode declares the second node; a
-                // second Inject call cannot, because it finds the branch already registered under
-                // the runtime type and skips node creation.
-                //
-                // Only one implementation of each port may be injected. A branch attaches every
-                // node its runtime type is assignable to, so injecting _atlasImages here would
-                // also land on the IImageLoadService node and displace the router. The atlas is
-                // reached through AvatarImageRouterService instead.
                 .Injections.AddNode<IAssetService>().Inject(_assetSourceService)
                 .Injections.AddNode<IImageLoadService>().Inject(_avatarImagesService)
                 .Inject(_viewRegistryService)
@@ -128,8 +117,6 @@ namespace Client.Bootstrap
 
             menuScreen.Bind(_world, demos);
             demoHud.Bind(_world, demos);
-
-            _log.Info($"World and pipeline built. Live worlds: {EcsWorld.AllWorldsCount}.");
         }
 
         private bool _HasEveryInspectorReference()
@@ -263,8 +250,6 @@ namespace Client.Bootstrap
 
             _world?.Destroy();
             _world = null;
-
-            _log?.Info($"World, pipeline and ports destroyed. Live worlds: {EcsWorld.AllWorldsCount}.");
             _log = null;
         }
     }

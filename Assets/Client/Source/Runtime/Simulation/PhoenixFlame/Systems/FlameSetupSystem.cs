@@ -1,15 +1,13 @@
-using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.PhoenixFlame
 {
     /// <summary>Consumes Start/Reset commands: initializes the flame state from config or wipes it.</summary>
-    public sealed class FlameSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
+    public sealed class FlameSetupSystem : IEcsRun, IEcsInject<EcsWorld>
     {
         private readonly PhoenixFlameConfig _config;
 
         private EcsWorld _world;
-        private ILog _log;
 
         public FlameSetupSystem(PhoenixFlameConfig config)
         {
@@ -36,10 +34,7 @@ namespace Client.Simulation.PhoenixFlame
             foreach (var entityId in _world.Where(out StartCommandAspect _))
             {
                 if (state.IsActive)
-                {
-                    _log.Info("Start requested while the flame is already active; restarting.");
                     _Reset(ref state);
-                }
 
                 _Start(ref state);
                 _world.DelEntity(entityId);
@@ -53,22 +48,11 @@ namespace Client.Simulation.PhoenixFlame
             state.CurrentPhase = _config.StartPhase;
             state.NextPhase = _config.StartPhase;
             state.TransitionDurationSeconds = _config.TransitionDurationSeconds;
-
-            _log.Info($"Flame started at {_config.StartPhase} with a " +
-                $"{_config.TransitionDurationSeconds:0.###}s transition.");
         }
 
-        private void _Reset(ref FlameStateComp state)
-        {
-            var previousPhase = state.CurrentPhase;
-            var phaseChangeCount = state.PhaseChangeCount;
-            state = default;
-
-            _log.Info($"Flame reset from {previousPhase} after {phaseChangeCount} phase change(s).");
-        }
+        private static void _Reset(ref FlameStateComp state) => state = default;
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
 
         private sealed class StartCommandAspect : EcsAspect
         {

@@ -140,7 +140,6 @@ namespace Client.Adapters.MagicWords
             _UpdateAvatarModeLabel();
             _RecalculateLayout();
             _world.WriteCommand<LoadDialogueCommand>();
-            _log.Info("Magic Words content loaded.");
             _TransitionTo(StageState.Ready);
         }
 
@@ -165,7 +164,6 @@ namespace Client.Adapters.MagicWords
             _avatars.SetMode(next);
             _UpdateAvatarModeLabel();
             _world.WriteCommand<ReloadAvatarsCommand>();
-            _log.Info($"Magic Words avatar mode changed to {next}.");
         }
 
         private bool _ResolveContent()
@@ -293,14 +291,7 @@ namespace Client.Adapters.MagicWords
         private void _OnRequestSkip() => _skipRequested = true;
         private void _OnRequestModeChange() => _modeRequested = true;
 
-        private void _TransitionTo(StageState next)
-        {
-            if (_state == next)
-                return;
-
-            _log.Info($"Magic Words stage: {_state} -> {next}.");
-            _state = next;
-        }
+        private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILog obj) => _log = obj;

@@ -196,7 +196,6 @@ namespace Client.Simulation.Tests.PhoenixFlame
             Assert.That(state.SecondsRemaining, Is.Zero, $"{state}");
             Assert.That(state.Progress, Is.Zero, $"{state}");
             Assert.That(state.PhaseChangeCount, Is.Zero, $"{state}");
-            Assert.That(_HasInfoContaining("Flame is now"), Is.False, $"{Log}");
         }
 
         [Test]
@@ -270,13 +269,5 @@ namespace Client.Simulation.Tests.PhoenixFlame
             Assert.That(FlamePhaseCycle.IsDefined((FlamePhase)FlamePhaseCycle.Count), Is.False);
         }
 
-        private bool _HasInfoContaining(string fragment)
-        {
-            foreach (var entry in Log.Entries)
-                if (entry.Level == FakeLog.Level.Info && entry.Message.Contains(fragment))
-                    return true;
-
-            return false;
-        }
     }
 }

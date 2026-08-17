@@ -80,8 +80,6 @@ namespace Client.Adapters.Stage
 
             BackgroundFitter.CoverFit(background, sprite, camera, orthographicSize,
                 Screen.width, Screen.height);
-            var mode = Screen.width < Screen.height ? "portrait" : "landscape";
-            log.Info($"{demoName} layout recalculated for {Screen.width}×{Screen.height} ({mode}).");
             return camera;
         }
 

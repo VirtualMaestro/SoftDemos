@@ -9,7 +9,6 @@ namespace Client.Adapters.MagicWords
     /// <remarks>It also carries the avatar poll state, so there is one object per line.</remarks>
     public sealed class DialogueLineItemData : IItemData
     {
-        public int EntityId;
         public int SpeakerId;
         public string SpeakerName;
         public AvatarSide Side;

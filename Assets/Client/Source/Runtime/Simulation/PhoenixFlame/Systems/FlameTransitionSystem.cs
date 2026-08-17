@@ -8,11 +8,10 @@ namespace Client.Simulation.PhoenixFlame
     /// current phase when time runs out.
     /// </summary>
     public sealed class FlameTransitionSystem : IEcsRun, IEcsInject<EcsWorld>,
-        IEcsInject<ITimeService>, IEcsInject<ILog>
+        IEcsInject<ITimeService>
     {
         private EcsWorld _world;
         private ITimeService _time;
-        private ILog _log;
 
         public void Run()
         {
@@ -49,8 +48,6 @@ namespace Client.Simulation.PhoenixFlame
             state.SecondsRemaining = 0f;
             state.Progress = 1f;
             state.PhaseChangeCount++;
-
-            _log.Info($"Flame is now {state.CurrentPhase} (change {state.PhaseChangeCount}).");
         }
 
         private static float _Clamp01(float value)
@@ -63,6 +60,5 @@ namespace Client.Simulation.PhoenixFlame
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ITimeService obj) => _time = obj;
-        public void Inject(ILog obj) => _log = obj;
     }
 }

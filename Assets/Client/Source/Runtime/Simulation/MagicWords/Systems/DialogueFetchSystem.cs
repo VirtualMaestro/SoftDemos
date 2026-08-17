@@ -32,7 +32,6 @@ namespace Client.Simulation.MagicWords
                 {
                     state.RequestId = _dialogueSource.BeginLoad();
                     state.State = DialogueLoadState.Loading;
-                    _log.Info("Dialogue fetch started.");
                 }
 
                 _world.DelEntity(entityId);

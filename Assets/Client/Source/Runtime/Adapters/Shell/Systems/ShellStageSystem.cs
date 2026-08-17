@@ -105,8 +105,7 @@ namespace Client.Adapters.Shell
                 sharedStatus != AsyncOpStatus.Done)
                 return;
 
-            if (_TryApplySkin())
-                _log.Info($"Shell skin applied from {MenuAtlasAddress}, {SharedAtlasAddress} and {BackgroundAddress}.");
+            _TryApplySkin();
 
             // The menu has its backdrop, panel, buttons and icons. Presentation can show it now.
             _stageReady.MarkShellReady();
@@ -265,14 +264,7 @@ namespace Client.Adapters.Shell
             _sharedAtlasRequestId = 0;
         }
 
-        private void _TransitionTo(StageState next)
-        {
-            if (_state == next)
-                return;
-
-            _log.Info($"Shell stage: {_state} -> {next}.");
-            _state = next;
-        }
+        private void _TransitionTo(StageState next) => _state = next;
 
         private static void _ClearSprite(Image image, bool disable)
         {
