@@ -21,7 +21,7 @@ namespace Client.Adapters.Services
         private readonly EcsWorld _world;
         private readonly ViewRegistryService _views;
         private readonly ILog _log;
-        private readonly List<entlong> _completions = new();
+        private readonly List<entlong> _completedTweens = new();
         private readonly List<CanvasGroup> _fading = new();
 
         public TweenPlayerService(EcsWorld world, ViewRegistryService views, ILog log)
@@ -32,11 +32,11 @@ namespace Client.Adapters.Services
         }
 
         /// <summary>Tweens that finished but whose completion has not been applied yet.</summary>
-        public int PendingCompletionCount => _completions.Count;
+        public bool HasCompletedTweens => _completedTweens.Count > 0;
         public int ActiveFadeCount => _fading.Count;
-        public IReadOnlyList<entlong> Completions => _completions;
+        public IReadOnlyList<entlong> Completions => _completedTweens;
 
-        public void ClearCompletions() => _completions.Clear();
+        public void ClearCompletions() => _completedTweens.Clear();
 
         public void StartMove(Transform view, CardView card, Vector3 target,
             float duration, entlong entity)
@@ -50,7 +50,7 @@ namespace Client.Adapters.Services
                 tween.OnUpdate(() => card.OnMoveProgress(tween.ElapsedPercentage()));
             }
 
-            tween.OnComplete(() => _completions.Add(entity));
+            tween.OnComplete(() => _completedTweens.Add(entity));
         }
 
         public void FadeIn(CanvasGroup group, float duration)
@@ -91,7 +91,7 @@ namespace Client.Adapters.Services
                 if (_ContainsHandle(handleIds, handleId) == false)
                     continue;
 
-                _completions.Remove(_world.GetEntityLong(entityId));
+                _completedTweens.Remove(_world.GetEntityLong(entityId));
                 running.TryDel(entityId);
                 commands.TryDel(entityId);
             }
@@ -114,7 +114,7 @@ namespace Client.Adapters.Services
                 killed += DOTween.Kill(view);
             }
 
-            _completions.Clear();
+            _completedTweens.Clear();
             _log.Info(
                 $"Killed {killed} move tween(s) and {faded} fade tween(s) " +
                 $"across {_views.Count} registered view(s).");

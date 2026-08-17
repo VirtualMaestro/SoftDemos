@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Client.Simulation.Core;
+using Client.Simulation.Ports;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Compilation;
@@ -99,9 +99,9 @@ namespace Client.Simulation.Tests
         [Test]
         public void Simulation_DoesNotReferenceUnityEngine()
         {
-            var assembly = typeof(SimulationAssemblyInfo).Assembly;
+            var assembly = typeof(ILog).Assembly;
             Assert.That(assembly.GetName().Name, Is.EqualTo(SimulationAssembly),
-                "SimulationAssemblyInfo moved out of the Client.Simulation assembly.");
+                "ILog moved out of the Client.Simulation assembly.");
 
             var referenced = assembly.GetReferencedAssemblies()
                 .Select(a => a.Name)

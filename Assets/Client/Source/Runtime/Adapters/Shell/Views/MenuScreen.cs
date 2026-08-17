@@ -56,7 +56,6 @@ namespace Client.Adapters.Shell
         {
             var entityId = _world.NewEntity();
             _world.GetPool<OpenDemoCommand>().Add(entityId).DemoIndex = demoIndex;
-            Debug.Log($"[MenuScreen] Wrote OpenDemoCommand({demoIndex}) on entity {entityId}.");
         }
     }
 }

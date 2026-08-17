@@ -43,7 +43,6 @@ namespace Client.Adapters.Shell
         {
             var entityId = _world.NewEntity();
             _world.GetPool<CloseDemoCommand>().Add(entityId);
-            Debug.Log($"[DemoHudView] Wrote CloseDemoCommand on entity {entityId}.");
         }
     }
 }

@@ -14,8 +14,6 @@ namespace Client.Adapters.Layout
 
         private int _width = -1;
         private int _height = -1;
-        private LayoutMode _mode;
-        private bool _hasMode;
 
         /// <summary>Raised on every resolution change, mode flip or not. This is the shell's single
         /// "the window changed" signal, so nothing else has to poll <c>Screen</c> per frame.</summary>
@@ -50,25 +48,12 @@ namespace Client.Adapters.Layout
             if (width <= 0 || height <= 0)
                 return;
 
-            var aspect = width / (float)height;
-            var mode = LayoutModes.FromAspect(aspect);
+            var isPortrait = width < height;
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution =
-                mode == LayoutMode.Portrait ? PortraitResolution : LandscapeResolution;
-            scaler.matchWidthOrHeight = mode == LayoutMode.Portrait ? 0f : 1f;
+            scaler.referenceResolution = isPortrait ? PortraitResolution : LandscapeResolution;
+            scaler.matchWidthOrHeight = isPortrait ? 0f : 1f;
 
             OnResolutionChanged?.Invoke();
-
-            if (_hasMode && mode == _mode)
-                return;
-
-            _mode = mode;
-            _hasMode = true;
-            var scale = mode == LayoutMode.Portrait
-                ? width / PortraitResolution.x
-                : height / LandscapeResolution.y;
-            Debug.Log($"[ResponsiveCanvas] Mode={mode}, resolution={width}x{height}, " +
-                $"aspect={aspect:0.###}, scale={scale:0.###}.");
         }
     }
 }

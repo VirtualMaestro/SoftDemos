@@ -19,54 +19,54 @@ namespace Client.Adapters.AceOfShadows
     {
         private EcsWorld _world;
         private ILog _log;
-        private ViewRegistryService _views;
-        private StackSlotLayoutService _layout;
-        private TweenPlayerService _player;
+        private ViewRegistryService _viewRegistry;
+        private StackSlotLayoutService _stackSlotLayout;
+        private TweenPlayerService _tweenPlayer;
 
-        private EcsPool<MoveCommand> _commands;
-        private EcsTagPool<MoveCompletedTag> _completed;
-        private EcsTagPool<TweenRunningTag> _running;
+        private EcsPool<MoveCommand> _moveCommands;
+        private EcsTagPool<MoveCompletedTag> _completedTweens;
+        private EcsTagPool<TweenRunningTag> _runningTweens;
 
         public void Init()
         {
             // The component's marker interface picks the pool type, so a tag gets EcsTagPool.
-            _commands = _world.GetPool<MoveCommand>();
-            _completed = _world.GetPool<MoveCompletedTag>();
-            _running = _world.GetPool<TweenRunningTag>();
+            _moveCommands = _world.GetPool<MoveCommand>();
+            _completedTweens = _world.GetPool<MoveCompletedTag>();
+            _runningTweens = _world.GetPool<TweenRunningTag>();
         }
 
         public void LateRun()
         {
-            _ApplyCompletions();
+            _HandleCompletedTweens();
             _StartNewTweens();
         }
 
         public void Destroy()
         {
-            _player.KillAll();
+            _tweenPlayer.KillAll();
         }
 
-        private void _ApplyCompletions()
+        private void _HandleCompletedTweens()
         {
-            if (_player.PendingCompletionCount == 0)
+            if (!_tweenPlayer.HasCompletedTweens)
                 return;
 
-            foreach (var completion in _player.Completions)
+            foreach (var completion in _tweenPlayer.Completions)
             {
                 // The entity can die while its tween runs. entlong holds a generation, so a
                 // recycled id reads as dead.
-                if (completion.TryGetID(out var entityId) == false)
+                if (!completion.TryGetID(out var entityId))
                 {
                     _log.Warn("A tween completed for an entity that no longer exists. Ignoring.");
                     continue;
                 }
 
-                _commands.TryDel(entityId);
-                _running.TryDel(entityId);
-                _completed.TryAdd(entityId);
+                _moveCommands.TryDel(entityId);
+                _runningTweens.TryDel(entityId);
+                _completedTweens.TryAdd(entityId);
             }
 
-            _player.ClearCompletions();
+            _tweenPlayer.ClearCompletions();
         }
 
         private void _StartNewTweens()
@@ -75,29 +75,29 @@ namespace Client.Adapters.AceOfShadows
             {
                 var handleId = aspect.Views.Read(entityId).Id;
 
-                if (_views.TryResolve(handleId, out var view, out var card) == false)
+                if (_viewRegistry.TryResolve(handleId, out var view, out var card) == false)
                 {
                     // Report a failure as a completion. The simulation must not wait forever.
                     _log.Error($"Entity {entityId}: view handle #{handleId} does not resolve. " +
                                "Dropping the move command.");
-                    _commands.TryDel(entityId);
-                    _completed.TryAdd(entityId);
+                    _moveCommands.TryDel(entityId);
+                    _completedTweens.TryAdd(entityId);
                     continue;
                 }
 
                 ref readonly var command = ref aspect.Commands.Read(entityId);
-                _running.TryAdd(entityId);
-                _player.StartMove(view, card,
-                    _layout.SlotPosition(command.TargetSlot, command.TargetDepth),
+                _runningTweens.TryAdd(entityId);
+                _tweenPlayer.StartMove(view, card,
+                    _stackSlotLayout.SlotPosition(command.TargetSlot, command.TargetDepth),
                     command.Duration, _world.GetEntityLong(entityId));
             }
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILog obj) => _log = obj;
-        public void Inject(ViewRegistryService obj) => _views = obj;
-        public void Inject(StackSlotLayoutService obj) => _layout = obj;
-        public void Inject(TweenPlayerService obj) => _player = obj;
+        public void Inject(ViewRegistryService obj) => _viewRegistry = obj;
+        public void Inject(StackSlotLayoutService obj) => _stackSlotLayout = obj;
+        public void Inject(TweenPlayerService obj) => _tweenPlayer = obj;
 
         private sealed class MoveAspect : EcsAspect
         {
