@@ -120,21 +120,21 @@ namespace Client.Simulation.MagicWords
 
         private sealed class ReloadCommandAspect : EcsAspect
         {
-            public EcsPool<ReloadAvatarsCommand> Commands = Inc;
+            public EcsPool<ReloadAvatarsCommand> _ = Inc;
         }
 
         private sealed class RequestAspect : EcsAspect
         {
-            public EcsPool<RequestAvatarCommand> Requests = Inc;
-            public EcsPool<SpeakerComp> Speakers = Inc;
-            public EcsPool<AvatarLoadComp> Loads = Inc;
+            public EcsPool<RequestAvatarCommand> _ = Inc;
+            public readonly EcsPool<SpeakerComp> Speakers = Inc;
+            public readonly EcsPool<AvatarLoadComp> Loads = Inc;
         }
 
         private sealed class SpeakerAspect : EcsAspect
         {
-            public EcsPool<SpeakerComp> Speakers = Inc;
-            public EcsPool<AvatarComp> Avatars = Inc;
-            public EcsPool<AvatarLoadComp> Loads = Inc;
+            public readonly EcsPool<SpeakerComp> Speakers = Inc;
+            public EcsPool<AvatarComp> _ = Inc;
+            public readonly EcsPool<AvatarLoadComp> Loads = Inc;
         }
     }
 }

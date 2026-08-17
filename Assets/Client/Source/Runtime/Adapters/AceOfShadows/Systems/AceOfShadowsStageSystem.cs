@@ -41,7 +41,7 @@ namespace Client.Adapters.AceOfShadows
         private ViewRegistryService _views;
         private StackSlotLayoutService _layout;
         private AddressablesAssetService _assets;
-        private TweenPlayerService _tweens;
+        private TweenPlayerService _tweenPlayer;
         private SharedUiSprites _uiSprites;
         private CardViewChannel _channel;
         private StageReadyChannel _stageReady;
@@ -270,7 +270,7 @@ namespace Client.Adapters.AceOfShadows
                 return;
 
             _stageReady.ClearDemo();
-            _tweens.KillTweensFor(_channel.Handles);
+            _tweenPlayer.KillTweensFor(_channel.Handles);
 
             if (resetDeck)
                 _world.WriteCommand<ResetDeckCommand>();
@@ -337,7 +337,7 @@ namespace Client.Adapters.AceOfShadows
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
-        public void Inject(TweenPlayerService obj) => _tweens = obj;
+        public void Inject(TweenPlayerService obj) => _tweenPlayer = obj;
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
         public void Inject(CardViewChannel obj) => _channel = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;

@@ -42,7 +42,7 @@ namespace Client.Simulation.MagicWords
 
                 if (knownTokens != null && knownTokens.Contains(token))
                 {
-                    AddLiteral(segments, literal);
+                    _AddLiteral(segments, literal);
                     segments.Add(new DialogueSegment { Kind = SegmentKind.Emoji, Value = token });
                 }
                 else
@@ -54,11 +54,11 @@ namespace Client.Simulation.MagicWords
                 index = closeIndex + 1;
             }
 
-            AddLiteral(segments, literal);
+            _AddLiteral(segments, literal);
             return segments.ToArray();
         }
 
-        private static void AddLiteral(List<DialogueSegment> segments, StringBuilder literal)
+        private static void _AddLiteral(List<DialogueSegment> segments, StringBuilder literal)
         {
             if (literal.Length == 0)
                 return;

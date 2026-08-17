@@ -19,7 +19,7 @@ namespace Client.Simulation.AceOfShadows
         {
             ref var state = ref _world.Get<DeckStateComp>();
 
-            if (state.IsDealt == false)
+            if (!state.IsDealt)
                 return;
 
             if (state.MovesIssued >= state.TotalCards)
@@ -72,6 +72,7 @@ namespace Client.Simulation.AceOfShadows
             command.TargetSlot = state.TargetStack;
             command.TargetDepth = targetOrder;
             command.Duration = state.MoveDurationSeconds;
+
             ref var moving = ref cards.Moving.Add(selectedEntity);
             moving.TargetStack = state.TargetStack;
             moving.TargetOrder = targetOrder;
@@ -85,14 +86,14 @@ namespace Client.Simulation.AceOfShadows
 
         private sealed class CardAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> Moving = Exc;
-            public EcsPool<MoveCommand> Commands = Opt;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<MovingComp> Moving = Exc;
+            public readonly EcsPool<MoveCommand> Commands = Opt;
         }
 
         private sealed class StackAspect : EcsAspect
         {
-            public EcsPool<StackComp> Stacks = Inc;
+            public readonly EcsPool<StackComp> Stacks = Inc;
         }
     }
 }

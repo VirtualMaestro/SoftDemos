@@ -24,16 +24,13 @@ namespace Client.Adapters.MagicWords
         [SerializeField] private TMP_Text bodyLabel;
 
         public CanvasGroup Group => group;
-        public Sprite AvatarSprite => leftSide.activeSelf
-            ? leftAvatar.sprite
-            : rightAvatar.sprite;
 
         private void Awake()
         {
             _HasEveryReference();
         }
 
-        public void Configure(
+        private void _Configure(
             string speakerName,
             AvatarSide side,
             Sprite bubbleSprite,
@@ -62,8 +59,8 @@ namespace Client.Adapters.MagicWords
                 return;
             }
 
-            Configure(data.SpeakerName, data.Side, data.Bubble, data.Frame, data.Emoji, data.Body);
-            SetAvatar(data.Avatar);
+            _Configure(data.SpeakerName, data.Side, data.Bubble, data.Frame, data.Emoji, data.Body);
+            _SetAvatar(data.Avatar);
         }
 
         /// <summary>VList recycling: a pooled line must not inherit a mid-fade alpha.</summary>
@@ -72,7 +69,7 @@ namespace Client.Adapters.MagicWords
             group.alpha = 1f;
         }
 
-        public void SetAvatar(Sprite sprite)
+        private void _SetAvatar(Sprite sprite)
         {
             if (leftSide.activeSelf)
                 leftAvatar.sprite = sprite;

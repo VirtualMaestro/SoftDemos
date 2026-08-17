@@ -64,7 +64,7 @@ namespace Client.Adapters.MagicWords
         {
             if (_mwScreen != null && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
-                 _screens.TryGet<MagicWordsScreen>(out _) == false))
+                 !_screens.TryGet<MagicWordsScreen>(out _)))
                 _TransitionTo(StageState.Closing);
 
             switch (_state)
@@ -156,7 +156,7 @@ namespace Client.Adapters.MagicWords
                 _world.WriteCommand<SkipDialogueCommand>();
             }
 
-            if (_modeRequested == false)
+            if (!_modeRequested)
                 return;
 
             _modeRequested = false;

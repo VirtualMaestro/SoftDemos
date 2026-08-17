@@ -25,9 +25,7 @@ namespace Client.Simulation.MagicWords
             {
                 if (state.State == DialogueLoadState.Loading ||
                     state.State == DialogueLoadState.Ready)
-                {
                     _log.Warn($"LoadDialogueCommand ignored while dialogue state is {state.State}.");
-                }
                 else
                 {
                     state.RequestId = _dialogueSource.BeginLoad();

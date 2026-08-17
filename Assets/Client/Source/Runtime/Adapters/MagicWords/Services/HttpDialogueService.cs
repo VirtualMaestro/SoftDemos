@@ -84,10 +84,7 @@ namespace Client.Adapters.MagicWords
             request.Status = status;
 
             if (status == AsyncOpStatus.Failed)
-            {
                 _LogFailure(requestId, request, failureBranch, failureDetail);
-                return status;
-            }
 
             return status;
         }

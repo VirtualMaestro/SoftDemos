@@ -47,7 +47,6 @@ namespace Client.Simulation.MagicWords
             var dialogue = payload.dialogue;
 
             if (dialogue != null)
-            {
                 for (var lineIndex = 0; lineIndex < dialogue.Length; lineIndex++)
                 {
                     var line = dialogue[lineIndex];
@@ -98,7 +97,6 @@ namespace Client.Simulation.MagicWords
                     textPool.Add(lineEntityId).Segments = segments;
                     lineCount++;
                 }
-            }
 
             state.State = DialogueLoadState.Ready;
             state.LineCount = lineCount;

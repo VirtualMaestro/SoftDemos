@@ -36,13 +36,14 @@ namespace Client.Adapters.Services
         public AsyncOpStatus Poll(int requestId)
         {
             // An unknown or released id reads as Pending. Do not throw at a late poll.
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (!_requests.TryGetValue(requestId, out var request))
                 return AsyncOpStatus.Pending;
 
             if (request.Status != AsyncOpStatus.Pending)
                 return request.Status;
 
-            var status = _Classify(request, out var failureDetail);
+            // Get status of async operation for loading or unloading a scene
+            var status = _GetAsyncOpStatus(request, out var failureDetail);
 
             if (status == AsyncOpStatus.Pending)
                 return AsyncOpStatus.Pending;
@@ -57,7 +58,7 @@ namespace Client.Adapters.Services
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out var request) == false)
+            if (!_requests.Remove(requestId, out var request))
                 return;
 
             request.Cancellation.Dispose();
@@ -115,7 +116,7 @@ namespace Client.Adapters.Services
             return requestId;
         }
 
-        private static AsyncOpStatus _Classify(Request request, out string failureDetail)
+        private static AsyncOpStatus _GetAsyncOpStatus(Request request, out string failureDetail)
         {
             failureDetail = string.Empty;
 

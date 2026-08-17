@@ -9,7 +9,7 @@ namespace Client.Adapters.MagicWords
 {
     public sealed class WebImageLoaderService : IImageLoadService, IDisposable
     {
-        public const float DefaultTimeoutSeconds = 5f;
+        private const float DefaultTimeoutSeconds = 5f;
 
         private readonly Dictionary<int, Request> _requests = new();
         private readonly Dictionary<int, Texture2D> _textures = new();
@@ -126,6 +126,7 @@ namespace Client.Adapters.MagicWords
                 new Rect(0f, 0f, texture.width, texture.height),
                 new Vector2(0.5f, 0.5f),
                 100f);
+
             foreach (var request in _requests.Values)
             {
                 if (request.HandleId != handleId)
