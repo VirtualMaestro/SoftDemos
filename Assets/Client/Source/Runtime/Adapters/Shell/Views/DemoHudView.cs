@@ -1,6 +1,5 @@
+using System;
 using System.Collections.Generic;
-using Client.Simulation.Menu;
-using DCFApixels.DragonECS;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,16 +11,16 @@ namespace Client.Adapters.Shell
         [SerializeField] private Button backButton;
         [SerializeField] private TMP_Text title;
 
-        private EcsWorld _world;
         private IReadOnlyList<DemoEntry> _demos;
 
-        /// <summary>Same contract as <see cref="MenuScreen.Bind"/>: binding is what makes the back
-        /// button live, and the titles come from the one authored list.</summary>
-        public void Bind(EcsWorld world, IReadOnlyList<DemoEntry> demos)
+        /// <summary>Raised when the back button is clicked. A system turns this into a
+        /// <c>CloseDemoCommand</c>; the view knows nothing about the world.</summary>
+        public event Action OnClosePressed;
+
+        public void SetDemos(IReadOnlyList<DemoEntry> demos)
         {
-            _world = world;
             _demos = demos;
-            backButton.onClick.AddListener(_OnCloseDemo);
+            backButton.onClick.AddListener(_OnBackPressed);
             backButton.interactable = true;
         }
 
@@ -32,17 +31,12 @@ namespace Client.Adapters.Shell
                 : string.Empty;
         }
 
-        // See the note in MenuScreen.OnDestroy: `?.` does not respect Unity's null overload.
         private void OnDestroy()
         {
             if (backButton != null)
-                backButton.onClick.RemoveListener(_OnCloseDemo);
+                backButton.onClick.RemoveListener(_OnBackPressed);
         }
 
-        private void _OnCloseDemo()
-        {
-            var entityId = _world.NewEntity();
-            _world.GetPool<CloseDemoCommand>().Add(entityId);
-        }
+        private void _OnBackPressed() => OnClosePressed?.Invoke();
     }
 }

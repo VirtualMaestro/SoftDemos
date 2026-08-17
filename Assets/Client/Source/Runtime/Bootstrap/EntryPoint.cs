@@ -52,6 +52,9 @@ namespace Client.Bootstrap
             if (_HasEveryInspectorReference() == false)
                 return;
 
+            menuScreen.SetDemos(demos);
+            demoHud.SetDemos(demos);
+
             _sceneService = new SceneLoaderService(new UnityLogService("Scenes"));
             _assetSourceService = new AddressablesAssetService(new UnityLogService("Assets"));
             _dialogueSourceService = new HttpDialogueService(new UnityLogService("Dialogue"));
@@ -114,9 +117,6 @@ namespace Client.Bootstrap
                 .Add(new ShellStageSystem(shellSkin, demos))
                 .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
                 .BuildAndInit();
-
-            menuScreen.Bind(_world, demos);
-            demoHud.Bind(_world, demos);
         }
 
         private bool _HasEveryInspectorReference()

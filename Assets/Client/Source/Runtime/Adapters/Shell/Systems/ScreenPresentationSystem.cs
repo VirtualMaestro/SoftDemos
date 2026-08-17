@@ -10,7 +10,7 @@ namespace Client.Adapters.Shell
     /// Shows/hides the menu, demo HUD and loading spinner based on screen state and readiness
     /// flags, with a fade-in when a panel appears.
     /// </summary>
-    public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsInject<EcsWorld>,
+    public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
         IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>
     {
         private const float FadeSeconds = 0.18f;
@@ -51,7 +51,24 @@ namespace Client.Adapters.Shell
             _menuGroup = menu.GetComponent<CanvasGroup>();
             _demoHudGroup = demoHud.GetComponent<CanvasGroup>();
             _loadingGroup = loadingIndicator.GetComponent<CanvasGroup>();
+
+            // Clicks cannot arrive before the world exists: EntryPoint enables the buttons via
+            // Bind only after BuildAndInit, which injects _world into this system first.
+            _menu.OnDemoPressed += _OnDemoPressed;
+            _demoHud.OnClosePressed += _OnClosePressed;
         }
+
+        void IEcsDestroy.Destroy()
+        {
+            _menu.OnDemoPressed -= _OnDemoPressed;
+            _demoHud.OnClosePressed -= _OnClosePressed;
+        }
+
+        private void _OnDemoPressed(int demoIndex) =>
+            _world.GetPool<OpenDemoCommand>().Add(_world.NewEntity()).DemoIndex = demoIndex;
+
+        private void _OnClosePressed() =>
+            _world.GetPool<CloseDemoCommand>().Add(_world.NewEntity());
 
         public void LateRun()
         {
