@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Client.Adapters.MagicWords;
 using Client.Adapters.Services;
 using Client.Simulation.Ports;
 using NUnit.Framework;

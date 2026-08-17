@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.Menu
 {
+    /// <summary>
+    /// Handles open/close demo commands: starts scene load/unload, polls the async operation, and
+    /// moves the screen state through Menu → Loading → Demo → Unloading → Menu.
+    /// </summary>
     public sealed class NavigationSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ISceneService>, IEcsInject<ILog>
     {
@@ -46,12 +50,11 @@ namespace Client.Simulation.Menu
                     continue;
                 }
 
-                var address = _catalog[command.DemoIndex];
                 state.LastOperationFailed = false;
                 state.ActiveDemoIndex = command.DemoIndex;
-                state.PendingRequestId = _scenes.BeginLoad(address);
+                state.PendingRequestId = _scenes.BeginLoad(_catalog[command.DemoIndex]);
 
-                _Transition(ref state, ScreenId.Loading, address);
+                _Transition(ref state, ScreenId.Loading);
             }
         }
 
@@ -67,9 +70,8 @@ namespace Client.Simulation.Menu
                     continue;
                 }
 
-                var address = _catalog[state.ActiveDemoIndex];
-                state.PendingRequestId = _scenes.BeginUnload(address);
-                _Transition(ref state, ScreenId.Unloading, address);
+                state.PendingRequestId = _scenes.BeginUnload(_catalog[state.ActiveDemoIndex]);
+                _Transition(ref state, ScreenId.Unloading);
             }
         }
 
@@ -92,14 +94,14 @@ namespace Client.Simulation.Menu
             {
                 if (status == AsyncOpStatus.Done)
                 {
-                    _Transition(ref state, ScreenId.Demo, address, requestId);
+                    _Transition(ref state, ScreenId.Demo);
                     return;
                 }
 
                 state.LastOperationFailed = true;
                 state.ActiveDemoIndex = -1;
                 _log.Error($"Load request #{requestId} failed for address '{address}'.");
-                _Transition(ref state, ScreenId.Menu, address, requestId);
+                _Transition(ref state, ScreenId.Menu);
                 return;
             }
 
@@ -110,21 +112,14 @@ namespace Client.Simulation.Menu
             }
 
             state.ActiveDemoIndex = -1;
-            _Transition(ref state, ScreenId.Menu, address, requestId);
+            _Transition(ref state, ScreenId.Menu);
         }
 
-        private void _Transition(
-            ref ScreenStateComp state,
-            ScreenId next,
-            string address,
-            int completedRequestId = -1)
+        private void _Transition(ref ScreenStateComp state, ScreenId next)
         {
             var previous = state.Current;
-            var requestId = completedRequestId >= 0 ? completedRequestId : state.PendingRequestId;
             state.Current = next;
-
-            _log.Info($"Navigation {previous} -> {next}; demo={state.ActiveDemoIndex}, " +
-                $"address='{address}', request=#{requestId}.");
+            _log.Info($"Navigation {previous} -> {next}; demo={state.ActiveDemoIndex}.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords
 {
+    /// <summary>
+    /// Handles avatar image requests: starts a download per request command, polls running ones,
+    /// stores the image handle or a Failed state; on reload releases everything and re-requests.
+    /// </summary>
     public sealed class AvatarLoadSystem :
         IEcsRun,
         IEcsInject<EcsWorld>,
@@ -27,8 +31,7 @@ namespace Client.Simulation.MagicWords
 
             if (reload)
             {
-                var reloadCount = 0;
-                foreach (var entityId in _world.Where(out ReloadSpeakerAspect aspect))
+                foreach (var entityId in _world.Where(out SpeakerAspect aspect))
                 {
                     ref var load = ref aspect.Loads.Get(entityId);
 
@@ -40,10 +43,9 @@ namespace Client.Simulation.MagicWords
                     load.HandleId = 0;
                     load.State = AvatarLoadState.NotRequested;
                     _requests.Add(entityId);
-                    reloadCount++;
                 }
 
-                _log.Info($"Reloading avatars for {reloadCount} speaker(s).");
+                _log.Info("Reloading avatars.");
             }
 
             foreach (var entityId in _world.Where(out RequestAspect aspect))
@@ -61,7 +63,7 @@ namespace Client.Simulation.MagicWords
                 _requests.Del(entityId);
             }
 
-            foreach (var entityId in _world.Where(out LoadingAspect aspect))
+            foreach (var entityId in _world.Where(out SpeakerAspect aspect))
             {
                 ref var load = ref aspect.Loads.Get(entityId);
 
@@ -121,13 +123,6 @@ namespace Client.Simulation.MagicWords
             public EcsPool<ReloadAvatarsCommand> Commands = Inc;
         }
 
-        private sealed class ReloadSpeakerAspect : EcsAspect
-        {
-            public EcsPool<SpeakerComp> Speakers = Inc;
-            public EcsPool<AvatarComp> Avatars = Inc;
-            public EcsPool<AvatarLoadComp> Loads = Inc;
-        }
-
         private sealed class RequestAspect : EcsAspect
         {
             public EcsPool<RequestAvatarCommand> Requests = Inc;
@@ -135,7 +130,7 @@ namespace Client.Simulation.MagicWords
             public EcsPool<AvatarLoadComp> Loads = Inc;
         }
 
-        private sealed class LoadingAspect : EcsAspect
+        private sealed class SpeakerAspect : EcsAspect
         {
             public EcsPool<SpeakerComp> Speakers = Inc;
             public EcsPool<AvatarComp> Avatars = Inc;

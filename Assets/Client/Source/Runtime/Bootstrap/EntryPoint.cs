@@ -1,8 +1,9 @@
-using Client.Adapters;
+using Client.Adapters.AceOfShadows;
+using Client.Adapters.MagicWords;
+using Client.Adapters.PhoenixFlame;
 using Client.Adapters.Services;
-using Client.Adapters.Shared;
-using Client.Adapters.Systems;
-using Client.Adapters.Views;
+using Client.Adapters.Shell;
+using Client.Adapters.Stage;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.MagicWords;
 using Client.Simulation.Menu;

@@ -4,23 +4,23 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows
 {
+    /// <summary>
+    /// Once per interval picks the top card of the source stack and issues a move command for it,
+    /// keeping the leftover time so the rhythm stays even.
+    /// </summary>
     public sealed class CardCadenceSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILog>
     {
         private EcsWorld _world;
         private ITimeService _time;
         private ILog _log;
-        private bool _warnedNoCandidate;
 
         public void Run()
         {
             ref var state = ref _world.Get<DeckStateComp>();
 
             if (state.IsDealt == false)
-            {
-                _warnedNoCandidate = false;
                 return;
-            }
 
             if (state.MovesIssued >= state.TotalCards)
                 return;
@@ -51,16 +51,11 @@ namespace Client.Simulation.AceOfShadows
 
             if (selectedEntity < 0)
             {
-                if (_warnedNoCandidate == false)
-                {
-                    _warnedNoCandidate = true;
-                    _log.Warn($"No movable card found with {state.MovesIssued}/{state.TotalCards} move(s) issued.");
-                }
-
+                // At most one warn per move interval; the timer above gates this path.
+                _log.Warn($"No movable card found with {state.MovesIssued}/{state.TotalCards} move(s) issued.");
                 return;
             }
 
-            _warnedNoCandidate = false;
             var targetStackCount = 0;
             foreach (var stackEntity in _world.Where(out StackAspect stacks))
             {

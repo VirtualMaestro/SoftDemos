@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords
 {
+    /// <summary>
+    /// Consumes the reset command: releases open dialogue/image requests, deletes all speaker and
+    /// line entities, and zeroes the dialogue state.
+    /// </summary>
     public sealed class DialogueResetSystem :
         IEcsRun,
         IEcsDestroy,
@@ -28,23 +32,22 @@ namespace Client.Simulation.MagicWords
             if (hasResetCommand == false)
                 return;
 
-            var hadDialogueRequest = _ReleaseDialogueRequest();
-            var openRequestCount = _ReleaseOpenRequests();
-            var speakerCount = _DeleteSpeakers();
-            var lineCount = _DeleteLines();
+            _ReleaseDialogueRequest();
+            _ReleaseOpenRequests();
+
+            foreach (var entityId in _world.Where(out SpeakerAspect _))
+                _world.DelEntity(entityId);
+
+            foreach (var entityId in _world.Where(out LineAspect _))
+                _world.DelEntity(entityId);
 
             ref var playback = ref _world.Get<DialoguePlaybackComp>();
-            var revealedLineCount = playback.VisibleLineCount;
             playback = default;
             ref var state = ref _world.Get<DialogueStateComp>();
             state = default;
             ref var payload = ref _world.Get<DialoguePayloadComp>();
             payload = default;
-            _log.Info(
-                $"Dialogue reset; dropped {lineCount} line(s), {speakerCount} speaker(s), " +
-                $"{revealedLineCount} revealed line(s), " +
-                $"{openRequestCount} open avatar request(s), " +
-                $"{(hadDialogueRequest ? 1 : 0)} open dialogue request(s).");
+            _log.Info("Dialogue reset.");
         }
 
         void IEcsDestroy.Destroy()
@@ -58,21 +61,19 @@ namespace Client.Simulation.MagicWords
         /// <see cref="DialogueFetchSystem"/> right after <c>Resolve</c>, so only a reset or a
         /// teardown mid-fetch reaches this.
         /// </summary>
-        private bool _ReleaseDialogueRequest()
+        private void _ReleaseDialogueRequest()
         {
             ref var state = ref _world.Get<DialogueStateComp>();
 
             if (state.State != DialogueLoadState.Loading || state.RequestId == 0)
-                return false;
+                return;
 
             _dialogueSource.Release(state.RequestId);
             state.RequestId = 0;
-            return true;
         }
 
-        private int _ReleaseOpenRequests()
+        private void _ReleaseOpenRequests()
         {
-            var releasedCount = 0;
             foreach (var entityId in _world.Where(out SpeakerAspect aspect))
             {
                 ref var load = ref aspect.Loads.Get(entityId);
@@ -87,34 +88,7 @@ namespace Client.Simulation.MagicWords
                 load.RequestId = 0;
                 load.HandleId = 0;
                 load.State = default;
-                releasedCount++;
             }
-
-            return releasedCount;
-        }
-
-        private int _DeleteSpeakers()
-        {
-            var count = 0;
-            foreach (var entityId in _world.Where(out SpeakerAspect _))
-            {
-                _world.DelEntity(entityId);
-                count++;
-            }
-
-            return count;
-        }
-
-        private int _DeleteLines()
-        {
-            var count = 0;
-            foreach (var entityId in _world.Where(out LineAspect _))
-            {
-                _world.DelEntity(entityId);
-                count++;
-            }
-
-            return count;
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

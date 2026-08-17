@@ -4,6 +4,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords
 {
+    /// <summary>
+    /// Turns the raw payload into entities: one per speaker (with avatar URL or "missing") and
+    /// one per dialogue line (with text split into text/emoji segments).
+    /// </summary>
     public sealed class DialogueIngestSystem :
         IEcsRun,
         IEcsInject<EcsWorld>,
@@ -85,9 +89,10 @@ namespace Client.Simulation.MagicWords
                         speakers.Add(line.name, speaker);
                     }
 
-                    var segments = DialogueTokenizer.Tokenize(line.text, _config.KnownEmojiTokens);
+                    var segments = DialogueTokenizer.Tokenize(
+                        line.text, _config.KnownEmojiTokens, out var hasUnknownToken);
 
-                    if (_ContainsUnknownToken(line.text))
+                    if (hasUnknownToken)
                         _log.Warn($"Dialogue line {lineIndex} contains an unknown emoji token.");
 
                     var lineEntityId = _world.NewEntity();
@@ -106,35 +111,6 @@ namespace Client.Simulation.MagicWords
             _log.Info(
                 $"Ingested {lineCount} line(s) across {speakers.Count} speaker(s); " +
                 $"{missingAvatarCount} without an avatar.");
-        }
-
-        private bool _ContainsUnknownToken(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return false;
-
-            var openIndex = 0;
-            while (openIndex < text.Length)
-            {
-                openIndex = text.IndexOf('{', openIndex);
-
-                if (openIndex < 0)
-                    return false;
-
-                var closeIndex = text.IndexOf('}', openIndex + 1);
-
-                if (closeIndex < 0)
-                    return false;
-
-                var token = text.Substring(openIndex + 1, closeIndex - openIndex - 1);
-
-                if (_config.KnownEmojiTokens.Contains(token) == false)
-                    return true;
-
-                openIndex = closeIndex + 1;
-            }
-
-            return false;
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

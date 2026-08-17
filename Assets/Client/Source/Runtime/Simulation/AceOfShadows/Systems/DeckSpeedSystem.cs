@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows
 {
+    /// <summary>
+    /// Consumes speed-change commands: clamps the multiplier to 1–8 and recomputes the move
+    /// interval and duration.
+    /// </summary>
     public sealed class DeckSpeedSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private readonly AceOfShadowsConfig _config;

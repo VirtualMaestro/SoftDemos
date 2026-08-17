@@ -20,7 +20,7 @@ namespace Client.Simulation.Tests.MagicWords
         [TestCase("")]
         public void EmptyInput_ReturnsEmptyArray(string text)
         {
-            Assert.That(DialogueTokenizer.Tokenize(text, KnownTokens), Is.Empty);
+            Assert.That(DialogueTokenizer.Tokenize(text, KnownTokens, out _), Is.Empty);
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace Client.Simulation.Tests.MagicWords
             HashSet<string> knownTokens,
             params DialogueSegment[] expected)
         {
-            var actual = DialogueTokenizer.Tokenize(text, knownTokens);
+            var actual = DialogueTokenizer.Tokenize(text, knownTokens, out _);
             Assert.That(actual, Has.Length.EqualTo(expected.Length));
 
             for (var index = 0; index < expected.Length; index++)

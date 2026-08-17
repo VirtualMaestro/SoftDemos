@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Client.Adapters.Systems;
-using Client.Adapters.Views;
+using Client.Adapters.AceOfShadows;
+using Client.Adapters.Shell;
 using Client.Bootstrap;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.Menu;

@@ -4,6 +4,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows
 {
+    /// <summary>
+    /// When a card's move finishes, lands it in the target stack (index, order, stack counters)
+    /// and marks the whole deal complete after the last card.
+    /// </summary>
     public sealed class MoveCompletionSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private EcsWorld _world;

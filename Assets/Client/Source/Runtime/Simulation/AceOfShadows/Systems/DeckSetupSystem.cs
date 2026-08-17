@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows
 {
+    /// <summary>
+    /// Consumes Deal/Reset commands: creates (or deletes) the card and stack entities and fills
+    /// the deck state from config.
+    /// </summary>
     public sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private readonly AceOfShadowsConfig _config;
@@ -81,18 +85,14 @@ namespace Client.Simulation.AceOfShadows
 
         private void _Reset(ref DeckStateComp state)
         {
-            var deletedCardCount = 0;
             foreach (var entityId in _world.Where(out CardAspect _))
-            {
                 _world.DelEntity(entityId);
-                deletedCardCount++;
-            }
 
             foreach (var entityId in _world.Where(out StackAspect _))
                 _world.DelEntity(entityId);
 
             state = default;
-            _log.Info($"Deck reset; {deletedCardCount} card entities deleted.");
+            _log.Info("Deck reset.");
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

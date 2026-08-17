@@ -61,17 +61,17 @@ namespace Client.Simulation.Tests
             // so injecting it would attach it to that port's node and displace the router there.
             // MagicWordsStageSystem reaches it through AvatarImageRouterService.
             "Client.Adapters.Services.AddressablesAssetService",
-            "Client.Adapters.Services.AvatarImageRouterService",
-            "Client.Adapters.Services.ViewRegistryService",
+            "Client.Adapters.MagicWords.AvatarImageRouterService",
+            "Client.Adapters.AceOfShadows.ViewRegistryService",
             "Client.Adapters.Services.TweenPlayerService",
-            "Client.Adapters.Services.StackSlotLayoutService",
+            "Client.Adapters.AceOfShadows.StackSlotLayoutService",
 
             // Shared adapter state. Data the systems pass to each other, not behaviour.
-            "Client.Adapters.Shared.SharedUiSprites",
-            "Client.Adapters.Shared.StageReadyChannel",
-            "Client.Adapters.Shared.CardViewChannel",
+            "Client.Adapters.Stage.SharedUiSprites",
+            "Client.Adapters.Stage.StageReadyChannel",
+            "Client.Adapters.AceOfShadows.CardViewChannel",
             "Client.Adapters.Services.ScreenRegistryService",
-            "Client.Adapters.Shared.DialogueLogChannel",
+            "Client.Adapters.MagicWords.DialogueLogChannel",
         };
 
         /// <summary>

@@ -6,8 +6,11 @@ namespace Client.Simulation.MagicWords
 {
     public static class DialogueTokenizer
     {
-        public static DialogueSegment[] Tokenize(string text, HashSet<string> knownTokens)
+        public static DialogueSegment[] Tokenize(
+            string text, HashSet<string> knownTokens, out bool hasUnknownToken)
         {
+            hasUnknownToken = false;
+
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<DialogueSegment>();
 
@@ -44,6 +47,7 @@ namespace Client.Simulation.MagicWords
                 }
                 else
                 {
+                    hasUnknownToken = true;
                     literal.Append(text, index, closeIndex - index + 1);
                 }
 

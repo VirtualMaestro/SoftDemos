@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.PhoenixFlame
 {
+    /// <summary>
+    /// Consumes advance-phase button commands: starts a transition to the next color unless one
+    /// is already running.
+    /// </summary>
     public sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
     {
         private EcsWorld _world;

@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Text.RegularExpressions;
-using Client.Adapters.Systems;
-using Client.Adapters.Views;
+using Client.Adapters.Shell;
+using Client.Adapters.PhoenixFlame;
 using Client.Bootstrap;
 using Client.Simulation.Menu;
 using Client.Simulation.PhoenixFlame;

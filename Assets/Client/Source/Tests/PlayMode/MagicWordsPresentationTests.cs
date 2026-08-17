@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
-using Client.Adapters.Services;
-using Client.Adapters.Shared;
-using Client.Adapters.Systems;
-using Client.Adapters.Views;
+using Client.Adapters.MagicWords;
+using Client.Adapters.Shell;
 using Client.Bootstrap;
 using Client.Simulation.MagicWords;
 using Client.Simulation.Menu;

@@ -4,6 +4,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords
 {
+    /// <summary>
+    /// Reveals dialogue lines one by one on a timer (or all at once on skip) and asks for the
+    /// speaker's avatar as their first line appears.
+    /// </summary>
     public sealed class DialoguePlaybackSystem :
         IEcsRun,
         IEcsInject<EcsWorld>,
@@ -42,6 +46,7 @@ namespace Client.Simulation.MagicWords
             if (playback.IsComplete)
                 return;
 
+            // The list is only read within this Run; stale content is cleared here, not on exit.
             _pendingLines.Clear();
             foreach (var entityId in _world.Where(out PendingLineAspect aspect))
                 _pendingLines.Add(entityId);
@@ -66,10 +71,7 @@ namespace Client.Simulation.MagicWords
                 playback.SecondsUntilNextLine -= _time.DeltaSeconds;
 
                 if (playback.SecondsUntilNextLine > 0f)
-                {
-                    _pendingLines.Clear();
                     return;
-                }
             }
 
             _RevealNext(ref playback);
@@ -77,8 +79,6 @@ namespace Client.Simulation.MagicWords
 
             if (_pendingLines.Count == 0)
                 _Complete(ref playback, false);
-            else
-                _pendingLines.Clear();
         }
 
         private bool _DrainSkipCommands()
@@ -128,7 +128,6 @@ namespace Client.Simulation.MagicWords
 
         private void _Complete(ref DialoguePlaybackComp playback, bool skipped)
         {
-            _pendingLines.Clear();
             playback.IsComplete = true;
             _log.Info(
                 $"Dialogue playback completed with {playback.VisibleLineCount} revealed line(s); " +

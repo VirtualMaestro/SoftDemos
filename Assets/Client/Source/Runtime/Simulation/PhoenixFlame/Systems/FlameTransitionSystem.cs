@@ -3,6 +3,10 @@ using DCFApixels.DragonECS;
 
 namespace Client.Simulation.PhoenixFlame
 {
+    /// <summary>
+    /// Counts the running transition down each frame, updates its 0..1 progress, and swaps the
+    /// current phase when time runs out.
+    /// </summary>
     public sealed class FlameTransitionSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILog>
     {

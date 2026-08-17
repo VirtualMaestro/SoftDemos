@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Client.Adapters.MagicWords;
 using Client.Adapters.Services;
 using Client.Simulation.MagicWords;
 using Client.Simulation.Ports;
