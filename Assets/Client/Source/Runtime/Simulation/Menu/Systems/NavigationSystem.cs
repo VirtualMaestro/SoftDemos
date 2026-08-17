@@ -13,7 +13,7 @@ namespace Client.Simulation.Menu
         private readonly DemoCatalog _catalog;
 
         private EcsWorld _world;
-        private ISceneService _scenes;
+        private ISceneService _sceneService;
         private ILog _log;
 
         public NavigationSystem(DemoCatalog catalog)
@@ -52,7 +52,7 @@ namespace Client.Simulation.Menu
 
                 state.LastOperationFailed = false;
                 state.ActiveDemoIndex = command.DemoIndex;
-                state.PendingRequestId = _scenes.BeginLoad(_catalog[command.DemoIndex]);
+                state.PendingRequestId = _sceneService.BeginLoad(_catalog[command.DemoIndex]);
 
                 _Transition(ref state, ScreenId.Loading);
             }
@@ -70,7 +70,7 @@ namespace Client.Simulation.Menu
                     continue;
                 }
 
-                state.PendingRequestId = _scenes.BeginUnload(_catalog[state.ActiveDemoIndex]);
+                state.PendingRequestId = _sceneService.BeginUnload(_catalog[state.ActiveDemoIndex]);
                 _Transition(ref state, ScreenId.Unloading);
             }
         }
@@ -80,14 +80,14 @@ namespace Client.Simulation.Menu
             if (state.Current != ScreenId.Loading && state.Current != ScreenId.Unloading)
                 return;
 
-            var status = _scenes.Poll(state.PendingRequestId);
+            var status = _sceneService.Poll(state.PendingRequestId);
 
             if (status == AsyncOpStatus.Pending)
                 return;
 
             var requestId = state.PendingRequestId;
             var address = _catalog[state.ActiveDemoIndex];
-            _scenes.Release(requestId);
+            _sceneService.Release(requestId);
             state.PendingRequestId = -1;
 
             if (state.Current == ScreenId.Loading)
@@ -119,17 +119,17 @@ namespace Client.Simulation.Menu
             state.Current = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ISceneService obj) => _scenes = obj;
+        public void Inject(ISceneService obj) => _sceneService = obj;
         public void Inject(ILog obj) => _log = obj;
 
         private sealed class OpenCommandAspect : EcsAspect
         {
-            public EcsPool<OpenDemoCommand> Commands = Inc;
+            public readonly EcsPool<OpenDemoCommand> Commands = Inc;
         }
 
         private sealed class CloseCommandAspect : EcsAspect
         {
-            public EcsPool<CloseDemoCommand> Commands = Inc;
+            public EcsPool<CloseDemoCommand> _ = Inc;
         }
     }
 }

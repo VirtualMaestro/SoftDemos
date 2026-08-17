@@ -47,7 +47,6 @@ namespace Client.Simulation.Tests
             // Ports. The simulation knows nothing else about the outside world.
             "Client.Simulation.Ports.ILog",
             "Client.Simulation.Ports.ITimeService",
-            "Client.Simulation.Ports.IRandomService",
             "Client.Simulation.Ports.ISceneService",
             "Client.Simulation.Ports.IAssetService",
             "Client.Simulation.Ports.IDialogueService",

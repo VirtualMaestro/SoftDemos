@@ -53,7 +53,6 @@ namespace Client.Simulation.Tests
         public void Inject_WithInterfaceGenericArgument_ReachesEveryPort()
         {
             var time = new FakeTime { DeltaSeconds = 0.25f };
-            var random = new FakeRandom(7);
             var log = new FakeLog();
             var scenes = new FakeSceneService();
             var assets = new FakeAssetService();
@@ -64,7 +63,6 @@ namespace Client.Simulation.Tests
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ITimeService>(time)
-                .Inject<IRandomService>(random)
                 .Inject<ILog>(log)
                 .Inject<ISceneService>(scenes)
                 .Inject<IAssetService>(assets)
@@ -74,7 +72,6 @@ namespace Client.Simulation.Tests
                 .BuildAndInit();
 
             Assert.That(probe.Time, Is.SameAs(time), $"ITimeService did not arrive. {probe}");
-            Assert.That(probe.Random, Is.SameAs(random), $"IRandomService did not arrive. {probe}");
             Assert.That(probe.Log, Is.SameAs(log), $"ILog did not arrive. {probe}");
             Assert.That(probe.Scenes, Is.SameAs(scenes), $"ISceneService did not arrive. {probe}");
             Assert.That(probe.Assets, Is.SameAs(assets), $"IAssetService did not arrive. {probe}");
@@ -188,7 +185,6 @@ namespace Client.Simulation.Tests
         private sealed class AllPortsProbeSystem :
             IEcsRun,
             IEcsInject<ITimeService>,
-            IEcsInject<IRandomService>,
             IEcsInject<ILog>,
             IEcsInject<ISceneService>,
             IEcsInject<IAssetService>,
@@ -196,7 +192,6 @@ namespace Client.Simulation.Tests
             IEcsInject<IImageLoadService>
         {
             public ITimeService Time { get; private set; }
-            public IRandomService Random { get; private set; }
             public ILog Log { get; private set; }
             public ISceneService Scenes { get; private set; }
             public IAssetService Assets { get; private set; }
@@ -204,7 +199,6 @@ namespace Client.Simulation.Tests
             public IImageLoadService Images { get; private set; }
 
             public void Inject(ITimeService obj) => Time = obj;
-            public void Inject(IRandomService obj) => Random = obj;
             public void Inject(ILog obj) => Log = obj;
             public void Inject(ISceneService obj) => Scenes = obj;
             public void Inject(IAssetService obj) => Assets = obj;
@@ -214,7 +208,7 @@ namespace Client.Simulation.Tests
             public void Run() { }
 
             public override string ToString() =>
-                $"AllPortsProbeSystem(time={_Describe(Time)}, random={_Describe(Random)}, " +
+                $"AllPortsProbeSystem(time={_Describe(Time)}, " +
                 $"log={_Describe(Log)}, scenes={_Describe(Scenes)}, assets={_Describe(Assets)}, " +
                 $"dialogue={_Describe(Dialogue)}, images={_Describe(Images)})";
 

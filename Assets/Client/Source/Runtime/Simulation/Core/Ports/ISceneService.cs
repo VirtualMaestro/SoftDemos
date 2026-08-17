@@ -1,7 +1,11 @@
 namespace Client.Simulation.Ports
 {
     /// <summary>Loads and unloads scenes. Handle and poll.</summary>
-    /// <remarks>The adapter owns the async primitive. The simulation sees a request id and a status.</remarks>
+    /// <remarks>
+    /// The adapter owns the async primitive. The simulation sees a request id and a status.
+    /// There is no Resolve: a loaded scene has no result the simulation could hold — the
+    /// completion status itself is the whole outcome.
+    /// </remarks>
     public interface ISceneService
     {
         /// <summary>Starts an additive load of <paramref name="sceneId"/>.</summary>

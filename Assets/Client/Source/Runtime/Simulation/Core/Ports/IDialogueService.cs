@@ -3,7 +3,12 @@ using Client.Simulation.MagicWords;
 namespace Client.Simulation.Ports
 {
     /// <summary>Loads the dialogue payload. Handle and poll.</summary>
-    /// <remarks>The port returns plain simulation types, never an engine or transport object.</remarks>
+    /// <remarks>
+    /// The port returns plain simulation types, never an engine or transport object. That is why
+    /// <see cref="Resolve"/> hands out the payload directly where the asset ports hand out an
+    /// opaque handle: a <see cref="DialoguePayload"/> is plain data and may cross the boundary,
+    /// a texture or sprite may not.
+    /// </remarks>
     public interface IDialogueService
     {
         /// <summary>Starts to load the dialogue payload.</summary>

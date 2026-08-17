@@ -80,7 +80,6 @@ namespace Client.Bootstrap
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ITimeService>(new UnityTimeService())
-                .Inject<IRandomService>(new UnityRandomService())
                 .Inject<ILog>(new UnityLogService("Simulation"))
                 .Inject<ISceneService>(_sceneService)
                 .Inject<IDialogueService>(_dialogueSourceService)
