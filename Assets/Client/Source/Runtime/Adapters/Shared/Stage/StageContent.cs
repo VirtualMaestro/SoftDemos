@@ -1,23 +1,16 @@
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Shared.Ports;
-using DCFApixels.DragonECS;
 using UnityEngine;
 
 namespace Client.Adapters.Shared.Stage
 {
     /// <summary>
-    /// Shared plumbing for the demo stage systems: command entities, asset resolution,
-    /// background handling and request release. Keeps the per-demo systems down to their
-    /// demo-specific logic.
+    /// Shared plumbing for the demo stage systems: asset resolution, background handling and
+    /// request release. Keeps the per-demo systems down to their demo-specific logic — and
+    /// touches no world: a system writes its command entities itself, in one visible line.
     /// </summary>
     internal static class StageContent
     {
-        /// <summary>Creates a one-component command entity for the simulation to consume.</summary>
-        public static void WriteCommand<T>(this EcsWorld world) where T : struct, IEcsComponent
-        {
-            world.GetPool<T>().Add(world.NewEntity());
-        }
-
         public static T GetAsset<T>(AddressablesAssetService assets, int requestId)
             where T : Object
         {

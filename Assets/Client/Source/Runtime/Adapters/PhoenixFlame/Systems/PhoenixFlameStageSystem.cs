@@ -158,7 +158,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _stageReady.MarkDemoReady();
             _flameScreen.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
-            _world.WriteCommand<StartFlameCommand>();
+            _world.GetPool<StartFlameCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Starting);
         }
 
@@ -201,7 +201,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 return;
 
             _advanceRequested = false;
-            _world.WriteCommand<AdvanceFlamePhaseCommand>();
+            _world.GetPool<AdvanceFlamePhaseCommand>().Add(_world.NewEntity());
         }
 
         private void _DriveAnimator(in FlameStateComp flame)
@@ -315,7 +315,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _stageReady.ClearDemo();
 
             if (resetFlame)
-                _world.WriteCommand<ResetFlameCommand>();
+                _world.GetPool<ResetFlameCommand>().Add(_world.NewEntity());
 
             // Keep this order. The view must release its sprite references before you destroy them.
             // Clear the triggers too. The Animator survives a reopen and a latched trigger fires again.

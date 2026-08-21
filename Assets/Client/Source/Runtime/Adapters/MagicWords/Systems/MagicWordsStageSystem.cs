@@ -143,7 +143,7 @@ namespace Client.Adapters.MagicWords.Systems
                 _mwScreen);
             _UpdateAvatarModeLabel();
             _RecalculateLayout();
-            _world.WriteCommand<LoadDialogueCommand>();
+            _world.GetPool<LoadDialogueCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
         }
 
@@ -157,7 +157,7 @@ namespace Client.Adapters.MagicWords.Systems
             if (_skipRequested)
             {
                 _skipRequested = false;
-                _world.WriteCommand<SkipDialogueCommand>();
+                _world.GetPool<SkipDialogueCommand>().Add(_world.NewEntity());
             }
 
             if (!_modeRequested)
@@ -167,7 +167,7 @@ namespace Client.Adapters.MagicWords.Systems
             var next = _avatars.Mode == AvatarMode.Local ? AvatarMode.Remote : AvatarMode.Local;
             _avatars.SetMode(next);
             _UpdateAvatarModeLabel();
-            _world.WriteCommand<ReloadAvatarsCommand>();
+            _world.GetPool<ReloadAvatarsCommand>().Add(_world.NewEntity());
         }
 
         private bool _ResolveContent()
@@ -246,7 +246,7 @@ namespace Client.Adapters.MagicWords.Systems
                 return;
 
             if (resetDialogue)
-                _world.WriteCommand<ResetDialogueCommand>();
+                _world.GetPool<ResetDialogueCommand>().Add(_world.NewEntity());
             _stageReady.ClearDemo();
             _tweens.KillFades();
             // The dialogue log destroys its own views when it sees the change. That happens later

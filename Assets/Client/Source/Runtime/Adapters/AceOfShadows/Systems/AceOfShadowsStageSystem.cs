@@ -163,7 +163,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
             _channel.BumpBindingReset();
             _channel.BumpSeating();
-            _world.WriteCommand<DealDeckCommand>();
+            _world.GetPool<DealDeckCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
         }
 
@@ -277,7 +277,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             _cardMovePlayer.KillTweensFor(_channel.Handles);
 
             if (resetDeck)
-                _world.WriteCommand<ResetDeckCommand>();
+                _world.GetPool<ResetDeckCommand>().Add(_world.NewEntity());
 
             foreach (var handle in _channel.Handles)
                 _views.Unregister(handle);
