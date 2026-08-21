@@ -1,13 +1,14 @@
 using System.Collections.Generic;
-using Client.Adapters.Services;
-using Client.Adapters.Stage;
-using Client.Simulation.Ports;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
+using Client.Adapters.Shell.Views;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
 
-namespace Client.Adapters.Shell
+namespace Client.Adapters.Shell.Systems
 {
     /// <summary>Paints the persistent shell with content loaded by address.</summary>
     /// <remarks>

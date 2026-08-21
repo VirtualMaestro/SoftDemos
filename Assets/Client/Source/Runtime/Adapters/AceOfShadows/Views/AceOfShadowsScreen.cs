@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Views
 {
     public sealed class AceOfShadowsScreen : MonoBehaviour
     {

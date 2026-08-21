@@ -1,10 +1,10 @@
 using System;
-using Client.Adapters.Vendor;
+using Client.Adapters.Vendor.OptVList;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Views
 {
     public sealed class MagicWordsScreen : MonoBehaviour
     {

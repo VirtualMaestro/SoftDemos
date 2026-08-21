@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Systems
 {
     /// <summary>
     /// Turns the raw payload into entities: one per speaker (with avatar URL or "missing") and

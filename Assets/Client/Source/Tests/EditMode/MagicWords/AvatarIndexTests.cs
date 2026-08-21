@@ -1,5 +1,6 @@
 using System.Linq;
 using Client.Simulation.MagicWords;
+using Client.Simulation.MagicWords.Payload;
 using Client.Simulation.Tests.Fakes;
 using NUnit.Framework;
 

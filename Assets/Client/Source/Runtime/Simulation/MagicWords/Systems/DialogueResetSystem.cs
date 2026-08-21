@@ -1,7 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Systems
 {
     /// <summary>
     /// Consumes the reset command: releases open dialogue/image requests, deletes all speaker and

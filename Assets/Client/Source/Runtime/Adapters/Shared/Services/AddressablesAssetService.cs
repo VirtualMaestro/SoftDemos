@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
 
-namespace Client.Adapters.Services
+namespace Client.Adapters.Shared.Services
 {
     /// <summary>
     /// <see cref="IAssetService"/> on top of Addressables, in the same handle-and-poll shape as

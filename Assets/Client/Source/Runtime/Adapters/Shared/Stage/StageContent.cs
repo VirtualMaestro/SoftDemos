@@ -1,9 +1,9 @@
-using Client.Adapters.Services;
-using Client.Simulation.Ports;
+using Client.Adapters.Shared.Services;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 
-namespace Client.Adapters.Stage
+namespace Client.Adapters.Shared.Stage
 {
     /// <summary>
     /// Shared plumbing for the demo stage systems: command entities, asset resolution,

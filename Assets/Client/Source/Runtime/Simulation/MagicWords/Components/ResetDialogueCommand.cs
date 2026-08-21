@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Components
 {
     public struct ResetDialogueCommand : IEcsComponent
     {

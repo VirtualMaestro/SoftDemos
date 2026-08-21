@@ -1,5 +1,6 @@
 using System;
 using Client.Simulation.PhoenixFlame;
+using Client.Simulation.PhoenixFlame.Components;
 using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
 using NUnit.Framework;

@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using Client.Adapters.Services;
-using Client.Adapters.AceOfShadows;
-using Client.Simulation.Messages;
-using Client.Simulation.Ports;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.AceOfShadows.Systems;
+using Client.Adapters.Shared.Services;
+using Client.Simulation.Core.Messages;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using UnityEngine;

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Client.Simulation.AceOfShadows;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -45,12 +47,12 @@ namespace Client.Simulation.Tests
             "DCFApixels.DragonECS.EcsWorld",
 
             // Ports. The simulation knows nothing else about the outside world.
-            "Client.Simulation.Ports.ILog",
-            "Client.Simulation.Ports.ITimeService",
-            "Client.Simulation.Ports.ISceneService",
-            "Client.Simulation.Ports.IAssetService",
-            "Client.Simulation.Ports.IDialogueService",
-            "Client.Simulation.Ports.IImageLoadService",
+            "Client.Simulation.Core.Ports.ILog",
+            "Client.Simulation.Core.Ports.ITimeService",
+            "Client.Simulation.Core.Ports.ISceneService",
+            "Client.Simulation.Core.Ports.IAssetService",
+            "Client.Simulation.Core.Ports.IDialogueService",
+            "Client.Simulation.Core.Ports.IImageLoadService",
 
             // Adapter services. The first two implement a port and are injected under their
             // concrete type as well, because the stage systems need engine objects the port does
@@ -59,17 +61,17 @@ namespace Client.Simulation.Tests
             // AtlasImageLoaderService is deliberately absent: it also implements IImageLoadService,
             // so injecting it would attach it to that port's node and displace the router there.
             // MagicWordsStageSystem reaches it through AvatarImageRouterService.
-            "Client.Adapters.Services.AddressablesAssetService",
-            "Client.Adapters.MagicWords.AvatarImageRouterService",
-            "Client.Adapters.AceOfShadows.ViewRegistryService",
-            "Client.Adapters.Services.TweenPlayerService",
-            "Client.Adapters.AceOfShadows.StackSlotLayoutService",
+            "Client.Adapters.Shared.Services.AddressablesAssetService",
+            "Client.Adapters.MagicWords.Services.AvatarImageRouterService",
+            "Client.Adapters.AceOfShadows.Services.ViewRegistryService",
+            "Client.Adapters.Shared.Services.TweenPlayerService",
+            "Client.Adapters.AceOfShadows.Services.StackSlotLayoutService",
 
             // Shared adapter state. Data the systems pass to each other, not behaviour.
-            "Client.Adapters.Stage.SharedUiSprites",
-            "Client.Adapters.Stage.StageReadyChannel",
+            "Client.Adapters.Shared.Stage.SharedUiSprites",
+            "Client.Adapters.Shared.Stage.StageReadyChannel",
             "Client.Adapters.AceOfShadows.CardViewChannel",
-            "Client.Adapters.Services.ScreenRegistryService",
+            "Client.Adapters.Shared.Services.ScreenRegistryService",
             "Client.Adapters.MagicWords.DialogueLogChannel",
         };
 

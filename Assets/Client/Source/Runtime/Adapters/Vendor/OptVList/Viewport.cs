@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Client.Adapters.Vendor
+namespace Client.Adapters.Vendor.OptVList
 {
     internal sealed class Viewport
     {

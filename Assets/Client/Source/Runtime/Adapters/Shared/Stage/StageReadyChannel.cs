@@ -1,4 +1,4 @@
-namespace Client.Adapters.Stage
+namespace Client.Adapters.Shared.Stage
 {
     /// <summary>Reports whether the shell and the live demo have painted themselves yet.</summary>
     /// <remarks>

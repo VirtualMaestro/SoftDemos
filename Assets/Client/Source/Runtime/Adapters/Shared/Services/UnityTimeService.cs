@@ -1,7 +1,7 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
 using UnityEngine;
 
-namespace Client.Adapters.Services
+namespace Client.Adapters.Shared.Services
 {
     /// <summary><see cref="ITimeService"/> on the Unity player loop.</summary>
     public sealed class UnityTimeService : ITimeService

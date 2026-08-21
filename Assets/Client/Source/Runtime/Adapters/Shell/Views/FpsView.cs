@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace Client.Adapters.Shell
+namespace Client.Adapters.Shell.Views
 {
     [RequireComponent(typeof(TMP_Text))]
     public sealed class FpsView : MonoBehaviour

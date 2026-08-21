@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
 using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Services
 {
     public sealed class WebImageLoaderService : IImageLoadService, IDisposable
     {

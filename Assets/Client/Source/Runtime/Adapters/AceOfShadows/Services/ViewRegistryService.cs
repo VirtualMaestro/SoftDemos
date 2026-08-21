@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Client.Adapters.AceOfShadows.Views;
 using UnityEngine;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Services
 {
     /// <summary>Resolves a <c>ViewHandleComp.Id</c> to a <see cref="Transform"/>.</summary>
     /// <remarks>This is the only place that knows both a handle number and a scene object.</remarks>

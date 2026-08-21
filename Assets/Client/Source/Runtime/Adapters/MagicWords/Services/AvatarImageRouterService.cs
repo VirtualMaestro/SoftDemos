@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
 using UnityEngine;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Services
 {
     public sealed class AvatarImageRouterService : IImageLoadService, IDisposable
     {

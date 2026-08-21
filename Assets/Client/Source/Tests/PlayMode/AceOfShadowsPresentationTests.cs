@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Client.Adapters.AceOfShadows;
-using Client.Adapters.Shell;
+using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
-using Client.Simulation.AceOfShadows;
+using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Menu;
+using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using UnityEngine;

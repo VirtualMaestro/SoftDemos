@@ -1,11 +1,14 @@
 using System.Collections.Generic;
-using Client.Adapters.AceOfShadows;
-using Client.Simulation.Messages;
+using Client.Adapters.AceOfShadows.Components;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.AceOfShadows.Systems;
+using Client.Adapters.AceOfShadows.Views;
+using Client.Simulation.Core.Messages;
 using DCFApixels.DragonECS;
 using DG.Tweening;
 using UnityEngine;
 
-namespace Client.Adapters.Services
+namespace Client.Adapters.Shared.Services
 {
     /// <summary>The only place that calls DOTween.</summary>
     /// <remarks>

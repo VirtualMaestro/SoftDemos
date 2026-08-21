@@ -1,9 +1,11 @@
-using Client.Adapters.Services;
-using Client.Simulation.Messages;
-using Client.Simulation.Ports;
+using Client.Adapters.AceOfShadows.Components;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.Shared.Services;
+using Client.Simulation.Core.Messages;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>Runs the command, tween and completion cycle through <see cref="TweenPlayerService"/>.</summary>
     /// <remarks>

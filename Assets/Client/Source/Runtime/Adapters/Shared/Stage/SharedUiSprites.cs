@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Client.Adapters.Stage
+namespace Client.Adapters.Shared.Stage
 {
     /// <summary>Sprites the shell lends to a demo, so the demo needs no second request on the same atlas.</summary>
     /// <remarks>

@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Text.RegularExpressions;
-using Client.Adapters.Shell;
-using Client.Adapters.PhoenixFlame;
+using Client.Adapters.PhoenixFlame.Views;
+using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
 using Client.Simulation.Menu;
+using Client.Simulation.Menu.Components;
 using Client.Simulation.PhoenixFlame;
+using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using UnityEditor;

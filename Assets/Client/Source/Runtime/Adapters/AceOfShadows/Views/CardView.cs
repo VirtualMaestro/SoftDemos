@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Views
 {
     [RequireComponent(typeof(SpriteRenderer))]
     public sealed class CardView : MonoBehaviour

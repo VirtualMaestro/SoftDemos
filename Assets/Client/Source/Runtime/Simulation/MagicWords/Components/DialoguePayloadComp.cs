@@ -1,7 +1,8 @@
+using Client.Simulation.MagicWords.Payload;
 using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Components
 {
     public struct DialoguePayloadComp : IEcsWorldComponent<DialoguePayloadComp>
     {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.Adapters.AceOfShadows.Views;
 using UnityEngine;
 
 namespace Client.Adapters.AceOfShadows

@@ -1,4 +1,4 @@
-namespace Client.Adapters.Stage
+namespace Client.Adapters.Shared.Stage
 {
     /// <summary>The lifecycle every stage system steps through in <c>LateRun</c>.</summary>
     /// <remarks>

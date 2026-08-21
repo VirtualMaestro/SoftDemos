@@ -1,10 +1,13 @@
-using Client.Adapters.Services;
-using Client.Simulation.AceOfShadows;
-using Client.Simulation.Messages;
-using Client.Simulation.Ports;
+using Client.Adapters.AceOfShadows.Components;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.Shared.Services;
+using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.Core.Messages;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>
     /// Attaches pooled card views to card entities, keeps resting cards seated at their slot

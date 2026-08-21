@@ -1,15 +1,19 @@
 using System;
-using Client.Adapters.Services;
-using Client.Adapters.Stage;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
 using Client.Simulation.AceOfShadows;
+using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.Menu;
-using Client.Simulation.Ports;
+using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>
     /// Runs the card demo's screen lifecycle: loads atlas+background, spawns the card view pool,

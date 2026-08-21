@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Client.Adapters.Vendor
+namespace Client.Adapters.Vendor.OptVList
 {
     public class Binder<T1, T2> : IEnumerable<KeyValuePair<T1, T2>>
     {

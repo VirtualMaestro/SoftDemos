@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Client.Adapters.Services
+namespace Client.Adapters.Shared.Services
 {
     /// <summary>
     /// Holds the live screen component of each additively loaded demo scene, so systems built

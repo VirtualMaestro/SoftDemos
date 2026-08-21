@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Views
 {
     [RequireComponent(typeof(Graphic))]
     public sealed class DialogueTapArea : MonoBehaviour, IPointerClickHandler

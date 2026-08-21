@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Client.Simulation.AceOfShadows;
-using Client.Simulation.Messages;
+using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.Core.Messages;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.Tests.Fakes

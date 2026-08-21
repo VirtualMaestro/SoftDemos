@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Client.Adapters.PhoenixFlame
+namespace Client.Adapters.PhoenixFlame.Views
 {
     /// <summary>Holds the animated colour of the fire.</summary>
     /// <remarks>

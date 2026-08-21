@@ -1,13 +1,17 @@
-using Client.Adapters.Services;
-using Client.Adapters.Stage;
+using Client.Adapters.PhoenixFlame.Views;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.Menu;
+using Client.Simulation.Menu.Components;
 using Client.Simulation.PhoenixFlame;
-using Client.Simulation.Ports;
+using Client.Simulation.PhoenixFlame.Components;
+using Client.Simulation.PhoenixFlame.Systems;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
 
-namespace Client.Adapters.PhoenixFlame
+namespace Client.Adapters.PhoenixFlame.Systems
 {
     /// <summary>Drives the flame Animator. Loads the content and mirrors <see cref="FlameStateComp"/> onto the view.</summary>
     /// <remarks>

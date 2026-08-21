@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.Vendor
+namespace Client.Adapters.Vendor.OptVList
 {
     /// <summary>
     /// VList uses Unity's version of the ScrollRect.

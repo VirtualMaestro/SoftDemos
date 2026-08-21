@@ -1,10 +1,12 @@
-using Client.Adapters.Services;
-using Client.Adapters.Stage;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
+using Client.Adapters.Shell.Views;
 using Client.Simulation.Menu;
+using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 using UnityEngine;
 
-namespace Client.Adapters.Shell
+namespace Client.Adapters.Shell.Systems
 {
     /// <summary>
     /// Shows/hides the menu, demo HUD and loading spinner based on screen state and readiness

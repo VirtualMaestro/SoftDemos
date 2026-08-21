@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Systems
 {
     /// <summary>
     /// Reveals dialogue lines one by one on a timer (or all at once on skip) and asks for the

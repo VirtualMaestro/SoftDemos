@@ -1,7 +1,7 @@
 using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Components
 {
     public struct DialogueStateComp : IEcsWorldComponent<DialogueStateComp>
     {

@@ -1,10 +1,10 @@
-using Client.Adapters.Vendor;
+using Client.Adapters.Vendor.OptVList;
 using Client.Simulation.MagicWords;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Views
 {
     public sealed class DialogueLineView : MonoBehaviour, IItemVisual
     {

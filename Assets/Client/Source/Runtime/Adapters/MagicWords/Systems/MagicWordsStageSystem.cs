@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Client.Adapters.Services;
-using Client.Adapters.Stage;
+using Client.Adapters.MagicWords.Services;
+using Client.Adapters.MagicWords.Views;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
+using Client.Simulation.MagicWords.Components;
 using Client.Simulation.Menu;
-using Client.Simulation.Ports;
+using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 using TMPro;
 using UnityEngine;
 using UnityEngine.U2D;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Systems
 {
     /// <summary>
     /// Runs the dialogue demo's screen lifecycle: loads atlas/background/emoji, hands content to

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Linq;
-using Client.Adapters.Services;
-using Client.Simulation.Ports;
+using Client.Adapters.Shared.Services;
+using Client.Simulation.Core.Ports;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor.AddressableAssets;

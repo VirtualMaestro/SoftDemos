@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Services
 {
     /// <summary>
     /// Places two card stacks inside an orthographic viewport. All authored values below are in

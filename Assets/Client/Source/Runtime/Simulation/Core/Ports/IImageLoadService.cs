@@ -1,4 +1,4 @@
-namespace Client.Simulation.Ports
+namespace Client.Simulation.Core.Ports
 {
     /// <summary>Loads a remote image. Handle and poll.</summary>
     /// <remarks>

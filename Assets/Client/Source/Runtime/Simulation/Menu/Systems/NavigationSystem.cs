@@ -1,7 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.Menu
+namespace Client.Simulation.Menu.Systems
 {
     /// <summary>
     /// Handles open/close demo commands: starts scene load/unload, polls the async operation, and

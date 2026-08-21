@@ -1,14 +1,23 @@
 using Client.Adapters.AceOfShadows;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.AceOfShadows.Systems;
+using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.MagicWords;
-using Client.Adapters.PhoenixFlame;
-using Client.Adapters.Services;
+using Client.Adapters.MagicWords.Services;
+using Client.Adapters.MagicWords.Systems;
+using Client.Adapters.MagicWords.Views;
+using Client.Adapters.PhoenixFlame.Systems;
+using Client.Adapters.PhoenixFlame.Views;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell;
-using Client.Adapters.Stage;
+using Client.Adapters.Shell.Systems;
+using Client.Adapters.Shell.Views;
 using Client.Simulation.AceOfShadows;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.Menu;
 using Client.Simulation.PhoenixFlame;
-using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 

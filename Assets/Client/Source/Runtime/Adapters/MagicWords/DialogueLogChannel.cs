@@ -1,3 +1,4 @@
+using Client.Adapters.MagicWords.Views;
 using TMPro;
 using UnityEngine;
 

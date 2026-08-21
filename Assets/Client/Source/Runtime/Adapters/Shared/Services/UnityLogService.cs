@@ -1,7 +1,7 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
 using UnityEngine;
 
-namespace Client.Adapters.Services
+namespace Client.Adapters.Shared.Services
 {
     /// <summary>Writes <see cref="ILog"/> messages to the Unity console.</summary>
     /// <remarks>

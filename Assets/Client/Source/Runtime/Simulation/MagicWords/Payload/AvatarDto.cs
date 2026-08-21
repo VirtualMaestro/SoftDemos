@@ -1,6 +1,6 @@
 using System;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Payload
 {
     [Serializable]
     public sealed class AvatarDto

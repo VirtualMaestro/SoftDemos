@@ -1,7 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords
+namespace Client.Simulation.MagicWords.Systems
 {
     /// <summary>
     /// Handles avatar image requests: starts a download per request command, polls running ones,

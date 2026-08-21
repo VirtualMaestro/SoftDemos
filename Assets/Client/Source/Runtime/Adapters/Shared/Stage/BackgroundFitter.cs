@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Client.Adapters.Stage
+namespace Client.Adapters.Shared.Stage
 {
     /// <summary>Cover-fit for a full-screen demo backdrop.</summary>
     /// <remarks>

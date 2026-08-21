@@ -1,3 +1,4 @@
+using Client.Simulation.MagicWords.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords

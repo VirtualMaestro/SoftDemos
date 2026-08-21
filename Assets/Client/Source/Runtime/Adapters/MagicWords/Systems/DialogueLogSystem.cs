@@ -1,14 +1,18 @@
 using System.Collections.Generic;
 using System.Text;
-using Client.Adapters.Services;
-using Client.Adapters.Vendor;
+using Client.Adapters.MagicWords.Components;
+using Client.Adapters.MagicWords.Services;
+using Client.Adapters.MagicWords.Views;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Vendor.OptVList;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
-using Client.Simulation.Ports;
+using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Systems
 {
     /// <summary>
     /// Feeds the dialogue <see cref="VList"/> with one data record per visible line. The list owns

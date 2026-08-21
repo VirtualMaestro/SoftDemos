@@ -1,8 +1,10 @@
 // Captured payload: 17 dialogue lines and 5 avatar entries.
 
 using System.IO;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
-using Client.Simulation.Ports;
+using Client.Simulation.MagicWords.Components;
+using Client.Simulation.MagicWords.Payload;
 using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
 using NUnit.Framework;

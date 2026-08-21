@@ -1,5 +1,4 @@
-using Client.Adapters.Vendor;
-﻿namespace Client.Adapters.Vendor
+namespace Client.Adapters.Vendor.OptVList
 {
     public interface IItemVisual
     {

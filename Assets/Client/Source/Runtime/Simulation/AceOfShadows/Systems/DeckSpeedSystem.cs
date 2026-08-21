@@ -1,7 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows.Systems
 {
     /// <summary>
     /// Consumes speed-change commands: clamps the multiplier to 1–8 and recomputes the move

@@ -1,7 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame.Systems
 {
     /// <summary>
     /// Counts the running transition down each frame, updates its 0..1 progress, and swaps the

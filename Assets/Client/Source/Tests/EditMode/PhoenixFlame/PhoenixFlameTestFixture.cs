@@ -1,5 +1,6 @@
+using Client.Simulation.Core.Ports;
 using Client.Simulation.PhoenixFlame;
-using Client.Simulation.Ports;
+using Client.Simulation.PhoenixFlame.Components;
 using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
 using NUnit.Framework;

@@ -1,10 +1,14 @@
 using System;
 using System.Collections;
 using Client.Adapters.MagicWords;
-using Client.Adapters.Shell;
+using Client.Adapters.MagicWords.Systems;
+using Client.Adapters.MagicWords.Views;
+using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
 using Client.Simulation.MagicWords;
+using Client.Simulation.MagicWords.Components;
 using Client.Simulation.Menu;
+using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using TMPro;

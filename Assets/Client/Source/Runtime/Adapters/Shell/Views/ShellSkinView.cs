@@ -1,8 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.Shell
+namespace Client.Adapters.Shell.Views
 {
     /// <summary>Every sprite target of the persistent shell, in one serialized place.</summary>
     /// <remarks>
@@ -42,7 +42,7 @@ namespace Client.Adapters.Shell
             return isComplete;
         }
 
-        private bool _Check(ILog log, UnityEngine.Object reference, string fieldName)
+        private bool _Check(ILog log, Object reference, string fieldName)
         {
             // `?.` skips Unity's null overload, so a destroyed Image would pass the check.
             if (reference != null)

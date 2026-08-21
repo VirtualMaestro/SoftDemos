@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.MagicWords;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Payload;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Client.Adapters.MagicWords
+namespace Client.Adapters.MagicWords.Services
 {
     public sealed class HttpDialogueService : IDialogueService, IDisposable
     {

@@ -1,7 +1,8 @@
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.PhoenixFlame
+namespace Client.Simulation.PhoenixFlame.Systems
 {
     /// <summary>
     /// Consumes advance-phase button commands: starts a transition to the next color unless one

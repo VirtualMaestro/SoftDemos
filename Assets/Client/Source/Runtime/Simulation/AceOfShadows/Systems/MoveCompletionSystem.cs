@@ -1,8 +1,9 @@
-using Client.Simulation.Messages;
-using Client.Simulation.Ports;
+using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.Core.Messages;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.AceOfShadows
+namespace Client.Simulation.AceOfShadows.Systems
 {
     /// <summary>
     /// When a card's move finishes, lands it in the target stack (index, order, stack counters)

@@ -1,9 +1,11 @@
-using Client.Adapters.Services;
-using Client.Simulation.AceOfShadows;
+using Client.Adapters.AceOfShadows.Services;
+using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.Shared.Services;
+using Client.Simulation.AceOfShadows.Components;
 using DCFApixels.DragonECS;
 using UnityEngine;
 
-namespace Client.Adapters.AceOfShadows
+namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>
     /// Mirrors deck state onto the HUD: stack counters, speed label, completion message, and

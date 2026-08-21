@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Client.Adapters.PhoenixFlame
+namespace Client.Adapters.PhoenixFlame.Views
 {
     /// <summary>
     /// The Phoenix Flame demo scene publishing itself to the stage system. It holds no game state

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Ports;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Payload;
 
 namespace Client.Simulation.MagicWords
 {

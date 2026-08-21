@@ -1,7 +1,7 @@
 using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
-namespace Client.Simulation.Menu
+namespace Client.Simulation.Menu.Components
 {
     public struct ScreenStateComp : IEcsWorldComponent<ScreenStateComp>
     {

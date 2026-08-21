@@ -1,10 +1,11 @@
+using Client.Simulation.Core.Ports;
 using Client.Simulation.Menu;
-using Client.Simulation.Ports;
+using Client.Simulation.Menu.Components;
 using Client.Simulation.Tests.Fakes;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
-namespace Client.Simulation.Tests
+namespace Client.Simulation.Tests.Menu
 {
     public sealed class NavigationSystemTests
     {
