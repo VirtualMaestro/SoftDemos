@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Client.Simulation.AceOfShadows;
-using Client.Simulation.Shared.Ports;
-using Client.Simulation.MagicWords.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 

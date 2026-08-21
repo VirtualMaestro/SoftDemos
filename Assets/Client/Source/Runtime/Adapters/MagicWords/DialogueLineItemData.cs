@@ -1,4 +1,3 @@
-using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Vendor.OptVList;
 using Client.Simulation.MagicWords;
 using TMPro;

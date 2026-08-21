@@ -1,5 +1,4 @@
 using System;
-using Client.Simulation.AceOfShadows.Components;
 
 namespace Client.Simulation.AceOfShadows
 {

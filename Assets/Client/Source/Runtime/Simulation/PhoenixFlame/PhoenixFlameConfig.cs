@@ -1,5 +1,4 @@
 using System;
-using Client.Simulation.PhoenixFlame.Components;
 
 namespace Client.Simulation.PhoenixFlame
 {
