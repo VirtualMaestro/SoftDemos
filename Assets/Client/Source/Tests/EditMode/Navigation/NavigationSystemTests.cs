@@ -1,11 +1,11 @@
+using Client.Simulation.Shared.Navigation;
+using Client.Simulation.Shared.Navigation.Components;
 using Client.Simulation.Shared.Ports;
-using Client.Simulation.Menu;
-using Client.Simulation.Menu.Components;
 using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
-namespace Client.Simulation.Tests.Menu
+namespace Client.Simulation.Tests.Navigation
 {
     public sealed class NavigationSystemTests
     {
@@ -31,7 +31,7 @@ namespace Client.Simulation.Tests.Menu
                 .Inject(_world)
                 .Inject<ISceneService>(_scenes)
                 .Inject<ILogService>(_log)
-                .AddModule(new MenuModule(new DemoCatalog(Addresses)))
+                .AddModule(new NavigationModule(new DemoCatalog(Addresses)))
                 .BuildAndInit();
         }
 

@@ -1,8 +1,8 @@
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
-using Client.Simulation.Menu;
-using Client.Simulation.Menu.Components;
+using Client.Simulation.Shared.Navigation;
+using Client.Simulation.Shared.Navigation.Components;
 using DCFApixels.DragonECS;
 using UnityEngine;
 

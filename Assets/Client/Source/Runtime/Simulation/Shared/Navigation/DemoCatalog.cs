@@ -1,6 +1,6 @@
 using System;
 
-namespace Client.Simulation.Menu
+namespace Client.Simulation.Shared.Navigation
 {
     public sealed class DemoCatalog
     {

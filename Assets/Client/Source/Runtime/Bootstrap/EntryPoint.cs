@@ -17,7 +17,7 @@ using Client.Simulation.AceOfShadows;
 using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
-using Client.Simulation.Menu;
+using Client.Simulation.Shared.Navigation;
 using Client.Simulation.PhoenixFlame;
 using DCFApixels.DragonECS;
 using UnityEngine;
@@ -109,7 +109,7 @@ namespace Client.Bootstrap
                 // The simulation halves are modules because the test fixtures build a headless
                 // pipeline from the same ones. Presentation has no such reuse, so it is a plain
                 // list; a module around Add(new X()) would only hide the order.
-                .AddModule(new MenuModule(new DemoCatalog(_GetDemoAddresses(demos))))
+                .AddModule(new NavigationModule(new DemoCatalog(_GetDemoAddresses(demos))))
                 .AddModule(new AceOfShadowsModule(aceConfig))
                 .AddModule(new MagicWordsModule(new MagicWordsConfig()))
                 .AddModule(new PhoenixFlameModule(new PhoenixFlameConfig()))

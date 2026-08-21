@@ -1,14 +1,13 @@
 using System;
 using System.Collections;
 using Client.Adapters.MagicWords;
-using Client.Adapters.MagicWords.Systems;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
-using Client.Simulation.Menu;
-using Client.Simulation.Menu.Components;
+using Client.Simulation.Shared.Navigation;
+using Client.Simulation.Shared.Navigation.Components;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using TMPro;
@@ -16,6 +15,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Client.Adapters.Tests
 {
@@ -35,7 +35,7 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = UnityEngine.Object.FindFirstObjectByType<EntryPoint>();
+            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
             Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
             Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
             // Boot's shell skin holds three requests for the whole session; that is the floor.
@@ -124,7 +124,7 @@ namespace Client.Adapters.Tests
             yield return Resources.UnloadUnusedAssets();
             yield return null;
 
-            Assert.That(UnityEngine.Object.FindObjectsByType<DialogueLineView>(
+            Assert.That(Object.FindObjectsByType<DialogueLineView>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
             Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
             Assert.That(entryPoint.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
@@ -227,7 +227,7 @@ namespace Client.Adapters.Tests
         }
 
         private static MagicWordsScreen _Screen() =>
-            UnityEngine.Object.FindFirstObjectByType<MagicWordsScreen>();
+            Object.FindFirstObjectByType<MagicWordsScreen>();
 
         private static IEnumerator _Open(EcsWorld world)
         {

@@ -1,8 +1,8 @@
 using System.Collections;
 using Client.Adapters.Shell.Views;
 using Client.Bootstrap;
-using Client.Simulation.Menu;
-using Client.Simulation.Menu.Components;
+using Client.Simulation.Shared.Navigation;
+using Client.Simulation.Shared.Navigation.Components;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using UnityEngine;

@@ -1,10 +1,10 @@
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
-using Client.Simulation.Menu;
-using Client.Simulation.Menu.Components;
 using Client.Simulation.PhoenixFlame;
 using Client.Simulation.PhoenixFlame.Components;
+using Client.Simulation.Shared.Navigation;
+using Client.Simulation.Shared.Navigation.Components;
 using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
