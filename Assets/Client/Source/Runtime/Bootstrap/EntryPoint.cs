@@ -11,7 +11,6 @@ using Client.Simulation.PhoenixFlame;
 using Client.Simulation.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Client.Bootstrap
 {

@@ -8,8 +8,8 @@ namespace Client.Simulation.MagicWords
     /// Turns the raw payload into entities: one per speaker (with avatar URL or "missing") and
     /// one per dialogue line (with text split into text/emoji segments).
     /// </summary>
-    public sealed class DialogueIngestSystem :
-        IEcsRun,
+    public sealed class DialogueIngestSystem : IEcsRun, IEcsInit,
+
         IEcsInject<EcsWorld>,
         IEcsInject<ILog>
     {
@@ -17,10 +17,24 @@ namespace Client.Simulation.MagicWords
 
         private EcsWorld _world;
         private ILog _log;
+        private EcsPool<SpeakerComp> _speakerPool;
+        private EcsPool<AvatarComp> _avatarPool;
+        private EcsPool<AvatarLoadComp> _avatarLoadPool;
+        private EcsPool<DialogueLineComp> _linePool;
+        private EcsPool<DialogueTextComp> _textPool;
 
         public DialogueIngestSystem(MagicWordsConfig config)
         {
             _config = config;
+        }
+
+        public void Init()
+        {
+            _speakerPool = _world.GetPool<SpeakerComp>();
+            _avatarPool = _world.GetPool<AvatarComp>();
+            _avatarLoadPool = _world.GetPool<AvatarLoadComp>();
+            _linePool = _world.GetPool<DialogueLineComp>();
+            _textPool = _world.GetPool<DialogueTextComp>();
         }
 
         public void Run()
@@ -38,11 +52,6 @@ namespace Client.Simulation.MagicWords
 
             var avatarIndex = new AvatarIndex(payload.avatars, _log);
             var speakers = new Dictionary<string, entlong>(System.StringComparer.Ordinal);
-            var speakerPool = _world.GetPool<SpeakerComp>();
-            var avatarPool = _world.GetPool<AvatarComp>();
-            var avatarLoadPool = _world.GetPool<AvatarLoadComp>();
-            var linePool = _world.GetPool<DialogueLineComp>();
-            var textPool = _world.GetPool<DialogueTextComp>();
             var lineCount = 0;
             var dialogue = payload.dialogue;
 
@@ -66,13 +75,13 @@ namespace Client.Simulation.MagicWords
                     if (speakers.TryGetValue(line.name, out var speaker) == false)
                     {
                         var speakerEntityId = _world.NewEntity();
-                        speakerPool.Add(speakerEntityId).Name = line.name;
+                        _speakerPool.Add(speakerEntityId).Name = line.name;
 
-                        ref var avatarLoad = ref avatarLoadPool.Add(speakerEntityId);
+                        ref var avatarLoad = ref _avatarLoadPool.Add(speakerEntityId);
 
                         if (avatarIndex.TryGet(line.name, out var url, out var side))
                         {
-                            ref var avatar = ref avatarPool.Add(speakerEntityId);
+                            ref var avatar = ref _avatarPool.Add(speakerEntityId);
                             avatar.Url = url;
                             avatar.Side = side;
                             avatarLoad.State = AvatarLoadState.NotRequested;
@@ -91,10 +100,10 @@ namespace Client.Simulation.MagicWords
                         _log.Warn($"Dialogue line {lineIndex} contains an unknown emoji token.");
 
                     var lineEntityId = _world.NewEntity();
-                    ref var lineComp = ref linePool.Add(lineEntityId);
+                    ref var lineComp = ref _linePool.Add(lineEntityId);
                     lineComp.Index = lineIndex;
                     lineComp.Speaker = speaker;
-                    textPool.Add(lineEntityId).Segments = segments;
+                    _textPool.Add(lineEntityId).Segments = segments;
                     lineCount++;
                 }
 

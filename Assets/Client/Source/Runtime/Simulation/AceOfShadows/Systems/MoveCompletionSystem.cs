@@ -49,7 +49,7 @@ namespace Client.Simulation.AceOfShadows
                 aspect.Completed.TryDel(entityId);
                 aspect.Moving.TryDel(entityId);
 
-                if (state.IsComplete == false && state.MovesCompleted == state.TotalCards)
+                if (!state.IsComplete && state.MovesCompleted == state.TotalCards)
                     state.IsComplete = true;
             }
         }
@@ -59,14 +59,14 @@ namespace Client.Simulation.AceOfShadows
 
         private sealed class CompletionAspect : EcsAspect
         {
-            public EcsTagPool<MoveCompletedTag> Completed = Inc;
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> Moving = Opt;
+            public readonly EcsTagPool<MoveCompletedTag> Completed = Inc;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<MovingComp> Moving = Opt;
         }
 
         private sealed class StackAspect : EcsAspect
         {
-            public EcsPool<StackComp> Stacks = Inc;
+            public readonly EcsPool<StackComp> Stacks = Inc;
         }
     }
 }
