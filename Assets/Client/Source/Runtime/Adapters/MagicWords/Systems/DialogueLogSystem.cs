@@ -24,7 +24,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// </summary>
     public sealed class DialogueLogSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
-        IEcsInject<TweenPlayerService>, IEcsInject<DialogueLogChannel>
+        IEcsInject<FadePlayerService>, IEcsInject<DialogueLogChannel>
     {
         private const float FadeSeconds = 0.2f;
 
@@ -39,7 +39,7 @@ namespace Client.Adapters.MagicWords.Systems
         private EcsWorld _world;
         private ILogService _log;
         private AvatarImageRouterService _avatars;
-        private TweenPlayerService _tweens;
+        private FadePlayerService _tweens;
         private DialogueLogChannel _channel;
         private EcsTagPool<DialogueLineBoundTag> _bound;
         private EcsPool<DialogueLineComp> _lines;
@@ -230,7 +230,7 @@ namespace Client.Adapters.MagicWords.Systems
 
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
-        public void Inject(TweenPlayerService obj) => _tweens = obj;
+        public void Inject(FadePlayerService obj) => _tweens = obj;
         public void Inject(DialogueLogChannel obj) => _channel = obj;
 
         private sealed class VisibleLineAspect : EcsAspect

@@ -12,7 +12,7 @@ namespace Client.Simulation.Tests
     /// system. Systems are independent pipeline blocks; only the composition root constructs them,
     /// and only to <c>Add</c> them to the <c>EcsPipeline</c>. Cross-system needs go through
     /// command/tag components, world components, or a plain non-system collaborator
-    /// (<c>ViewRegistryService</c>, <c>TweenPlayerService</c>) owned by the composition root.
+    /// (<c>ViewRegistryService</c>, <c>FadePlayerService</c>) owned by the composition root.
     ///
     /// Reflection is deliberate: the offending reference is perfectly legal C#, so no asmdef
     /// setting can reject it. A Roslyn analyzer would move this to compile time — until then this
@@ -56,7 +56,7 @@ namespace Client.Simulation.Tests
             Assert.That(violations, Is.Empty,
                 "A system must never hold, receive, or be passed another system. Route the shared " +
                 "state or behaviour through a component in the EcsWorld or a plain non-system " +
-                "collaborator (ViewRegistryService, TweenPlayerService) instead.\nViolations:\n  " +
+                "collaborator (ViewRegistryService, FadePlayerService) instead.\nViolations:\n  " +
                 string.Join("\n  ", violations));
         }
 

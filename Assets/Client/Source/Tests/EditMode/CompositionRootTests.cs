@@ -64,7 +64,8 @@ namespace Client.Simulation.Tests
             "Client.Adapters.Shared.Services.AddressablesAssetService",
             "Client.Adapters.MagicWords.Services.AvatarImageRouterService",
             "Client.Adapters.AceOfShadows.Services.ViewRegistryService",
-            "Client.Adapters.Shared.Services.TweenPlayerService",
+            "Client.Adapters.Shared.Services.FadePlayerService",
+            "Client.Adapters.AceOfShadows.Services.CardMovePlayerService",
             "Client.Adapters.AceOfShadows.Services.StackSlotLayoutService",
 
             // Shared adapter state. Data the systems pass to each other, not behaviour.

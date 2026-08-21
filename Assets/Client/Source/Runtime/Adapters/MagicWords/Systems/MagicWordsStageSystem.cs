@@ -23,7 +23,7 @@ namespace Client.Adapters.MagicWords.Systems
     public sealed class MagicWordsStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
-        IEcsInject<DialogueLogChannel>, IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>,
+        IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>, IEcsInject<StageReadyChannel>,
         IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/magic-words/atlas";
@@ -46,7 +46,7 @@ namespace Client.Adapters.MagicWords.Systems
         private AddressablesAssetService _assets;
         private AvatarImageRouterService _avatars;
         private DialogueLogChannel _dialogueChannel;
-        private TweenPlayerService _tweens;
+        private FadePlayerService _tweens;
         private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
         private StageState _state;
@@ -302,7 +302,7 @@ namespace Client.Adapters.MagicWords.Systems
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
         public void Inject(DialogueLogChannel obj) => _dialogueChannel = obj;
-        public void Inject(TweenPlayerService obj) => _tweens = obj;
+        public void Inject(FadePlayerService obj) => _tweens = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 

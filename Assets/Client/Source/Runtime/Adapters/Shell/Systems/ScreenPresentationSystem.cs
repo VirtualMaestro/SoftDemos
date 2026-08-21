@@ -13,7 +13,7 @@ namespace Client.Adapters.Shell.Systems
     /// flags, with a fade-in when a panel appears.
     /// </summary>
     public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
-        IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>
+        IEcsInject<FadePlayerService>, IEcsInject<StageReadyChannel>
     {
         private const float FadeSeconds = 0.18f;
 
@@ -27,7 +27,7 @@ namespace Client.Adapters.Shell.Systems
         private readonly CanvasGroup _loadingGroup;
 
         private EcsWorld _world;
-        private TweenPlayerService _tweens;
+        private FadePlayerService _tweens;
         private StageReadyChannel _stageReady;
         private ScreenId _lastScreen;
         private int _lastDemoIndex;
@@ -64,6 +64,10 @@ namespace Client.Adapters.Shell.Systems
         {
             _menu.OnDemoPressed -= _OnDemoPressed;
             _demoHud.OnClosePressed -= _OnClosePressed;
+
+            // The fade half of the safety net the old TweenPlayerService.KillAll carried: a fade
+            // that outlives its world calls back into a destroyed pipeline.
+            _tweens.KillFades();
         }
 
         private void _OnDemoPressed(int demoIndex) =>
@@ -127,7 +131,7 @@ namespace Client.Adapters.Shell.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(TweenPlayerService obj) => _tweens = obj;
+        public void Inject(FadePlayerService obj) => _tweens = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
     }
 }

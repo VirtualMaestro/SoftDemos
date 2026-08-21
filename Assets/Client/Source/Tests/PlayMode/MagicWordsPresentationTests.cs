@@ -137,7 +137,7 @@ namespace Client.Adapters.Tests
             // Returning to the menu starts the shell's own screen fade, so this cannot be sampled
             // the instant the demo closes — the claim is that every fade finishes and unregisters,
             // not that none was ever running.
-            yield return _WaitUntil(() => entryPoint.Tweens.ActiveFadeCount == 0,
+            yield return _WaitUntil(() => entryPoint.Fades.ActiveFadeCount == 0,
                 "A fade tween outlived the screens it was fading.", 2f);
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(bootWorldBaseline));
 

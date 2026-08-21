@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Client.Adapters.AceOfShadows;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.Shared.Services;
@@ -28,6 +29,7 @@ namespace Client.Adapters.Tests
         private EcsWorld _world;
         private EcsPipeline _pipeline;
         private ViewRegistryService _registry;
+        private CardViewChannel _channel;
         private StackSlotLayoutService _layout;
         private GameObject _view;
 
@@ -42,11 +44,13 @@ namespace Client.Adapters.Tests
             _layout.Recalculate(1080, 1920, 5f);
 
             _world = new EcsWorld();
-            var player = new TweenPlayerService(_world, _registry);
+            _channel = new CardViewChannel();
+            var player = new CardMovePlayerService(_registry);
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ILogService>(new UnityLogService("Test.Tween"))
                 .Inject<ViewRegistryService>(_registry)
+                .Inject(_channel)
                 .Inject(_layout)
                 .Inject(player)
                 .Add(new TweenPlaybackSystem())
@@ -132,6 +136,9 @@ namespace Client.Adapters.Tests
         private int _CreateMovingEntity(float duration)
         {
             var handleId = _registry.Register(_view.transform);
+            // The playback system reads an empty channel as "stage closed" and cancels moves,
+            // so the test registers its handle the way the stage system does. No CardView needed.
+            _channel.Add(null, handleId);
 
             var entityId = _world.NewEntity();
             _world.GetPool<ViewHandleComp>().Add(entityId).Id = handleId;

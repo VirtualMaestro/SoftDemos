@@ -22,7 +22,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     public sealed class AceOfShadowsStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
-        IEcsInject<TweenPlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
+        IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
         IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/ace-of-shadows/atlas";
@@ -45,7 +45,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         private ViewRegistryService _views;
         private StackSlotLayoutService _layout;
         private AddressablesAssetService _assets;
-        private TweenPlayerService _tweenPlayer;
+        private CardMovePlayerService _cardMovePlayer;
         private SharedUiSprites _uiSprites;
         private CardViewChannel _channel;
         private StageReadyChannel _stageReady;
@@ -274,7 +274,7 @@ namespace Client.Adapters.AceOfShadows.Systems
                 return;
 
             _stageReady.ClearDemo();
-            _tweenPlayer.KillTweensFor(_channel.Handles);
+            _cardMovePlayer.KillTweensFor(_channel.Handles);
 
             if (resetDeck)
                 _world.WriteCommand<ResetDeckCommand>();
@@ -341,7 +341,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
-        public void Inject(TweenPlayerService obj) => _tweenPlayer = obj;
+        public void Inject(CardMovePlayerService obj) => _cardMovePlayer = obj;
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
         public void Inject(CardViewChannel obj) => _channel = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;

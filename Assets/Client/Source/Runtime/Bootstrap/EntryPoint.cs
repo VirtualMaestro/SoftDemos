@@ -43,7 +43,8 @@ namespace Client.Bootstrap
         private AtlasImageLoaderService _atlasImagesService;
         private AvatarImageRouterService _avatarImagesService;
         private ViewRegistryService _viewRegistryService;
-        private TweenPlayerService _tweenPlayerService;
+        private FadePlayerService _fadePlayerService;
+        private CardMovePlayerService _cardMovePlayerService;
         private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
 
@@ -51,7 +52,8 @@ namespace Client.Bootstrap
         public ViewRegistryService Views => _viewRegistryService;
         public AddressablesAssetService Assets => _assetSourceService;
         public AvatarImageRouterService Avatars => _avatarImagesService;
-        public TweenPlayerService Tweens => _tweenPlayerService;
+        public FadePlayerService Fades => _fadePlayerService;
+        public CardMovePlayerService CardMoves => _cardMovePlayerService;
         public StageReadyChannel StageReady => _stageReady;
 
         private void Start()
@@ -72,12 +74,11 @@ namespace Client.Bootstrap
             _avatarImagesService = new AvatarImageRouterService(_atlasImagesService, _webImagesService);
             _viewRegistryService = new ViewRegistryService();
 
-            // Make the world before the collaborators. TweenPlayerService clears move state from its
-            // pools when it kills tween.
             _world = new EcsWorld();
 
             // Shared state and behaviour. Systems reach through these instead of holding each other.
-            _tweenPlayerService = new TweenPlayerService(_world, _viewRegistryService);
+            _fadePlayerService = new FadePlayerService();
+            _cardMovePlayerService = new CardMovePlayerService(_viewRegistryService);
             _stageReady = new StageReadyChannel();
             _screens = new ScreenRegistryService(
                 typeof(AceOfShadowsScreen), typeof(MagicWordsScreen), typeof(PhoenixFlameScreen));
@@ -96,7 +97,8 @@ namespace Client.Bootstrap
                 .Injections.AddNode<IAssetService>().Inject(_assetSourceService)
                 .Injections.AddNode<IImageLoadService>().Inject(_avatarImagesService)
                 .Inject(_viewRegistryService)
-                .Inject(_tweenPlayerService)
+                .Inject(_fadePlayerService)
+                .Inject(_cardMovePlayerService)
                 .Inject(new StackSlotLayoutService())
                 .Inject(new SharedUiSprites())
                 .Inject(_stageReady)
@@ -250,7 +252,8 @@ namespace Client.Bootstrap
             _webImagesService = null;
 
             _viewRegistryService = null;
-            _tweenPlayerService = null;
+            _fadePlayerService = null;
+            _cardMovePlayerService = null;
             _stageReady = null;
 
             _screens?.Dispose();
