@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Messages;
+using Client.Simulation.Shared.Components;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes.Systems
 {
     /// <summary>
     /// EditMode stand-in for TweenPlaybackSystem's LateRun contract. It re-implements that contract
     /// because the EditMode assembly deliberately does not reference Client.Adapters.Unity.
     /// </summary>
-    public sealed class FakeMovePlayback : IEcsRun, IEcsInject<EcsWorld>
+    public sealed class FakeMovePlaybackSystem : IEcsRun, IEcsInject<EcsWorld>
     {
         private readonly List<PendingMove> _pending = new();
 

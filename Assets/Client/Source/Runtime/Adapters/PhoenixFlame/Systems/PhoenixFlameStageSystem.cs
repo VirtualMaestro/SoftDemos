@@ -1,7 +1,7 @@
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.Menu;
 using Client.Simulation.Menu.Components;
 using Client.Simulation.PhoenixFlame;
@@ -20,7 +20,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// <c>IsActive</c> is true.
     /// </remarks>
     public sealed class PhoenixFlameStageSystem : IEcsLateRun, IEcsDestroy,
-        IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<AddressablesAssetService>,
+        IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/phoenix-flame/atlas";
@@ -54,7 +54,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _HashPerPhase(OrangeTrigger, GreenTrigger, BlueTrigger);
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private AddressablesAssetService _assets;
         private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
@@ -373,7 +373,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
@@ -17,7 +17,7 @@ namespace Client.Adapters.Shell.Systems
     /// not retried. Every sprite from <see cref="SpriteAtlas.GetSprite"/> is a copy this system
     /// owns and must destroy in <see cref="Destroy"/>.
     /// </remarks>
-    public sealed class ShellStageSystem : IEcsLateRun, IEcsDestroy, IEcsInject<ILog>,
+    public sealed class ShellStageSystem : IEcsLateRun, IEcsDestroy, IEcsInject<ILogService>,
         IEcsInject<AddressablesAssetService>, IEcsInject<SharedUiSprites>,
         IEcsInject<StageReadyChannel>
     {
@@ -40,7 +40,7 @@ namespace Client.Adapters.Shell.Systems
         private readonly DemoEntry[] _demos;
         private readonly List<Sprite> _ownedSprites = new();
 
-        private ILog _log;
+        private ILogService _log;
         private AddressablesAssetService _assets;
         private SharedUiSprites _uiSprites;
         private StageReadyChannel _stageReady;
@@ -278,7 +278,7 @@ namespace Client.Adapters.Shell.Systems
                 image.enabled = false;
         }
 
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
         public void Inject(StageReadyChannel obj) => _stageReady = obj;

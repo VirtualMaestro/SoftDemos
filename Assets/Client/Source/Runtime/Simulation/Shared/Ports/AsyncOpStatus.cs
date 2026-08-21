@@ -1,4 +1,4 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Shared.Ports
 {
     /// <summary>State of an asynchronous port request.</summary>
     /// <remarks>

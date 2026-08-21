@@ -1,7 +1,7 @@
 using System.Linq;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Payload;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Tests.Fakes.Services;
 using NUnit.Framework;
 
 namespace Client.Simulation.Tests.MagicWords
@@ -11,17 +11,17 @@ namespace Client.Simulation.Tests.MagicWords
         [Test]
         public void NullArray_ProducesOneWarning()
         {
-            var log = new FakeLog();
+            var log = new FakeLogService();
             var index = new AvatarIndex(null, log);
 
             Assert.That(index.TryGet("Sheldon", out _, out _), Is.False);
-            Assert.That(log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         [Test]
         public void InvalidEntries_AreDiscardedAndWarned()
         {
-            var log = new FakeLog();
+            var log = new FakeLogService();
             var index = new AvatarIndex(
                 new AvatarDto[]
                 {
@@ -31,13 +31,13 @@ namespace Client.Simulation.Tests.MagicWords
                 log);
 
             Assert.That(index.TryGet(" ", out _, out _), Is.False);
-            Assert.That(log.CountOf(FakeLog.Level.Warn), Is.EqualTo(2));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(2));
         }
 
         [Test]
         public void DuplicateName_KeepsFirstUrlAndSide()
         {
-            var log = new FakeLog();
+            var log = new FakeLogService();
             var index = new AvatarIndex(
                 new[]
                 {
@@ -49,8 +49,8 @@ namespace Client.Simulation.Tests.MagicWords
             Assert.That(index.TryGet("Sheldon", out var url, out var side), Is.True);
             Assert.That(url, Is.EqualTo("first"));
             Assert.That(side, Is.EqualTo(AvatarSide.Left));
-            Assert.That(log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
-            Assert.That(log.OfLevel(FakeLog.Level.Warn).Single().Message, Does.Contain("first entry wins"));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.OfLevel(FakeLogService.Level.Warn).Single().Message, Does.Contain("first entry wins"));
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace Client.Simulation.Tests.MagicWords
         {
             var index = new AvatarIndex(
                 new[] { new AvatarDto { name = "Sheldon", url = "url", position = "left" } },
-                new FakeLog());
+                new FakeLogService());
 
             Assert.That(index.TryGet("sheldon", out _, out _), Is.False);
         }
@@ -68,14 +68,14 @@ namespace Client.Simulation.Tests.MagicWords
         [TestCase("middle")]
         public void InvalidPosition_FallsBackToLeftAndWarns(string position)
         {
-            var log = new FakeLog();
+            var log = new FakeLogService();
             var index = new AvatarIndex(
                 new[] { new AvatarDto { name = "Penny", url = "url", position = position } },
                 log);
 
             Assert.That(index.TryGet("Penny", out _, out var side), Is.True);
             Assert.That(side, Is.EqualTo(AvatarSide.Left));
-            Assert.That(log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         [TestCase(null)]
@@ -83,13 +83,13 @@ namespace Client.Simulation.Tests.MagicWords
         [TestCase(" ")]
         public void MissingUrl_IsIndexedAsAbsentAndWarns(string url)
         {
-            var log = new FakeLog();
+            var log = new FakeLogService();
             var index = new AvatarIndex(
                 new[] { new AvatarDto { name = "Neighbour", url = url, position = "right" } },
                 log);
 
             Assert.That(index.TryGet("Neighbour", out _, out _), Is.False);
-            Assert.That(log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
     }
 }

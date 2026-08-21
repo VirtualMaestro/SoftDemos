@@ -14,7 +14,8 @@ using Client.Adapters.Shell;
 using Client.Adapters.Shell.Systems;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.AceOfShadows;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.Menu;
 using Client.Simulation.PhoenixFlame;
@@ -34,7 +35,7 @@ namespace Client.Bootstrap
 
         private EcsWorld _world;
         private EcsPipeline _pipeline;
-        private ILog _log;
+        private ILogService _log;
         private SceneLoaderService _sceneService;
         private AddressablesAssetService _assetSourceService;
         private HttpDialogueService _dialogueSourceService;
@@ -88,7 +89,7 @@ namespace Client.Bootstrap
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ITimeService>(new UnityTimeService())
-                .Inject<ILog>(new UnityLogService("Simulation"))
+                .Inject<ILogService>(new UnityLogService("Simulation"))
                 .Inject<ISceneService>(_sceneService)
                 .Inject<IDialogueService>(_dialogueSourceService)
 

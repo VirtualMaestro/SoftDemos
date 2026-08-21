@@ -1,6 +1,6 @@
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Messages;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Components;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows.Systems
@@ -9,10 +9,10 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// When a card's move finishes, lands it in the target stack (index, order, stack counters)
     /// and marks the whole deal complete after the last card.
     /// </summary>
-    public sealed class MoveCompletionSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
+    public sealed class MoveCompletionSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
 
         public void Run()
         {
@@ -56,7 +56,7 @@ namespace Client.Simulation.AceOfShadows.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class CompletionAspect : EcsAspect
         {

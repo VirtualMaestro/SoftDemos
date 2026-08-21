@@ -1,6 +1,7 @@
 using Client.Simulation.MagicWords.Payload;
+using Client.Simulation.Shared.Ports;
 
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.MagicWords.Ports
 {
     /// <summary>Loads the dialogue payload. Handle and poll.</summary>
     /// <remarks>

@@ -3,8 +3,8 @@ using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Messages;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Components;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.AceOfShadows.Systems
@@ -13,14 +13,14 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// Attaches pooled card views to card entities, keeps resting cards seated at their slot
     /// position, and raises the sorting order of cards in flight.
     /// </summary>
-    public sealed class CardBindingSystem : IEcsLateRun, IEcsInject<EcsWorld>, IEcsInject<ILog>,
+    public sealed class CardBindingSystem : IEcsLateRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>,
         IEcsInject<ViewRegistryService>, IEcsInject<StackSlotLayoutService>, IEcsInject<CardViewChannel>,
         IEcsInject<ScreenRegistryService>
     {
         private const int InFlightSortingBase = 500;
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private ViewRegistryService _views;
         private StackSlotLayoutService _layout;
         private CardViewChannel _channel;
@@ -122,7 +122,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(CardViewChannel obj) => _channel = obj;

@@ -1,4 +1,5 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
@@ -12,11 +13,11 @@ namespace Client.Simulation.MagicWords.Systems
         IEcsRun,
         IEcsInject<EcsWorld>,
         IEcsInject<IDialogueService>,
-        IEcsInject<ILog>
+        IEcsInject<ILogService>
     {
         private EcsWorld _world;
         private IDialogueService _dialogueSource;
-        private ILog _log;
+        private ILogService _log;
 
         public void Run()
         {
@@ -71,7 +72,7 @@ namespace Client.Simulation.MagicWords.Systems
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(IDialogueService obj) => _dialogueSource = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class LoadCommandAspect : EcsAspect
         {

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Messages;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Shared.Components;
+using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -162,7 +162,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.MovesIssued, Is.EqualTo(144), $"{state}");
             Assert.That(_GetStack(0).Count, Is.Zero, $"{state}");
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.Zero, $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.Zero, $"{Log}");
         }
 
         [Test]
@@ -178,7 +178,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.IsComplete, Is.True, $"{state}");
             Assert.That(_GetStack(1).Count, Is.EqualTo(144), $"{state}");
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(144), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(144), $"{Log}");
         }
 
         [Test]
@@ -215,7 +215,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             Assert.That(_GetStack(0).Count, Is.EqualTo(144), $"{state}");
             Assert.That(_GetStack(1).Count, Is.Zero, $"{state}");
             Assert.That(state.MovesIssued, Is.Zero, $"{state}");
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.Zero, $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.Zero, $"{Log}");
         }
 
         [Test]
@@ -315,7 +315,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             Assert.That(state.MoveIntervalSeconds, Is.EqualTo(1f), $"{state}");
             Assert.That(state.MoveDurationSeconds, Is.EqualTo(0.5f), $"{state}");
             Assert.That(state.SpeedMultiplier, Is.EqualTo(1f), $"{state}");
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(2), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(2), $"{Log}");
         }
 
         [Test]

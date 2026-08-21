@@ -1,7 +1,7 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Shared.Ports
 {
     /// <summary>The logging contract of the simulation. Three levels are enough.</summary>
-    public interface ILog
+    public interface ILogService
     {
         void Info(string message);
         void Warn(string message);

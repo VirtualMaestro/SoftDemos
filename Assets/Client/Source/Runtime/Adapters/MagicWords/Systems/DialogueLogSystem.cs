@@ -5,7 +5,7 @@ using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Vendor.OptVList;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
@@ -23,7 +23,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// LateRun pass, the list is cleared in the same frame the teardown started.
     /// </summary>
     public sealed class DialogueLogSystem : IEcsLateRun, IEcsDestroy,
-        IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<AvatarImageRouterService>,
+        IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
         IEcsInject<TweenPlayerService>, IEcsInject<DialogueLogChannel>
     {
         private const float FadeSeconds = 0.2f;
@@ -37,7 +37,7 @@ namespace Client.Adapters.MagicWords.Systems
         private readonly StringBuilder _body = new();
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private AvatarImageRouterService _avatars;
         private TweenPlayerService _tweens;
         private DialogueLogChannel _channel;
@@ -228,7 +228,7 @@ namespace Client.Adapters.MagicWords.Systems
             _avatarLoads = obj.GetPool<AvatarLoadComp>();
         }
 
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
         public void Inject(TweenPlayerService obj) => _tweens = obj;
         public void Inject(DialogueLogChannel obj) => _channel = obj;

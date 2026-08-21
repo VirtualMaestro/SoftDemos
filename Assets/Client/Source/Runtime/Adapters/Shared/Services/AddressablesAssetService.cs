@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
@@ -20,12 +20,12 @@ namespace Client.Adapters.Shared.Services
     {
         private readonly Dictionary<int, Request> _requests = new();
         private readonly Dictionary<int, Object> _assets = new();
-        private readonly ILog _log;
+        private readonly ILogService _log;
         private int _nextRequestId;
         private int _nextHandleId;
         private bool _isDisposed;
 
-        public AddressablesAssetService(ILog log)
+        public AddressablesAssetService(ILogService log)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
         }

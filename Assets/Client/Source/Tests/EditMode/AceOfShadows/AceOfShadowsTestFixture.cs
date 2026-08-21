@@ -1,7 +1,8 @@
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Ports;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.Tests.Fakes.Services;
+using Client.Simulation.Tests.Fakes.Systems;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -11,21 +12,21 @@ namespace Client.Simulation.Tests.AceOfShadows
     {
         protected EcsWorld World { get; private set; }
         protected EcsPipeline Pipeline { get; private set; }
-        protected FakeTime Time { get; private set; }
-        protected FakeLog Log { get; private set; }
-        protected FakeMovePlayback Playback { get; private set; }
+        protected FakeTimeService Time { get; private set; }
+        protected FakeLogService Log { get; private set; }
+        protected FakeMovePlaybackSystem Playback { get; private set; }
 
         [SetUp]
         public void SetUp()
         {
             World = new EcsWorld();
-            Time = new FakeTime();
-            Log = new FakeLog();
-            Playback = new FakeMovePlayback();
+            Time = new FakeTimeService();
+            Log = new FakeLogService();
+            Playback = new FakeMovePlaybackSystem();
             Pipeline = EcsPipeline.New()
                 .Inject(World)
                 .Inject<ITimeService>(Time)
-                .Inject<ILog>(Log)
+                .Inject<ILogService>(Log)
                 .AddModule(new AceOfShadowsModule(new AceOfShadowsConfig()))
                 .Add(Playback)
                 .BuildAndInit();

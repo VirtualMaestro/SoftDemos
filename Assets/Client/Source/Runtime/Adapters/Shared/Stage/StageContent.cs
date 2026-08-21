@@ -1,5 +1,5 @@
 using Client.Adapters.Shared.Services;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 using UnityEngine;
 
@@ -31,7 +31,7 @@ namespace Client.Adapters.Shared.Stage
         /// created here, <paramref name="ownsSprite"/> is true and the caller must destroy it.
         /// </summary>
         public static Sprite ResolveBackground(
-            AddressablesAssetService assets, int requestId, string demoName, ILog log,
+            AddressablesAssetService assets, int requestId, string demoName, ILogService log,
             out bool ownsSprite)
         {
             ownsSprite = false;
@@ -65,7 +65,7 @@ namespace Client.Adapters.Shared.Stage
         /// size. Returns the camera so the caller can keep it cached.
         /// </summary>
         public static Camera FitBackground(
-            Camera camera, Transform background, Sprite sprite, string demoName, ILog log,
+            Camera camera, Transform background, Sprite sprite, string demoName, ILogService log,
             out float orthographicSize)
         {
             if (camera == null)

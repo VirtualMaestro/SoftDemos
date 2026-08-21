@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Client.Simulation.AceOfShadows;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -18,7 +19,7 @@ namespace Client.Simulation.Tests
     /// arrive through both routes, which is what this fixture proves.</para>
     ///
     /// <para>Injection is what keeps a module free of ports. <c>AceOfShadowsModule</c> builds four
-    /// systems that need <c>ITimeService</c>, <c>ILog</c> and the world; were those constructor
+    /// systems that need <c>ITimeService</c>, <c>ILogService</c> and the world; were those constructor
     /// parameters, every module would have to accept and forward every port. That is the whole
     /// reason the injectable list below exists — see CLAUDE.md, "Composition root".</para>
     ///
@@ -46,13 +47,15 @@ namespace Client.Simulation.Tests
         {
             "DCFApixels.DragonECS.EcsWorld",
 
-            // Ports. The simulation knows nothing else about the outside world.
-            "Client.Simulation.Core.Ports.ILog",
-            "Client.Simulation.Core.Ports.ITimeService",
-            "Client.Simulation.Core.Ports.ISceneService",
-            "Client.Simulation.Core.Ports.IAssetService",
-            "Client.Simulation.Core.Ports.IDialogueService",
-            "Client.Simulation.Core.Ports.IImageLoadService",
+            // Ports. The simulation knows nothing else about the outside world. The shared ones
+            // live in Shared/Ports; a port only one feature uses lives in that feature's Ports
+            // folder, so deleting the feature deletes its ports with it.
+            "Client.Simulation.Shared.Ports.ILogService",
+            "Client.Simulation.Shared.Ports.ITimeService",
+            "Client.Simulation.Shared.Ports.ISceneService",
+            "Client.Simulation.Shared.Ports.IAssetService",
+            "Client.Simulation.MagicWords.Ports.IDialogueService",
+            "Client.Simulation.MagicWords.Ports.IImageLoadService",
 
             // Adapter services. The first two implement a port and are injected under their
             // concrete type as well, because the stage systems need engine objects the port does

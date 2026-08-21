@@ -5,7 +5,7 @@ using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.Menu;
 using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
@@ -20,7 +20,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// forwards the speed button, tears everything down on close.
     /// </summary>
     public sealed class AceOfShadowsStageSystem : IEcsLateRun, IEcsDestroy,
-        IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<ViewRegistryService>,
+        IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<TweenPlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
         IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
@@ -41,7 +41,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         private readonly Sprite[] _faces = new Sprite[FaceCount];
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private ViewRegistryService _views;
         private StackSlotLayoutService _layout;
         private AddressablesAssetService _assets;
@@ -337,7 +337,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;

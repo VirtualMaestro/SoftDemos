@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords.Payload;
 
 namespace Client.Simulation.MagicWords
@@ -10,7 +10,7 @@ namespace Client.Simulation.MagicWords
         private readonly Dictionary<string, Entry> _entries =
             new(StringComparer.Ordinal);
 
-        public AvatarIndex(AvatarDto[] avatars, ILog log)
+        public AvatarIndex(AvatarDto[] avatars, ILogService log)
         {
             if (log == null)
                 throw new ArgumentNullException(nameof(log));
@@ -69,7 +69,7 @@ namespace Client.Simulation.MagicWords
             return false;
         }
 
-        private static AvatarSide ParseSide(string value, string speakerName, ILog log)
+        private static AvatarSide ParseSide(string value, string speakerName, ILogService log)
         {
             if (string.Equals(value, "left", StringComparison.OrdinalIgnoreCase))
                 return AvatarSide.Left;

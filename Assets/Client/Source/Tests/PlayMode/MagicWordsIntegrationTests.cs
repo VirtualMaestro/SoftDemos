@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
@@ -29,7 +30,7 @@ namespace Client.Adapters.Tests
             _imageSource = new WebImageLoaderService(new UnityLogService("Test.Avatars"));
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
-                .Inject<ILog>(new UnityLogService("Test.MagicWords"))
+                .Inject<ILogService>(new UnityLogService("Test.MagicWords"))
                 .Inject<IDialogueService>(_dialogueSource)
                 .Inject<IImageLoadService>(_imageSource)
                 .Inject<ITimeService>(new UnityTimeService())

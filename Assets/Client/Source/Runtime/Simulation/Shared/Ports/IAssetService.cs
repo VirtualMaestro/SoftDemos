@@ -1,4 +1,4 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Shared.Ports
 {
     /// <summary>Loads an asset by address. Handle and poll.</summary>
     /// <remarks>

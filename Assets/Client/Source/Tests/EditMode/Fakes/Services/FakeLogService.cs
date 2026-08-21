@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 
-namespace Client.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes.Services
 {
     /// <summary>
-    /// <see cref="ILog"/> that records every message with its level, so a test can assert that a
+    /// <see cref="ILogService"/> that records every message with its level, so a test can assert that a
     /// failure path actually reported itself instead of failing silently.
     /// </summary>
-    public sealed class FakeLog : ILog
+    public sealed class FakeLogService : ILogService
     {
         public enum Level { Info, Warn, Error }
 
@@ -42,7 +42,7 @@ namespace Client.Simulation.Tests.Fakes
 
         public override string ToString() =>
             _entries.Count == 0
-                ? "FakeLog(empty)"
-                : "FakeLog:\n  " + string.Join("\n  ", _entries.Select(e => e.ToString()));
+                ? "FakeLogService(empty)"
+                : "FakeLogService:\n  " + string.Join("\n  ", _entries.Select(e => e.ToString()));
     }
 }

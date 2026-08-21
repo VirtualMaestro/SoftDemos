@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 
 namespace Client.Simulation.Tests.Fakes
 {

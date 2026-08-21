@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Payload;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -14,14 +15,14 @@ namespace Client.Adapters.MagicWords.Services
         public const float DefaultTimeoutSeconds = 10f;
 
         private readonly Dictionary<int, Request> _requests = new();
-        private readonly ILog _log;
+        private readonly ILogService _log;
         private readonly string _url;
         private readonly float _timeoutSeconds;
         private int _nextRequestId;
         private bool _isDisposed;
 
         public HttpDialogueService(
-            ILog log,
+            ILogService log,
             string url = DefaultUrl,
             float timeoutSeconds = DefaultTimeoutSeconds)
         {

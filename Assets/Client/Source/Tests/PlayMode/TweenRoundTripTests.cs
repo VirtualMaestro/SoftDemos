@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.Shared.Services;
-using Client.Simulation.Core.Messages;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Components;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using UnityEngine;
@@ -45,7 +45,7 @@ namespace Client.Adapters.Tests
             var player = new TweenPlayerService(_world, _registry);
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
-                .Inject<ILog>(new UnityLogService("Test.Tween"))
+                .Inject<ILogService>(new UnityLogService("Test.Tween"))
                 .Inject<ViewRegistryService>(_registry)
                 .Inject(_layout)
                 .Inject(player)

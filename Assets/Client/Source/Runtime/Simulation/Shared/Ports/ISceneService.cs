@@ -1,4 +1,4 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Shared.Ports
 {
     /// <summary>Loads and unloads scenes. Handle and poll.</summary>
     /// <remarks>

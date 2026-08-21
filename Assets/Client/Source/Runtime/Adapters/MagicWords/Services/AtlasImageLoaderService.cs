@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using UnityEngine;
 
 namespace Client.Adapters.MagicWords.Services
@@ -11,14 +12,14 @@ namespace Client.Adapters.MagicWords.Services
 
         private readonly Dictionary<int, Request> _requests = new();
         private readonly Dictionary<int, Sprite> _handles = new();
-        private readonly ILog _log;
+        private readonly ILogService _log;
 
         private IReadOnlyDictionary<string, Sprite> _sprites;
         private int _nextRequestId;
         private int _nextHandleId;
         private bool _isDisposed;
 
-        public AtlasImageLoaderService(ILog log)
+        public AtlasImageLoaderService(ILogService log)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
         }

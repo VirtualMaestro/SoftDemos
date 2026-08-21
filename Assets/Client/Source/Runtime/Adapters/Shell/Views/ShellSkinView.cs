@@ -1,4 +1,4 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,7 +30,7 @@ namespace Client.Adapters.Shell.Views
 
         /// <summary>Reports every unassigned target through <paramref name="log"/>. It does not throw.</summary>
         /// <remarks>A missing reference gives one flat rectangle on screen. The game keeps running.</remarks>
-        public bool HasEveryReference(ILog log)
+        public bool HasEveryReference(ILogService log)
         {
             var isComplete = true;
             isComplete &= _Check(log, background, nameof(background));
@@ -42,7 +42,7 @@ namespace Client.Adapters.Shell.Views
             return isComplete;
         }
 
-        private bool _Check(ILog log, Object reference, string fieldName)
+        private bool _Check(ILogService log, Object reference, string fieldName)
         {
             // `?.` skips Unity's null overload, so a destroyed Image would pass the check.
             if (reference != null)
@@ -52,7 +52,7 @@ namespace Client.Adapters.Shell.Views
             return false;
         }
 
-        private bool _CheckArray(ILog log, Image[] references, string fieldName)
+        private bool _CheckArray(ILogService log, Image[] references, string fieldName)
         {
             if (references == null || references.Length == 0)
             {

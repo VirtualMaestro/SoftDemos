@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using MyGameDevTools.SceneLoading;
 
 namespace Client.Adapters.Shared.Services
@@ -17,11 +17,11 @@ namespace Client.Adapters.Shared.Services
     public sealed class SceneLoaderService : ISceneService, IDisposable
     {
         private readonly Dictionary<int, Request> _requests = new();
-        private readonly ILog _log;
+        private readonly ILogService _log;
         private int _nextId;
         private bool _isDisposed;
 
-        public SceneLoaderService(ILog log)
+        public SceneLoaderService(ILogService log)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
         }

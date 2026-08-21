@@ -1,4 +1,5 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
@@ -12,11 +13,11 @@ namespace Client.Simulation.MagicWords.Systems
         IEcsRun,
         IEcsInject<EcsWorld>,
         IEcsInject<IImageLoadService>,
-        IEcsInject<ILog>
+        IEcsInject<ILogService>
     {
         private EcsWorld _world;
         private IImageLoadService _imageSource;
-        private ILog _log;
+        private ILogService _log;
         private EcsPool<ReloadAvatarsCommand> _reloads;
         private EcsPool<RequestAvatarCommand> _requests;
         private EcsPool<AvatarComp> _avatars;
@@ -117,7 +118,7 @@ namespace Client.Simulation.MagicWords.Systems
         }
 
         public void Inject(IImageLoadService obj) => _imageSource = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class ReloadCommandAspect : EcsAspect
         {

@@ -3,7 +3,7 @@ using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.AceOfShadows.Views;
-using Client.Simulation.Core.Messages;
+using Client.Simulation.Shared.Components;
 using DCFApixels.DragonECS;
 using DG.Tweening;
 using UnityEngine;

@@ -1,8 +1,8 @@
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.Shared.Services;
-using Client.Simulation.Core.Messages;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Components;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.AceOfShadows.Systems
@@ -16,11 +16,11 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// thread at one point in the frame. DOTween is only used here, through the player.
     /// </remarks>
     public sealed class TweenPlaybackSystem : IEcsInit, IEcsLateRun, IEcsDestroy,
-        IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<ViewRegistryService>,
+        IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<TweenPlayerService>
     {
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private ViewRegistryService _viewRegistry;
         private StackSlotLayoutService _stackSlotLayout;
         private TweenPlayerService _tweenPlayer;
@@ -96,7 +96,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(ViewRegistryService obj) => _viewRegistry = obj;
         public void Inject(StackSlotLayoutService obj) => _stackSlotLayout = obj;
         public void Inject(TweenPlayerService obj) => _tweenPlayer = obj;

@@ -1,7 +1,7 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.PhoenixFlame;
 using Client.Simulation.PhoenixFlame.Components;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -11,8 +11,8 @@ namespace Client.Simulation.Tests.PhoenixFlame
     {
         protected EcsWorld World { get; private set; }
         protected EcsPipeline Pipeline { get; private set; }
-        protected FakeTime Time { get; private set; }
-        protected FakeLog Log { get; private set; }
+        protected FakeTimeService Time { get; private set; }
+        protected FakeLogService Log { get; private set; }
 
         [SetUp]
         public void SetUp()
@@ -67,12 +67,12 @@ namespace Client.Simulation.Tests.PhoenixFlame
         private void _Build(PhoenixFlameConfig config)
         {
             World = new EcsWorld();
-            Time = new FakeTime();
-            Log = new FakeLog();
+            Time = new FakeTimeService();
+            Log = new FakeLogService();
             Pipeline = EcsPipeline.New()
                 .Inject(World)
                 .Inject<ITimeService>(Time)
-                .Inject<ILog>(Log)
+                .Inject<ILogService>(Log)
                 .AddModule(new PhoenixFlameModule(config))
                 .BuildAndInit();
         }

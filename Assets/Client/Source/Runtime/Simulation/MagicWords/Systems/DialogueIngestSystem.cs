@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
@@ -12,12 +12,12 @@ namespace Client.Simulation.MagicWords.Systems
     public sealed class DialogueIngestSystem : IEcsRun, IEcsInit,
 
         IEcsInject<EcsWorld>,
-        IEcsInject<ILog>
+        IEcsInject<ILogService>
     {
         private readonly MagicWordsConfig _config;
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private EcsPool<SpeakerComp> _speakerPool;
         private EcsPool<AvatarComp> _avatarPool;
         private EcsPool<AvatarLoadComp> _avatarLoadPool;
@@ -115,6 +115,6 @@ namespace Client.Simulation.MagicWords.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
     }
 }

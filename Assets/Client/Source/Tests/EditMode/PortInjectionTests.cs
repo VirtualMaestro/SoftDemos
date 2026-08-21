@@ -1,6 +1,7 @@
 using System;
-using Client.Simulation.Core.Ports;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
+using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -52,8 +53,8 @@ namespace Client.Simulation.Tests
         [Test]
         public void Inject_WithInterfaceGenericArgument_ReachesEveryPort()
         {
-            var time = new FakeTime { DeltaSeconds = 0.25f };
-            var log = new FakeLog();
+            var time = new FakeTimeService { DeltaSeconds = 0.25f };
+            var log = new FakeLogService();
             var scenes = new FakeSceneService();
             var assets = new FakeAssetService();
             var dialogue = new FakeDialogueService();
@@ -63,7 +64,7 @@ namespace Client.Simulation.Tests
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ITimeService>(time)
-                .Inject<ILog>(log)
+                .Inject<ILogService>(log)
                 .Inject<ISceneService>(scenes)
                 .Inject<IAssetService>(assets)
                 .Inject<IDialogueService>(dialogue)
@@ -72,7 +73,7 @@ namespace Client.Simulation.Tests
                 .BuildAndInit();
 
             Assert.That(probe.Time, Is.SameAs(time), $"ITimeService did not arrive. {probe}");
-            Assert.That(probe.Log, Is.SameAs(log), $"ILog did not arrive. {probe}");
+            Assert.That(probe.Log, Is.SameAs(log), $"ILogService did not arrive. {probe}");
             Assert.That(probe.Scenes, Is.SameAs(scenes), $"ISceneService did not arrive. {probe}");
             Assert.That(probe.Assets, Is.SameAs(assets), $"IAssetService did not arrive. {probe}");
             Assert.That(probe.Dialogue, Is.SameAs(dialogue), $"IDialogueService did not arrive. {probe}");
@@ -82,9 +83,9 @@ namespace Client.Simulation.Tests
         [Test]
         public void Inject_WithConcreteTypeOnly_ThrowsAtBuild()
         {
-            var time = new FakeTime { DeltaSeconds = 0.25f };
+            var time = new FakeTimeService { DeltaSeconds = 0.25f };
 
-            // No explicit generic argument: T is inferred as FakeTime, so only a FakeTime node
+            // No explicit generic argument: T is inferred as FakeTimeService, so only a FakeTimeService node
             // is created and the ITimeService requirement stays unsatisfied.
             // Catch, not Throws: the concrete type is DragonECS's InjectionException, and pinning
             // it here would couple the test to a framework internal. The message is the contract.
@@ -107,11 +108,11 @@ namespace Client.Simulation.Tests
         [Test]
         public void AddNode_ThenInjectConcrete_IsEquivalentToExplicitGeneric()
         {
-            var time = new FakeTime { DeltaSeconds = 0.5f };
+            var time = new FakeTimeService { DeltaSeconds = 0.5f };
             var probe = new TimeProbeSystem();
 
-            // The node exists before the injection, so FakeTime's branch picks it up by
-            // ITimeService.IsAssignableFrom(FakeTime). Same result, more moving parts —
+            // The node exists before the injection, so FakeTimeService's branch picks it up by
+            // ITimeService.IsAssignableFrom(FakeTimeService). Same result, more moving parts —
             // production wiring uses the explicit generic form instead.
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
@@ -185,21 +186,21 @@ namespace Client.Simulation.Tests
         private sealed class AllPortsProbeSystem :
             IEcsRun,
             IEcsInject<ITimeService>,
-            IEcsInject<ILog>,
+            IEcsInject<ILogService>,
             IEcsInject<ISceneService>,
             IEcsInject<IAssetService>,
             IEcsInject<IDialogueService>,
             IEcsInject<IImageLoadService>
         {
             public ITimeService Time { get; private set; }
-            public ILog Log { get; private set; }
+            public ILogService Log { get; private set; }
             public ISceneService Scenes { get; private set; }
             public IAssetService Assets { get; private set; }
             public IDialogueService Dialogue { get; private set; }
             public IImageLoadService Images { get; private set; }
 
             public void Inject(ITimeService obj) => Time = obj;
-            public void Inject(ILog obj) => Log = obj;
+            public void Inject(ILogService obj) => Log = obj;
             public void Inject(ISceneService obj) => Scenes = obj;
             public void Inject(IAssetService obj) => Assets = obj;
             public void Inject(IDialogueService obj) => Dialogue = obj;

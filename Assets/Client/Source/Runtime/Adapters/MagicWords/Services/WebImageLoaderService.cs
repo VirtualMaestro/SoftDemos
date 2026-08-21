@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
+using Client.Simulation.MagicWords.Ports;
 using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
@@ -14,13 +15,13 @@ namespace Client.Adapters.MagicWords.Services
         private readonly Dictionary<int, Request> _requests = new();
         private readonly Dictionary<int, Texture2D> _textures = new();
         private readonly Dictionary<int, Sprite> _sprites = new();
-        private readonly ILog _log;
+        private readonly ILogService _log;
         private readonly float _timeoutSeconds;
         private int _nextRequestId;
         private int _nextHandleId;
         private bool _isDisposed;
 
-        public WebImageLoaderService(ILog log, float timeoutSeconds = DefaultTimeoutSeconds)
+        public WebImageLoaderService(ILogService log, float timeoutSeconds = DefaultTimeoutSeconds)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _timeoutSeconds = timeoutSeconds > 0f

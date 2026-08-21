@@ -3,7 +3,7 @@ using System.Linq;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using Client.Simulation.MagicWords.Payload;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -51,7 +51,7 @@ namespace Client.Simulation.Tests.MagicWords
                 World.Get<DialoguePlaybackComp>().ToString());
             Assert.That(ImageSource.LoadCalls, Has.Count.EqualTo(2));
             Assert.That(
-                Log.OfLevel(FakeLog.Level.Info).Any(x => x.Message.Contains("playback completed")),
+                Log.OfLevel(FakeLogService.Level.Info).Any(x => x.Message.Contains("playback completed")),
                 Is.True);
         }
 
@@ -165,7 +165,7 @@ namespace Client.Simulation.Tests.MagicWords
         }
 
         private int _CompletionLogCount() =>
-            Log.OfLevel(FakeLog.Level.Info).Count(x => x.Message.Contains("playback completed"));
+            Log.OfLevel(FakeLogService.Level.Info).Count(x => x.Message.Contains("playback completed"));
 
         private static DialogueLineDto _Line(string name, string text) =>
             new() { name = name, text = text };

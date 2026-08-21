@@ -1,5 +1,5 @@
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows.Systems
@@ -8,12 +8,12 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Consumes Deal/Reset commands: creates (or deletes) the card and stack entities and fills
     /// the deck state from config.
     /// </summary>
-    public sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
+    public sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private readonly AceOfShadowsConfig _config;
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
 
         public DeckSetupSystem(AceOfShadowsConfig config)
         {
@@ -90,7 +90,7 @@ namespace Client.Simulation.AceOfShadows.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class DealCommandAspect : EcsAspect
         {

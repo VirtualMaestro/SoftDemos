@@ -1,4 +1,4 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using UnityEngine;
 
 namespace Client.Adapters.Shared.Services

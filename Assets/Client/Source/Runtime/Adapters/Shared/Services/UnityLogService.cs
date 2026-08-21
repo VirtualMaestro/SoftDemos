@@ -1,15 +1,15 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using UnityEngine;
 
 namespace Client.Adapters.Shared.Services
 {
-    /// <summary>Writes <see cref="ILog"/> messages to the Unity console.</summary>
+    /// <summary>Writes <see cref="ILogService"/> messages to the Unity console.</summary>
     /// <remarks>
     /// Every message carries the <see cref="Prefix"/> tag and the caller's channel, so the console
     /// filter works: <c>[Client]</c> shows all of them, <c>[Client][Scenes]</c> shows one adapter.
     /// A release player drops Info and Warn. Errors always go through.
     /// </remarks>
-    public sealed class UnityLogService : ILog
+    public sealed class UnityLogService : ILogService
     {
         private const string Prefix = "[Client]";
 

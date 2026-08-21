@@ -2,7 +2,7 @@ using System;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using Client.Simulation.MagicWords.Payload;
-using Client.Simulation.Tests.Fakes;
+using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -16,7 +16,7 @@ namespace Client.Simulation.Tests.MagicWords
             _LoadWithoutThrow(null);
 
             Assert.That(World.Get<DialogueStateComp>().State, Is.EqualTo(DialogueLoadState.Failed));
-            Assert.That(Log.CountOf(FakeLog.Level.Error), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Error), Is.EqualTo(1));
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace Client.Simulation.Tests.MagicWords
             });
 
             Assert.That(World.Get<DialogueStateComp>().LineCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         [Test]
@@ -82,7 +82,7 @@ namespace Client.Simulation.Tests.MagicWords
                 avatars = new AvatarDto[] { null }
             });
 
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         [TestCase(null)]
@@ -96,7 +96,7 @@ namespace Client.Simulation.Tests.MagicWords
             });
 
             Assert.That(World.Get<DialogueStateComp>().LineCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         [Test]
@@ -127,7 +127,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 Assert.That(aspect.Loads.Read(entityId).State, Is.EqualTo(AvatarLoadState.Missing));
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         [Test]
@@ -144,7 +144,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 Assert.That(aspect.Avatars.Read(entityId).Side, Is.EqualTo(AvatarSide.Left));
-            Assert.That(Log.CountOf(FakeLog.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
         private void _LoadWithoutThrow(DialoguePayload payload)

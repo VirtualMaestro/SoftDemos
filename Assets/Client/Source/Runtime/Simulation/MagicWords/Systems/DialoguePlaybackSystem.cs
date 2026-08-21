@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
 
@@ -13,14 +13,14 @@ namespace Client.Simulation.MagicWords.Systems
         IEcsRun,
         IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>,
-        IEcsInject<ILog>
+        IEcsInject<ILogService>
     {
         private readonly MagicWordsConfig _config;
         private readonly List<int> _pendingLines = new();
 
         private EcsWorld _world;
         private ITimeService _time;
-        private ILog _log;
+        private ILogService _log;
         private EcsPool<SkipDialogueCommand> _skipCommands;
         private EcsPool<DialogueLineComp> _lines;
         private EcsTagPool<LineVisibleTag> _visibleLines;
@@ -146,7 +146,7 @@ namespace Client.Simulation.MagicWords.Systems
         }
 
         public void Inject(ITimeService obj) => _time = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class SkipAspect : EcsAspect
         {

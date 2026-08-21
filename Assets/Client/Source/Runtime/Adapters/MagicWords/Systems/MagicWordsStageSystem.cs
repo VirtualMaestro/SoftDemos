@@ -4,7 +4,7 @@ using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using Client.Simulation.Menu;
@@ -21,7 +21,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// the dialogue log channel, forwards skip and avatar-mode buttons, shows load status.
     /// </summary>
     public sealed class MagicWordsStageSystem : IEcsLateRun, IEcsDestroy,
-        IEcsInject<EcsWorld>, IEcsInject<ILog>, IEcsInject<AddressablesAssetService>,
+        IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
         IEcsInject<DialogueLogChannel>, IEcsInject<TweenPlayerService>, IEcsInject<StageReadyChannel>,
         IEcsInject<ScreenRegistryService>
@@ -42,7 +42,7 @@ namespace Client.Adapters.MagicWords.Systems
         private readonly Dictionary<string, Sprite> _sprites = new(StringComparer.Ordinal);
 
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
         private AddressablesAssetService _assets;
         private AvatarImageRouterService _avatars;
         private DialogueLogChannel _dialogueChannel;
@@ -298,7 +298,7 @@ namespace Client.Adapters.MagicWords.Systems
         private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
         public void Inject(DialogueLogChannel obj) => _dialogueChannel = obj;

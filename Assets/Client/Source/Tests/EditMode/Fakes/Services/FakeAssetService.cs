@@ -1,15 +1,18 @@
 using System.Collections.Generic;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 
-namespace Client.Simulation.Tests.Fakes
+namespace Client.Simulation.Tests.Fakes.Services
 {
-    /// <summary><see cref="IImageLoadService"/> backed by <see cref="FakeAsyncRequests"/>.</summary>
-    public sealed class FakeImageService : IImageLoadService
+    /// <summary>
+    /// <see cref="IAssetService"/> backed by <see cref="FakeAsyncRequests"/>. Hands out an opaque
+    /// handle id once a request settles as <see cref="AsyncOpStatus.Done"/> — the same contract
+    /// the Addressables adapter honours, so a system written against the fake needs no change.
+    /// </summary>
+    public sealed class FakeAssetService : IAssetService
     {
         private readonly FakeAsyncRequests _requests = new();
         private readonly Dictionary<int, int> _handles = new();
-        private readonly List<(string SpeakerName, string Url)> _loadCalls = new();
-        private readonly List<int> _releaseCalls = new();
+        private readonly List<string> _loadCalls = new();
         private int _nextHandle;
 
         public int CompleteAfterPolls
@@ -24,14 +27,12 @@ namespace Client.Simulation.Tests.Fakes
             set => _requests.TerminalStatus = value;
         }
 
-        public IReadOnlyList<(string SpeakerName, string Url)> LoadCalls => _loadCalls;
-        public IReadOnlyList<int> ReleaseCalls => _releaseCalls;
+        public IReadOnlyList<string> LoadCalls => _loadCalls;
         public int OpenRequestCount => _requests.OpenRequestCount;
-        public bool ReturnZeroHandle { get; set; }
 
-        public int BeginLoad(string speakerName, string url)
+        public int BeginLoad(string address)
         {
-            _loadCalls.Add((speakerName, url));
+            _loadCalls.Add(address);
             var id = _requests.Begin();
             _handles[id] = ++_nextHandle;
             return id;
@@ -42,21 +43,16 @@ namespace Client.Simulation.Tests.Fakes
         public int ResolveHandle(int requestId)
         {
             var isDone = _requests.TerminalStatus == AsyncOpStatus.Done && _requests.IsSettled(requestId);
-
-            if (isDone && ReturnZeroHandle)
-                return 0;
-
             return isDone && _handles.TryGetValue(requestId, out var handle) ? handle : 0;
         }
 
         public void Release(int requestId)
         {
-            _releaseCalls.Add(requestId);
             _requests.Release(requestId);
             _handles.Remove(requestId);
         }
 
         public override string ToString() =>
-            $"FakeImageService({_requests}, loads={_loadCalls.Count})";
+            $"FakeAssetService({_requests}, loads=[{string.Join(", ", _loadCalls)}])";
     }
 }

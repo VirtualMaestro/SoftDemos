@@ -1,4 +1,4 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.Menu.Components;
 using DCFApixels.DragonECS;
 
@@ -9,13 +9,13 @@ namespace Client.Simulation.Menu.Systems
     /// moves the screen state through Menu → Loading → Demo → Unloading → Menu.
     /// </summary>
     public sealed class NavigationSystem : IEcsRun, IEcsInject<EcsWorld>,
-        IEcsInject<ISceneService>, IEcsInject<ILog>
+        IEcsInject<ISceneService>, IEcsInject<ILogService>
     {
         private readonly DemoCatalog _catalog;
 
         private EcsWorld _world;
         private ISceneService _sceneService;
-        private ILog _log;
+        private ILogService _log;
 
         public NavigationSystem(DemoCatalog catalog)
         {
@@ -121,7 +121,7 @@ namespace Client.Simulation.Menu.Systems
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ISceneService obj) => _sceneService = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class OpenCommandAspect : EcsAspect
         {

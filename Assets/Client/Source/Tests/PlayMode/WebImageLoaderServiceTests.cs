@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;

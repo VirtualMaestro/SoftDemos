@@ -1,4 +1,4 @@
-using Client.Simulation.Core.Ports;
+using Client.Simulation.Shared.Ports;
 using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
 
@@ -8,10 +8,10 @@ namespace Client.Simulation.PhoenixFlame.Systems
     /// Consumes advance-phase button commands: starts a transition to the next color unless one
     /// is already running.
     /// </summary>
-    public sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILog>
+    public sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private EcsWorld _world;
-        private ILog _log;
+        private ILogService _log;
 
         public void Run()
         {
@@ -50,7 +50,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-        public void Inject(ILog obj) => _log = obj;
+        public void Inject(ILogService obj) => _log = obj;
 
         private sealed class CommandAspect : EcsAspect
         {
