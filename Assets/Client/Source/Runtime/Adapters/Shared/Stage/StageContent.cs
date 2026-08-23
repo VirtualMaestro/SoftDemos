@@ -9,7 +9,7 @@ namespace Client.Adapters.Shared.Stage
     /// request release. Keeps the per-demo systems down to their demo-specific logic — and
     /// touches no world: a system writes its command entities itself, in one visible line.
     /// </summary>
-    internal static class StageContent
+    public static class StageContent
     {
         public static T GetAsset<T>(AddressablesAssetService assets, int requestId)
             where T : Object

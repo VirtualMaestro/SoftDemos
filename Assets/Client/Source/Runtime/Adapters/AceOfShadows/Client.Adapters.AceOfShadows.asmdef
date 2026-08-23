@@ -1,18 +1,17 @@
 {
-    "name": "Client.Bootstrap",
-    "rootNamespace": "Client.Bootstrap",
+    "name": "Client.Adapters.AceOfShadows",
+    "rootNamespace": "Client.Adapters.AceOfShadows",
     "references": [
         "Client.Simulation.Shared",
         "Client.Simulation.AceOfShadows",
-        "Client.Simulation.MagicWords",
-        "Client.Simulation.PhoenixFlame",
         "Client.Adapters.Shared",
-        "Client.Adapters.AceOfShadows",
-        "Client.Adapters.MagicWords",
-        "Client.Adapters.PhoenixFlame",
-        "Client.Adapters.Shell",
         "DCFApixels.DragonECS",
-        "DCFApixels.DragonECS.Unity"
+        "DCFApixels.DragonECS.Unity",
+        "MyGameDevTools.SceneLoading",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

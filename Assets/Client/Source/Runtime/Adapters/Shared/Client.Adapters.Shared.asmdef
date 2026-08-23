@@ -1,0 +1,23 @@
+{
+    "name": "Client.Adapters.Shared",
+    "rootNamespace": "Client.Adapters.Shared",
+    "references": [
+        "Client.Simulation.Shared",
+        "DCFApixels.DragonECS",
+        "DCFApixels.DragonECS.Unity",
+        "MyGameDevTools.SceneLoading",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,7 +3,12 @@
     "rootNamespace": "Client.Adapters.Tests",
     "references": [
         "Client.Bootstrap",
-        "Client.Adapters.Unity",
+        "Client.Adapters.Shared",
+        "Client.Adapters.Vendor",
+        "Client.Adapters.AceOfShadows",
+        "Client.Adapters.MagicWords",
+        "Client.Adapters.PhoenixFlame",
+        "Client.Adapters.Shell",
         "Client.Simulation.Shared",
         "Client.Simulation.AceOfShadows",
         "Client.Simulation.MagicWords",

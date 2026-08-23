@@ -34,7 +34,12 @@ namespace Client.Simulation.Tests
             "Client.Simulation.AceOfShadows",
             "Client.Simulation.MagicWords",
             "Client.Simulation.PhoenixFlame",
-            "Client.Adapters.Unity",
+            "Client.Adapters.Shared",
+            "Client.Adapters.Vendor",
+            "Client.Adapters.AceOfShadows",
+            "Client.Adapters.MagicWords",
+            "Client.Adapters.PhoenixFlame",
+            "Client.Adapters.Shell",
             "Client.Bootstrap",
         };
 
