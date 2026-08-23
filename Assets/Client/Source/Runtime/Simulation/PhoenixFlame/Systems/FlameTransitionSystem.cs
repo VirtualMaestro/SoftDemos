@@ -8,7 +8,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
     /// Counts the running transition down each frame, updates its 0..1 progress, and swaps the
     /// current phase when time runs out.
     /// </summary>
-    public sealed class FlameTransitionSystem : IEcsRun, IEcsInject<EcsWorld>,
+    internal sealed class FlameTransitionSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>
     {
         private EcsWorld _world;

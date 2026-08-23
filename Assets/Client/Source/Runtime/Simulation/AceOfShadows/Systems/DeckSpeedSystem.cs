@@ -8,7 +8,7 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Consumes speed-change commands: clamps the multiplier to 1–8 and recomputes the move
     /// interval and duration.
     /// </summary>
-    public sealed class DeckSpeedSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class DeckSpeedSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private readonly AceOfShadowsConfig _config;
 

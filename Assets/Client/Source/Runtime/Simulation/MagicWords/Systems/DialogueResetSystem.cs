@@ -8,7 +8,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// Consumes the reset command: releases open dialogue/image requests, deletes all speaker and
     /// line entities, and zeroes the dialogue state.
     /// </summary>
-    public sealed class DialogueResetSystem :
+    internal sealed class DialogueResetSystem :
         IEcsRun,
         IEcsDestroy,
         IEcsInject<EcsWorld>,

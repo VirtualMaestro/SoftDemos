@@ -13,7 +13,7 @@ namespace Client.Simulation.MagicWords.Components
     /// <c>DialogueIngestSystem</c> in the same or a later tick. <c>DialogueResetSystem</c> also zeroes it
     /// so a payload never survives a teardown.
     /// </remarks>
-    public struct DialoguePayloadComp : IEcsWorldComponent<DialoguePayloadComp>
+    internal struct DialoguePayloadComp : IEcsWorldComponent<DialoguePayloadComp>
     {
         public DialoguePayload Payload;
 

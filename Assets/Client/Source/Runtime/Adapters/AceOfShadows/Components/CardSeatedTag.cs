@@ -8,7 +8,7 @@ namespace Client.Adapters.AceOfShadows.Components
     /// card is in flight and for every card when the layout changes. This is a presentation fact, so it
     /// stays in the adapter. The simulation must not read it.
     /// </remarks>
-    public struct CardSeatedTag : IEcsTagComponent
+    internal struct CardSeatedTag : IEcsTagComponent
     {
     }
 }

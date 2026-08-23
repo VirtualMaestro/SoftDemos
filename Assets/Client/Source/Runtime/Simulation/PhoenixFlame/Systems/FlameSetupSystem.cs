@@ -4,7 +4,7 @@ using DCFApixels.DragonECS;
 namespace Client.Simulation.PhoenixFlame.Systems
 {
     /// <summary>Consumes Start/Reset commands: initializes the flame state from config or wipes it.</summary>
-    public sealed class FlameSetupSystem : IEcsRun, IEcsInject<EcsWorld>
+    internal sealed class FlameSetupSystem : IEcsRun, IEcsInject<EcsWorld>
     {
         private readonly PhoenixFlameConfig _config;
 

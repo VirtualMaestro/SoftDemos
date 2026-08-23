@@ -8,7 +8,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
     /// Consumes advance-phase button commands: starts a transition to the next color unless one
     /// is already running.
     /// </summary>
-    public sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private EcsWorld _world;
         private ILogService _log;

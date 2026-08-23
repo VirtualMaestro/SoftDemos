@@ -5,7 +5,7 @@ using Client.Simulation.MagicWords.Payload;
 
 namespace Client.Simulation.MagicWords
 {
-    public sealed class AvatarIndex
+    internal sealed class AvatarIndex
     {
         private readonly Dictionary<string, Entry> _entries =
             new(StringComparer.Ordinal);

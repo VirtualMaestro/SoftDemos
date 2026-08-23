@@ -9,7 +9,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// Handles avatar image requests: starts a download per request command, polls running ones,
     /// stores the image handle or a Failed state; on reload releases everything and re-requests.
     /// </summary>
-    public sealed class AvatarLoadSystem :
+    internal sealed class AvatarLoadSystem :
         IEcsRun,
         IEcsInject<EcsWorld>,
         IEcsInject<IImageLoadService>,
@@ -100,13 +100,13 @@ namespace Client.Simulation.MagicWords.Systems
         private void _Fail(int entityId, ref AvatarLoadComp load, int requestId, string reason)
         {
             ref readonly var speaker = ref _world.GetPool<SpeakerComp>().Read(entityId);
-            ref readonly var avatar = ref _avatars.Read(entityId);
             load.State = AvatarLoadState.Failed;
             load.RequestId = 0;
             load.HandleId = 0;
             _imageSource.Release(requestId);
+
             _log.Error(
-                $"Avatar request {requestId} for '{speaker.Name}' ({avatar.Url}) {reason}.");
+                $"Avatar request {requestId} for '{speaker.Name}' ({_avatars.Read(entityId).Url}) {reason}.");
         }
 
         public void Inject(EcsWorld obj)

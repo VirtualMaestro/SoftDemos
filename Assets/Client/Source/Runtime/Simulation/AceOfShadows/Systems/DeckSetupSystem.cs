@@ -8,7 +8,7 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Consumes Deal/Reset commands: creates (or deletes) the card and stack entities and fills
     /// the deck state from config.
     /// </summary>
-    public sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private readonly AceOfShadowsConfig _config;
 

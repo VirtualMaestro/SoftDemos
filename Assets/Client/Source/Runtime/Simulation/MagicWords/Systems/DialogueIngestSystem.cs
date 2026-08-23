@@ -9,7 +9,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// Turns the raw payload into entities: one per speaker (with avatar URL or "missing") and
     /// one per dialogue line (with text split into text/emoji segments).
     /// </summary>
-    public sealed class DialogueIngestSystem : IEcsRun, IEcsInit,
+    internal sealed class DialogueIngestSystem : IEcsRun, IEcsInit,
 
         IEcsInject<EcsWorld>,
         IEcsInject<ILogService>

@@ -9,7 +9,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// Reveals dialogue lines one by one on a timer (or all at once on skip) and asks for the
     /// speaker's avatar as their first line appears.
     /// </summary>
-    public sealed class DialoguePlaybackSystem :
+    internal sealed class DialoguePlaybackSystem :
         IEcsRun,
         IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>,

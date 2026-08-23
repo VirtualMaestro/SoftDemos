@@ -8,7 +8,7 @@ namespace Client.Adapters.MagicWords.Components
     /// line when the list is cleared on teardown. This is a presentation fact, so it stays in the
     /// adapter. The simulation must not read it.
     /// </remarks>
-    public struct DialogueLineBoundTag : IEcsTagComponent
+    internal struct DialogueLineBoundTag : IEcsTagComponent
     {
     }
 }

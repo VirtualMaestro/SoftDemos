@@ -9,7 +9,7 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Once per interval picks the top card of the source stack and issues a move command for it,
     /// keeping the leftover time so the rhythm stays even.
     /// </summary>
-    public sealed class CardCadenceSystem : IEcsRun, IEcsInject<EcsWorld>,
+    internal sealed class CardCadenceSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILogService>
     {
         private EcsWorld _world;

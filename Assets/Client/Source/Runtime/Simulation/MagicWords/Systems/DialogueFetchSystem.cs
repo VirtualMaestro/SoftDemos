@@ -9,7 +9,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// Consumes the load command, starts the dialogue HTTP request, polls it, and stores the raw
     /// payload (or a Failed state) when it completes.
     /// </summary>
-    public sealed class DialogueFetchSystem :
+    internal sealed class DialogueFetchSystem :
         IEcsRun,
         IEcsInject<EcsWorld>,
         IEcsInject<IDialogueService>,

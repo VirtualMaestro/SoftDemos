@@ -11,7 +11,7 @@ namespace Client.Simulation.MagicWords.Components
     /// <c>AvatarLoadSystem</c> for every loaded speaker on reload. <c>AvatarLoadSystem</c> removes the
     /// component — not the entity — once the download has been started.
     /// </remarks>
-    public struct RequestAvatarCommand : IEcsComponent
+    internal struct RequestAvatarCommand : IEcsComponent
     {
     }
 }

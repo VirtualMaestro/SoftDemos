@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Client.Simulation.MagicWords
 {
-    public static class DialogueTokenizer
+    internal static class DialogueTokenizer
     {
         public static DialogueSegment[] Tokenize(
             string text, HashSet<string> knownTokens, out bool hasUnknownToken)

@@ -12,7 +12,7 @@ namespace Client.Simulation.MagicWords.Components
     /// <c>DialogueResetSystem</c>. <c>IsComplete</c> is what stops the timer from running forever after
     /// the last line. It lives as long as the world does.
     /// </remarks>
-    public struct DialoguePlaybackComp : IEcsWorldComponent<DialoguePlaybackComp>
+    internal struct DialoguePlaybackComp : IEcsWorldComponent<DialoguePlaybackComp>
     {
         public int VisibleLineCount;
         public float SecondsUntilNextLine;
