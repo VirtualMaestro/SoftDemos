@@ -2,7 +2,10 @@
     "name": "Client.Bootstrap",
     "rootNamespace": "Client.Bootstrap",
     "references": [
-        "Client.Simulation",
+        "Client.Simulation.Shared",
+        "Client.Simulation.AceOfShadows",
+        "Client.Simulation.MagicWords",
+        "Client.Simulation.PhoenixFlame",
         "Client.Adapters.Unity",
         "DCFApixels.DragonECS",
         "DCFApixels.DragonECS.Unity"

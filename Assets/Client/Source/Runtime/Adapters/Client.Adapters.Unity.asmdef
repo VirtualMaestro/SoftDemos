@@ -2,7 +2,10 @@
     "name": "Client.Adapters.Unity",
     "rootNamespace": "Client.Adapters",
     "references": [
-        "Client.Simulation",
+        "Client.Simulation.Shared",
+        "Client.Simulation.AceOfShadows",
+        "Client.Simulation.MagicWords",
+        "Client.Simulation.PhoenixFlame",
         "DCFApixels.DragonECS",
         "DCFApixels.DragonECS.Unity",
         "MyGameDevTools.SceneLoading",

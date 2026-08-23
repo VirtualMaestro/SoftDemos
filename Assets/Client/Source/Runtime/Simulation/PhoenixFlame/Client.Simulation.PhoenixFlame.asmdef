@@ -1,7 +1,8 @@
 {
-    "name": "Client.Simulation",
-    "rootNamespace": "Client.Simulation",
+    "name": "Client.Simulation.PhoenixFlame",
+    "rootNamespace": "Client.Simulation.PhoenixFlame",
     "references": [
+        "Client.Simulation.Shared",
         "DCFApixels.DragonECS"
     ],
     "includePlatforms": [],

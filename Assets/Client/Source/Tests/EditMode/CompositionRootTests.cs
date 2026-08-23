@@ -30,7 +30,10 @@ namespace Client.Simulation.Tests
         /// <summary>Every assembly that may define systems or modules.</summary>
         private static readonly string[] ProductAssemblies =
         {
-            "Client.Simulation",
+            "Client.Simulation.Shared",
+            "Client.Simulation.AceOfShadows",
+            "Client.Simulation.MagicWords",
+            "Client.Simulation.PhoenixFlame",
             "Client.Adapters.Unity",
             "Client.Bootstrap",
         };

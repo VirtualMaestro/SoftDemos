@@ -2,7 +2,10 @@
     "name": "Client.Simulation.Tests",
     "rootNamespace": "Client.Simulation.Tests",
     "references": [
-        "Client.Simulation",
+        "Client.Simulation.Shared",
+        "Client.Simulation.AceOfShadows",
+        "Client.Simulation.MagicWords",
+        "Client.Simulation.PhoenixFlame",
         "DCFApixels.DragonECS",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

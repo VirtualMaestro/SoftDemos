@@ -4,7 +4,10 @@
     "references": [
         "Client.Bootstrap",
         "Client.Adapters.Unity",
-        "Client.Simulation",
+        "Client.Simulation.Shared",
+        "Client.Simulation.AceOfShadows",
+        "Client.Simulation.MagicWords",
+        "Client.Simulation.PhoenixFlame",
         "DCFApixels.DragonECS",
         "DCFApixels.DragonECS.Unity",
         "UnityEngine.TestRunner",

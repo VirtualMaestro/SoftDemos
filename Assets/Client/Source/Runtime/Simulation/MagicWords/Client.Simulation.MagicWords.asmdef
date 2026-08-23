@@ -1,0 +1,17 @@
+{
+    "name": "Client.Simulation.MagicWords",
+    "rootNamespace": "Client.Simulation.MagicWords",
+    "references": [
+        "Client.Simulation.Shared",
+        "DCFApixels.DragonECS"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

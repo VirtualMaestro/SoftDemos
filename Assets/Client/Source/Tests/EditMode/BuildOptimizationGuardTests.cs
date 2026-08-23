@@ -171,10 +171,14 @@ namespace Client.Simulation.Tests
         /// <summary>JsonUtility builds the Magic Words DTOs by reflection. High stripping removes them.</summary>
         /// <remarks>The failure is silent: an empty dialogue, no exception, no log.</remarks>
         [Test]
-        public void LinkXml_PreservesTheSimulationAssembly()
+        public void LinkXml_PreservesTheSimulationAssemblies()
         {
             Assert.That(File.Exists(LinkXmlPath), Is.True, $"'{LinkXmlPath}' is missing.");
-            Assert.That(File.ReadAllText(LinkXmlPath), Does.Contain("Client.Simulation"));
+            var text = File.ReadAllText(LinkXmlPath);
+            Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.Shared\""));
+            Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.AceOfShadows\""));
+            Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.MagicWords\""));
+            Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.PhoenixFlame\""));
         }
 
         /// <summary>Asserts one value of the shipping profile's player-settings override.</summary>

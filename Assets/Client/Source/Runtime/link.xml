@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <linker>
-  <assembly fullname="Client.Simulation" preserve="all"/>
+  <assembly fullname="Client.Simulation.Shared" preserve="all"/>
+  <assembly fullname="Client.Simulation.AceOfShadows" preserve="all"/>
+  <assembly fullname="Client.Simulation.MagicWords" preserve="all"/>
+  <assembly fullname="Client.Simulation.PhoenixFlame" preserve="all"/>
 </linker>

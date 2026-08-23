@@ -1,0 +1,17 @@
+{
+    "name": "Client.Simulation.AceOfShadows",
+    "rootNamespace": "Client.Simulation.AceOfShadows",
+    "references": [
+        "Client.Simulation.Shared",
+        "DCFApixels.DragonECS"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
