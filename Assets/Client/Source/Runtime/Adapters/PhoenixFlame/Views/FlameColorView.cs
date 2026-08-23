@@ -30,16 +30,12 @@ namespace Client.Adapters.PhoenixFlame.Views
         private MaterialPropertyBlock _smokeBlock;
         private MaterialPropertyBlock _sparkBlock;
         private MaterialPropertyBlock _glowBlock;
-        private bool _isWired;
 
         public Color Tint => tint;
 
         private void Awake()
         {
-            _isWired = _HasEveryReference();
-
-            if (_isWired == false)
-                return;
+            _ThrowIfMissingReference();
 
             _flameRenderer = flameParticles.GetComponent<ParticleSystemRenderer>();
             _smokeRenderer = smokeParticles.GetComponent<ParticleSystemRenderer>();
@@ -71,9 +67,6 @@ namespace Client.Adapters.PhoenixFlame.Views
         /// </remarks>
         public void SetSprites(Sprite[] flameFrames, Sprite smoke, Sprite spark)
         {
-            if (_isWired == false)
-                return;
-
             _SetFrames(flameParticles, _flameRenderer, _flameBlock, flameFrames);
             _SetSprite(smokeParticles, _smokeRenderer, _smokeBlock, smoke);
             _SetSprite(sparkParticles, _sparkRenderer, _sparkBlock, spark);
@@ -85,9 +78,6 @@ namespace Client.Adapters.PhoenixFlame.Views
         /// <remarks>Call this before you destroy the sprite copies, or the particle systems keep dead references.</remarks>
         public void ClearSprites()
         {
-            if (_isWired == false)
-                return;
-
             _ClearSprite(flameParticles, _flameRenderer, _flameBlock);
             _ClearSprite(smokeParticles, _smokeRenderer, _smokeBlock);
             _ClearSprite(sparkParticles, _sparkRenderer, _sparkBlock);
@@ -97,9 +87,6 @@ namespace Client.Adapters.PhoenixFlame.Views
 
         private void _ApplyTint()
         {
-            if (_isWired == false)
-                return;
-
             _flameBlock.SetColor(BaseColorId, tint);
             _flameRenderer.SetPropertyBlock(_flameBlock);
             _sparkBlock.SetColor(BaseColorId, tint);
@@ -152,23 +139,12 @@ namespace Client.Adapters.PhoenixFlame.Views
             targetRenderer.SetPropertyBlock(block);
         }
 
-        private bool _HasEveryReference()
+        private void _ThrowIfMissingReference()
         {
-            var isComplete = true;
-            isComplete &= _Check(flameParticles, nameof(flameParticles));
-            isComplete &= _Check(smokeParticles, nameof(smokeParticles));
-            isComplete &= _Check(sparkParticles, nameof(sparkParticles));
-            isComplete &= _Check(glowParticles, nameof(glowParticles));
-            return isComplete;
-        }
-
-        private bool _Check(Object reference, string fieldName)
-        {
-            if (reference != null)
-                return true;
-
-            Debug.LogError($"{fieldName} is not assigned on {nameof(FlameColorView)}.", this);
-            return false;
+            Debug.Assert(flameParticles != null, $"'{nameof(flameParticles)}' is not assigned on {nameof(FlameColorView)}.", this);
+            Debug.Assert(smokeParticles != null, $"'{nameof(smokeParticles)}' is not assigned on {nameof(FlameColorView)}.", this);
+            Debug.Assert(sparkParticles != null, $"'{nameof(sparkParticles)}' is not assigned on {nameof(FlameColorView)}.", this);
+            Debug.Assert(glowParticles != null, $"'{nameof(glowParticles)}' is not assigned on {nameof(FlameColorView)}.", this);
         }
     }
 }

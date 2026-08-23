@@ -13,8 +13,7 @@ namespace Client.Adapters.MagicWords.Views
 
         private void Awake()
         {
-            if (screen == null)
-                Debug.LogError($"{nameof(screen)} is not assigned on {nameof(DialogueTapArea)}.", this);
+            Debug.Assert(screen != null, $"'{nameof(screen)}' is not assigned on {nameof(DialogueTapArea)}.", this);
         }
 
         public void OnPointerClick(PointerEventData eventData)

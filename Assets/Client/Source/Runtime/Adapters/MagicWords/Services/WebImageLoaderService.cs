@@ -243,9 +243,8 @@ namespace Client.Adapters.MagicWords.Services
 
         private void _LogFailure(int requestId, Request request, string branch, string detail)
         {
-            var responseCode = request.Transport?.responseCode ?? 0L;
             _log.Error($"Request #{requestId} avatar '{request.SpeakerName}' GET '{request.Url}' " +
-                       $"failed in {branch}; HTTP {responseCode}: {detail}");
+                       $"failed in {branch}; HTTP {request.Transport?.responseCode ?? 0L}: {detail}");
         }
 
         private sealed class Request
