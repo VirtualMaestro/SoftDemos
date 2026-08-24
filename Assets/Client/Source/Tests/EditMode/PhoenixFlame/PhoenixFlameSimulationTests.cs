@@ -144,7 +144,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
             Assert.That(after.SecondsRemaining, Is.EqualTo(before.SecondsRemaining), $"{after}");
             Assert.That(after.Progress, Is.EqualTo(before.Progress), $"{after}");
             Assert.That(after.PhaseChangeCount, Is.EqualTo(before.PhaseChangeCount), $"{after}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "is still running"), Is.EqualTo(1), $"{Log}");
         }
 
         [Test]
@@ -156,7 +156,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
             Assert.That(state.IsActive, Is.False, $"{state}");
             Assert.That(state.IsTransitioning, Is.False, $"{state}");
             Assert.That(state.PhaseChangeCount, Is.Zero, $"{state}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "the flame is not active"), Is.EqualTo(1), $"{Log}");
         }
 
         [Test]
@@ -179,7 +179,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
             _Advance();
 
             Assert.That(World.Get<FlameStateComp>().IsTransitioning, Is.False);
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "the flame is not active"), Is.EqualTo(1), $"{Log}");
         }
 
         [Test]
@@ -215,7 +215,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
             Assert.That(state.CurrentPhase, Is.EqualTo(FlamePhase.Orange), $"{state}");
             Assert.That(state.NextPhase, Is.EqualTo(FlamePhase.Green), $"{state}");
             Assert.That(state.SecondsRemaining, Is.EqualTo(1f), $"{state}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.Zero, $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "AdvanceFlamePhaseCommand ignored"), Is.Zero, $"{Log}");
         }
 
         [Test]

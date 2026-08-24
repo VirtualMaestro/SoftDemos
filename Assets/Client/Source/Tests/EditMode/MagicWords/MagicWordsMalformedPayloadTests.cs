@@ -16,7 +16,7 @@ namespace Client.Simulation.Tests.MagicWords
             _LoadWithoutThrow(null);
 
             Assert.That(World.Get<DialogueStateComp>().State, Is.EqualTo(DialogueLoadState.Failed));
-            Assert.That(Log.CountOf(FakeLogService.Level.Error), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Error, "completed without a payload"), Is.EqualTo(1));
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace Client.Simulation.Tests.MagicWords
             });
 
             Assert.That(World.Get<DialogueStateComp>().LineCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "Dialogue entry 0 is null"), Is.EqualTo(1));
         }
 
         [Test]
@@ -80,7 +80,7 @@ namespace Client.Simulation.Tests.MagicWords
                 avatars = new AvatarDto[] { null }
             });
 
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "Avatar entry 0 is null"), Is.EqualTo(1));
         }
 
         [TestCase(null)]
@@ -94,7 +94,7 @@ namespace Client.Simulation.Tests.MagicWords
             });
 
             Assert.That(World.Get<DialogueStateComp>().LineCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "has no speaker name"), Is.EqualTo(1));
         }
 
         [Test]
@@ -127,7 +127,7 @@ namespace Client.Simulation.Tests.MagicWords
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 Assert.That(aspect.Loads.Read(entityId).State, Is.EqualTo(AvatarLoadState.Missing));
 
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "has no URL"), Is.EqualTo(1));
         }
 
         [Test]
@@ -145,7 +145,7 @@ namespace Client.Simulation.Tests.MagicWords
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 Assert.That(aspect.Avatars.Read(entityId).Side, Is.EqualTo(AvatarSide.Left));
 
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "is invalid; using Left"), Is.EqualTo(1));
         }
 
         private void _LoadWithoutThrow(DialoguePayload payload)

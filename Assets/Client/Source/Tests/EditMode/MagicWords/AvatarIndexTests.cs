@@ -15,7 +15,7 @@ namespace Client.Simulation.Tests.MagicWords
             var index = new AvatarIndex(null, log);
 
             Assert.That(index.TryGet("Sheldon", out _, out _), Is.False);
-            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn, "Avatar array is null"), Is.EqualTo(1));
         }
 
         [Test]
@@ -31,7 +31,8 @@ namespace Client.Simulation.Tests.MagicWords
                 log);
 
             Assert.That(index.TryGet(" ", out _, out _), Is.False);
-            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(2));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn, "is null and was discarded"), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn, "has no speaker name"), Is.EqualTo(1));
         }
 
         [Test]
@@ -49,7 +50,6 @@ namespace Client.Simulation.Tests.MagicWords
             Assert.That(index.TryGet("Sheldon", out var url, out var side), Is.True);
             Assert.That(url, Is.EqualTo("first"));
             Assert.That(side, Is.EqualTo(AvatarSide.Left));
-            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
             Assert.That(log.OfLevel(FakeLogService.Level.Warn).Single().Message, Does.Contain("first entry wins"));
         }
 
@@ -75,7 +75,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             Assert.That(index.TryGet("Penny", out _, out var side), Is.True);
             Assert.That(side, Is.EqualTo(AvatarSide.Left));
-            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn, "is invalid; using Left"), Is.EqualTo(1));
         }
 
         [TestCase(null)]
@@ -89,7 +89,7 @@ namespace Client.Simulation.Tests.MagicWords
                 log);
 
             Assert.That(index.TryGet("Neighbour", out _, out _), Is.False);
-            Assert.That(log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
+            Assert.That(log.CountOf(FakeLogService.Level.Warn, "has no URL"), Is.EqualTo(1));
         }
     }
 }

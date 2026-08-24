@@ -162,7 +162,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.MovesIssued, Is.EqualTo(144), $"{state}");
             Assert.That(_GetStack(0).Count, Is.Zero, $"{state}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.Zero, $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "No movable card found"), Is.Zero, $"{Log}");
         }
 
         [Test]
@@ -179,7 +179,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.IsComplete, Is.True, $"{state}");
             Assert.That(_GetStack(1).Count, Is.EqualTo(144), $"{state}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(144), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "treating it as landed"), Is.EqualTo(144), $"{Log}");
         }
 
         [Test]
@@ -216,7 +216,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             Assert.That(_GetStack(0).Count, Is.EqualTo(144), $"{state}");
             Assert.That(_GetStack(1).Count, Is.Zero, $"{state}");
             Assert.That(state.MovesIssued, Is.Zero, $"{state}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.Zero, $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "ResetDeckCommand ignored"), Is.Zero, $"{Log}");
         }
 
         [Test]
@@ -318,7 +318,8 @@ namespace Client.Simulation.Tests.AceOfShadows
             Assert.That(state.MoveIntervalSeconds, Is.EqualTo(1f), $"{state}");
             Assert.That(state.MoveDurationSeconds, Is.EqualTo(0.5f), $"{state}");
             Assert.That(state.SpeedMultiplier, Is.EqualTo(1f), $"{state}");
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(2), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "the deck is not dealt"), Is.EqualTo(1), $"{Log}");
+            Assert.That(Log.CountOf(FakeLogService.Level.Warn, "invalid multiplier"), Is.EqualTo(1), $"{Log}");
         }
 
         [Test]

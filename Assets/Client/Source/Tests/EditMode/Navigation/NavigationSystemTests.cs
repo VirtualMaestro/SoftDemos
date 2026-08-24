@@ -82,7 +82,7 @@ namespace Client.Simulation.Tests.Navigation
             ref var failed = ref _world.Get<ScreenStateComp>();
             Assert.That(failed.Current, Is.EqualTo(ScreenId.Menu), $"{failed}");
             Assert.That(failed.LastOperationFailed, Is.True, $"{failed}");
-            Assert.That(_log.CountOf(FakeLogService.Level.Error), Is.EqualTo(1), $"{_log}");
+            Assert.That(_log.CountOf(FakeLogService.Level.Error, "Load request"), Is.EqualTo(1), $"{_log}");
             Assert.That(_scenes.OpenRequestCount, Is.Zero, $"{_scenes}");
 
             _scenes.CompleteAfterPolls = 2;
@@ -114,7 +114,7 @@ namespace Client.Simulation.Tests.Navigation
             Assert.That(state.Current, Is.EqualTo(ScreenId.Menu), $"{state}");
             Assert.That(state.ActiveDemoIndex, Is.EqualTo(-1), $"{state}");
             Assert.That(state.LastOperationFailed, Is.True, $"{state}");
-            Assert.That(_log.CountOf(FakeLogService.Level.Error), Is.EqualTo(1), $"{_log}");
+            Assert.That(_log.CountOf(FakeLogService.Level.Error, "Unload request"), Is.EqualTo(1), $"{_log}");
             Assert.That(_scenes.OpenRequestCount, Is.Zero, $"{_scenes}");
         }
 
@@ -149,7 +149,7 @@ namespace Client.Simulation.Tests.Navigation
             Assert.That(state.Current, Is.EqualTo(ScreenId.Menu), $"{state}");
             Assert.That(_world.GetPool<OpenDemoCommand>().Has(command), Is.False, $"{state}");
             Assert.That(_scenes.LoadCalls, Is.Empty, $"{_scenes}");
-            Assert.That(_log.CountOf(FakeLogService.Level.Error), Is.EqualTo(1), $"{_log}");
+            Assert.That(_log.CountOf(FakeLogService.Level.Error, "is outside"), Is.EqualTo(1), $"{_log}");
             Assert.That(_scenes.OpenRequestCount, Is.Zero, $"{_scenes}");
         }
 

@@ -45,7 +45,6 @@ namespace Client.Simulation.Tests.MagicWords
             Assert.That(loads.Read(speakers["Neighbour"]).State, Is.EqualTo(AvatarLoadState.Missing));
             Assert.That(avatars.Has(speakers["Neighbour"]), Is.False);
             Assert.That(speakers.ContainsKey("Nobody"), Is.False);
-            Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
             Assert.That(
                 Log.OfLevel(FakeLogService.Level.Warn).Single().Message,
                 Does.Contain("Duplicate avatar for 'Sheldon'"));

@@ -34,6 +34,14 @@ namespace Client.Simulation.Tests.Fakes.Services
 
         public int CountOf(Level level) => _entries.Count(e => e.Level == level);
 
+        /// <summary>Counts only the entries whose message carries <paramref name="messagePart"/>.</summary>
+        /// <remarks>
+        /// A test asserts on the line it owns; an unfiltered count fails the day anybody logs
+        /// anything else in the same run.
+        /// </remarks>
+        public int CountOf(Level level, string messagePart) =>
+            _entries.Count(e => e.Level == level && e.Message.Contains(messagePart));
+
         public void Clear() => _entries.Clear();
 
         public void Info(string message) => _entries.Add(new Entry(Level.Info, message));

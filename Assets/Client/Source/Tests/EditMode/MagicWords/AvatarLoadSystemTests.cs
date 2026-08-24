@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Client.Simulation.Shared.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
@@ -43,8 +42,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             Assert.That(_State(pennyId), Is.EqualTo(AvatarLoadState.Failed));
             Assert.That(ImageSource.OpenRequestCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLogService.Level.Error), Is.EqualTo(2));
-            Assert.That(Log.OfLevel(FakeLogService.Level.Error).Any(x => x.Message.Contains("Penny")), Is.True);
+            Assert.That(Log.CountOf(FakeLogService.Level.Error, "Penny"), Is.EqualTo(1));
         }
 
         [Test]
@@ -58,7 +56,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             Assert.That(_State(leonardId), Is.EqualTo(AvatarLoadState.Failed));
             Assert.That(ImageSource.OpenRequestCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLogService.Level.Error), Is.EqualTo(2));
+            Assert.That(Log.CountOf(FakeLogService.Level.Error, "Leonard"), Is.EqualTo(1));
         }
 
         [Test]
@@ -220,7 +218,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             Assert.That(ImageSource.LoadCalls, Is.Empty);
             Assert.That(ImageSource.ReleaseCalls, Is.Empty);
-            Assert.That(Log.CountOf(FakeLogService.Level.Error), Is.Zero);
+            Assert.That(Log.CountOf(FakeLogService.Level.Error, "Avatar request"), Is.Zero);
         }
 
         [Test]
@@ -230,7 +228,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             Assert.That(ImageSource.LoadCalls, Is.Empty);
             Assert.That(ImageSource.ReleaseCalls, Is.Empty);
-            Assert.That(Log.CountOf(FakeLogService.Level.Error), Is.Zero);
+            Assert.That(Log.CountOf(FakeLogService.Level.Error, "Avatar request"), Is.Zero);
         }
 
         private Dictionary<string, int> _LoadRealPayload()
