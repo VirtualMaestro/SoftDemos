@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Client.Simulation.MagicWords.Ports;
+using Client.Simulation.Shared.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -55,12 +57,12 @@ namespace Client.Simulation.Tests
             // Ports. The simulation knows nothing else about the outside world. The shared ones
             // live in Shared/Ports; a port only one feature uses lives in that feature's Ports
             // folder, so deleting the feature deletes its ports with it.
-            "Client.Simulation.Shared.Ports.ILogService",
-            "Client.Simulation.Shared.Ports.ITimeService",
-            "Client.Simulation.Shared.Ports.ISceneService",
-            "Client.Simulation.Shared.Ports.IAssetService",
-            "Client.Simulation.MagicWords.Ports.IDialogueService",
-            "Client.Simulation.MagicWords.Ports.IImageLoadService",
+            typeof(ILogService).FullName,
+            typeof(ITimeService).FullName,
+            typeof(ISceneService).FullName,
+            typeof(IAssetService).FullName,
+            typeof(IDialogueService).FullName,
+            typeof(IImageLoadService).FullName,
 
             // Adapter services. The first two implement a port and are injected under their
             // concrete type as well, because the stage systems need engine objects the port does
