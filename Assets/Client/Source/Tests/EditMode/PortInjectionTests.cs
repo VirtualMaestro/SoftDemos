@@ -199,13 +199,6 @@ namespace Client.Simulation.Tests
             public IDialogueService Dialogue { get; private set; }
             public IImageLoadService Images { get; private set; }
 
-            public void Inject(ITimeService obj) => Time = obj;
-            public void Inject(ILogService obj) => Log = obj;
-            public void Inject(ISceneService obj) => Scenes = obj;
-            public void Inject(IAssetService obj) => Assets = obj;
-            public void Inject(IDialogueService obj) => Dialogue = obj;
-            public void Inject(IImageLoadService obj) => Images = obj;
-
             public void Run() { }
 
             public override string ToString() =>
@@ -214,6 +207,13 @@ namespace Client.Simulation.Tests
                 $"dialogue={_Describe(Dialogue)}, images={_Describe(Images)})";
 
             private static string _Describe(object value) => value?.ToString() ?? "<null>";
+
+            public void Inject(ITimeService obj) => Time = obj;
+            public void Inject(ILogService obj) => Log = obj;
+            public void Inject(ISceneService obj) => Scenes = obj;
+            public void Inject(IAssetService obj) => Assets = obj;
+            public void Inject(IDialogueService obj) => Dialogue = obj;
+            public void Inject(IImageLoadService obj) => Images = obj;
         }
 
         /// <summary>Single-port probe for the negative and AddNode cases.</summary>
@@ -221,12 +221,12 @@ namespace Client.Simulation.Tests
         {
             public ITimeService Time { get; private set; }
 
-            public void Inject(ITimeService obj) => Time = obj;
-
             public void Run() { }
 
             public override string ToString() =>
                 $"TimeProbeSystem(time={(Time == null ? "<null>" : Time.ToString())})";
+
+            public void Inject(ITimeService obj) => Time = obj;
         }
     }
 }
