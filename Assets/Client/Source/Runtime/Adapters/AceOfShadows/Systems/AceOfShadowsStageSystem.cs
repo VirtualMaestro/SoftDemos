@@ -150,6 +150,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
             var remaining = _config.CardCount - _channel.Views.Count;
             var spawnCount = Mathf.Min(SpawnPerFrame, remaining);
+
             for (var index = 0; index < spawnCount; index++)
             {
                 var poolIndex = _channel.Views.Count;
@@ -236,6 +237,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             }
 
             var faceIndex = 0;
+
             foreach (var sprite in _atlasSprites)
             {
                 var spriteName = sprite.name.Replace("(Clone)", string.Empty).Trim();

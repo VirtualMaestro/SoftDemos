@@ -239,6 +239,7 @@ namespace Client.Simulation.Tests.MagicWords
             _Load();
 
             var result = new Dictionary<string, int>(System.StringComparer.Ordinal);
+
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 result.Add(aspect.Speakers.Read(entityId).Name, entityId);
 
@@ -274,6 +275,7 @@ namespace Client.Simulation.Tests.MagicWords
         private int _CountSpeakers()
         {
             var count = 0;
+
             foreach (var _ in World.Where(out SpeakerAspect _))
                 count++;
 
@@ -283,6 +285,7 @@ namespace Client.Simulation.Tests.MagicWords
         private int _CountLines()
         {
             var count = 0;
+
             foreach (var _ in World.Where(out LineAspect _))
                 count++;
 

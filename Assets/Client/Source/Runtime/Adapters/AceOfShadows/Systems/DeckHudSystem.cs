@@ -45,6 +45,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
             var sourceCount = 0;
             var targetCount = 0;
+
             foreach (var entityId in _world.Where(out StackAspect aspect))
             {
                 ref readonly var stack = ref aspect.Stacks.Read(entityId);

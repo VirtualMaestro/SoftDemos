@@ -25,6 +25,7 @@ namespace Client.Simulation.MagicWords.Systems
         public void Run()
         {
             var reload = false;
+
             foreach (var entityId in _world.Where(out ReloadCommandAspect _))
             {
                 _reloads.Del(entityId);

@@ -49,6 +49,7 @@ namespace Client.Simulation.MagicWords.Systems
 
             // The list is only read within this Run; stale content is cleared here, not on exit.
             _pendingLines.Clear();
+
             foreach (var entityId in _world.Where(out PendingLineAspect aspect))
                 _pendingLines.Add(entityId);
 
@@ -85,6 +86,7 @@ namespace Client.Simulation.MagicWords.Systems
         private bool _DrainSkipCommands()
         {
             var skip = false;
+
             foreach (var entityId in _world.Where(out SkipAspect _))
             {
                 _skipCommands.Del(entityId);
@@ -98,6 +100,7 @@ namespace Client.Simulation.MagicWords.Systems
         {
             var nextListIndex = 0;
             var nextLineIndex = _lines.Read(_pendingLines[0]).Index;
+
             for (var listIndex = 1; listIndex < _pendingLines.Count; listIndex++)
             {
                 var lineIndex = _lines.Read(_pendingLines[listIndex]).Index;

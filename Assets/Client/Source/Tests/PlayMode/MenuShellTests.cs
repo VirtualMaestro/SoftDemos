@@ -147,6 +147,7 @@ namespace Client.Adapters.Tests
             // Images that cannot be disabled without losing their raycasts, so before the shell
             // atlases land they would draw as white boxes. That is seconds on a real host.
             var shellDeadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (entryPoint.StageReady.IsShellReady == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(shellDeadline),
@@ -166,6 +167,7 @@ namespace Client.Adapters.Tests
 
             var sawIndicator = false;
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (world.Get<ScreenStateComp>().Current != ScreenId.Demo)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
@@ -180,6 +182,7 @@ namespace Client.Adapters.Tests
             // A landed scene is not a drawable demo. The stage system starts its atlas and
             // background requests on that frame. The indicator must cover that gap too.
             deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (entryPoint.StageReady.IsDemoReady == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
@@ -242,6 +245,7 @@ namespace Client.Adapters.Tests
                 "ui-icon-ace-of-shadows", "ui-icon-magic-words", "ui-icon-phoenix-flame"
             };
             Assert.That(skin.DemoIconCount, Is.EqualTo(expected.Length));
+
             for (var i = 0; i < expected.Length; i++)
                 Assert.That(skin.DemoIcons[i].sprite.name, Is.EqualTo(expected[i]),
                     $"demoIcons[{i}] shows the wrong demo's icon.");
@@ -258,6 +262,7 @@ namespace Client.Adapters.Tests
         private static IEnumerator _WaitUntilSkinned(ShellSkinView skin)
         {
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (skin.Background.sprite == null)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
@@ -269,6 +274,7 @@ namespace Client.Adapters.Tests
         private static IEnumerator _WaitForState(EcsWorld world, ScreenId expected)
         {
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (world.Get<ScreenStateComp>().Current != expected)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),

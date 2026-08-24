@@ -79,6 +79,7 @@ namespace Client.Adapters.Tests
 
             var particles = scene.FlameColor.GetComponentsInChildren<ParticleSystem>();
             Assert.That(particles.Length, Is.EqualTo(4), "The flame owns four particle systems.");
+
             foreach (var system in particles)
             {
                 Assert.That(system.isPlaying, Is.True, $"'{system.name}' must be playing.");
@@ -106,6 +107,7 @@ namespace Client.Adapters.Tests
             var anyStateTransitions = controller.layers[0].stateMachine.anyStateTransitions;
             Assert.That(anyStateTransitions, Has.Length.EqualTo(3),
                 "The controller must drive all three phases from AnyState.");
+
             foreach (var transition in anyStateTransitions)
             {
                 var target = transition.destinationState.name;
@@ -283,6 +285,7 @@ namespace Client.Adapters.Tests
             float timeoutSeconds)
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
+
             while (condition() == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), failureMessage);

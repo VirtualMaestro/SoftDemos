@@ -28,6 +28,7 @@ namespace Client.Simulation.MagicWords
                 }
 
                 var closeIndex = index + 1;
+
                 while (closeIndex < text.Length && text[closeIndex] != '}')
                     closeIndex++;
 

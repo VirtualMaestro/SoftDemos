@@ -133,6 +133,7 @@ namespace Client.Adapters.PhoenixFlame.Views
 
             for (var i = 0; i < textureSheet.spriteCount; i++)
                 textureSheet.SetSprite(i, null);
+
             block.Clear();
             targetRenderer.SetPropertyBlock(block);
         }

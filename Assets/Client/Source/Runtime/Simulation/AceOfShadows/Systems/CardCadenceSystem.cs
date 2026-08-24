@@ -39,6 +39,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             var selectedEntity = -1;
             var highestOrder = int.MinValue;
             CardAspect cards = null;
+
             foreach (var entityId in _world.Where(out cards))
             {
                 ref readonly var card = ref cards.Cards.Read(entityId);
@@ -58,6 +59,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             }
 
             var targetStackCount = 0;
+
             foreach (var stackEntity in _world.Where(out StackAspect stacks))
             {
                 ref var stack = ref stacks.Stacks.Get(stackEntity);

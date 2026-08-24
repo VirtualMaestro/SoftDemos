@@ -22,6 +22,7 @@ namespace Client.Simulation.MagicWords.Systems
         public void Run()
         {
             var hasResetCommand = false;
+
             foreach (var entityId in _world.Where(out ResetCommandAspect _))
             {
                 _world.DelEntity(entityId);

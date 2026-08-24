@@ -46,6 +46,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
             _Advance();
 
             var previousProgress = 0f;
+
             for (var tick = 0; tick < 4; tick++)
             {
                 _Tick(0.2f);

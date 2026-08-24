@@ -69,6 +69,7 @@ namespace Client.Simulation.Tests.MagicWords
                 Is.Not.EqualTo(DialogueLoadState.Ready));
 
             World.GetPool<SkipDialogueCommand>().Add(World.NewEntity());
+
             for (var tick = 0;
                 tick < 5 && World.Get<DialogueStateComp>().State != DialogueLoadState.Ready;
                 tick++)
@@ -157,6 +158,7 @@ namespace Client.Simulation.Tests.MagicWords
         private int[] _VisibleIndices()
         {
             var indices = new List<int>();
+
             foreach (var entityId in World.Where(out VisibleLineAspect aspect))
                 indices.Add(aspect.Lines.Read(entityId).Index);
 

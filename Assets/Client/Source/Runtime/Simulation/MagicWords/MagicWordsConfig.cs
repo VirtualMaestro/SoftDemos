@@ -31,6 +31,7 @@ namespace Client.Simulation.MagicWords
                     nameof(lineIntervalSeconds), lineIntervalSeconds, "Line interval must be positive.");
 
             KnownEmojiTokens = new HashSet<string>(StringComparer.Ordinal);
+
             foreach (var token in knownTokens)
             {
                 if (token == null)

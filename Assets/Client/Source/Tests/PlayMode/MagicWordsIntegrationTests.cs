@@ -85,6 +85,7 @@ namespace Client.Adapters.Tests
         private int _AssertDialogueReady()
         {
             var lineIndices = new List<int>();
+
             foreach (var entityId in _world.Where(out LineAspect lineAspect))
                 lineIndices.Add(lineAspect.Lines.Read(entityId).Index);
 
@@ -94,6 +95,7 @@ namespace Client.Adapters.Tests
             }));
 
             var speakers = new Dictionary<string, int>(System.StringComparer.Ordinal);
+
             foreach (var entityId in _world.Where(out SpeakerAspect speakerAspect))
                 speakers.Add(speakerAspect.Speakers.Read(entityId).Name, entityId);
 
@@ -148,6 +150,7 @@ namespace Client.Adapters.Tests
         private int _CountSpeakers()
         {
             var count = 0;
+
             foreach (var _ in _world.Where(out SpeakerAspect _))
                 count++;
 
@@ -157,6 +160,7 @@ namespace Client.Adapters.Tests
         private int _CountLines()
         {
             var count = 0;
+
             foreach (var _ in _world.Where(out LineAspect _))
                 count++;
 

@@ -69,6 +69,7 @@ namespace Client.Adapters.Shell.Views
             }
 
             var isComplete = true;
+
             for (var i = 0; i < references.Length; i++)
                 isComplete &= _Check(log, references[i], $"{fieldName}[{i}]");
 

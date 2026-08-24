@@ -261,6 +261,7 @@ namespace Client.Adapters.Tests
             float timeoutSeconds)
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
+
             while (condition() == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), failureMessage);

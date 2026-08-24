@@ -80,6 +80,7 @@ namespace Client.Adapters.Tests
             var commands = _world.GetPool<MoveCommand>();
 
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (completed.Has(entityId) == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),

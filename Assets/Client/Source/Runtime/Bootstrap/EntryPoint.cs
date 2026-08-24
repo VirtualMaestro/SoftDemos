@@ -212,6 +212,7 @@ namespace Client.Bootstrap
         private static string[] _GetDemoAddresses(DemoEntry[] demoList)
         {
             var addresses = new string[demoList.Length];
+
             for (var i = 0; i < demoList.Length; i++)
                 addresses[i] = demoList[i].Address;
 

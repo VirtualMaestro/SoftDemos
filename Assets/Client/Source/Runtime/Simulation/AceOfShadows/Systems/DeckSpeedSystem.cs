@@ -23,6 +23,7 @@ namespace Client.Simulation.AceOfShadows.Systems
         public void Run()
         {
             ref var state = ref _world.Get<DeckStateComp>();
+
             foreach (var entityId in _world.Where(out CommandAspect aspect))
             {
                 var requestedMultiplier = aspect.Commands.Read(entityId).Multiplier;

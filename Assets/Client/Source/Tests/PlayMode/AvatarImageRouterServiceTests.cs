@@ -50,6 +50,7 @@ namespace Client.Adapters.Tests
             foreach (var sprite in _sprites.Values)
                 if (sprite != null)
                     Object.DestroyImmediate(sprite);
+
             _sprites.Clear();
 
             if (_atlasTexture != null)
@@ -182,6 +183,7 @@ namespace Client.Adapters.Tests
         private IEnumerator _WaitUntilSettled(int requestId)
         {
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
             while (_router.Poll(requestId) == AsyncOpStatus.Pending)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
@@ -194,6 +196,7 @@ namespace Client.Adapters.Tests
         private void _CreateAtlasSprites()
         {
             _atlasTexture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+
             foreach (var key in new[]
                      {
                          "avatar-sheldon",

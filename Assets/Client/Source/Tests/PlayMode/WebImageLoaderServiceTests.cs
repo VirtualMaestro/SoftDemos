@@ -171,6 +171,7 @@ namespace Client.Adapters.Tests
             _AssertTablesEmpty();
 
             var deadline = Time.realtimeSinceStartup + 1f;
+
             while (Time.realtimeSinceStartup < deadline)
             {
                 Assert.DoesNotThrow(() => _source.Poll(requestId));

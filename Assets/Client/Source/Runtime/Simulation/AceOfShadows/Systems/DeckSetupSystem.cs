@@ -58,6 +58,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             state.SecondsUntilNextMove = _config.MoveIntervalSeconds;
 
             var stacks = _world.GetPool<StackComp>();
+
             for (var stackIndex = 0; stackIndex < _config.StackCount; stackIndex++)
             {
                 var entityId = _world.NewEntity();
@@ -67,6 +68,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             }
 
             var cards = _world.GetPool<CardComp>();
+
             for (var order = 0; order < _config.CardCount; order++)
             {
                 var entityId = _world.NewEntity();

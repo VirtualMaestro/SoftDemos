@@ -108,6 +108,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             foreach (var entityId in World.Where(out LineAspect aspect))
                 Assert.That(aspect.Texts.Read(entityId).Segments, Is.Empty);
+
             Assert.That(World.Get<DialogueStateComp>().LineCount, Is.EqualTo(1));
         }
 
@@ -125,6 +126,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 Assert.That(aspect.Loads.Read(entityId).State, Is.EqualTo(AvatarLoadState.Missing));
+
             Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 
@@ -142,6 +144,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 Assert.That(aspect.Avatars.Read(entityId).Side, Is.EqualTo(AvatarSide.Left));
+
             Assert.That(Log.CountOf(FakeLogService.Level.Warn), Is.EqualTo(1));
         }
 

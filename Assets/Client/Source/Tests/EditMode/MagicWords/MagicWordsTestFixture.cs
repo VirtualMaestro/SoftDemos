@@ -80,6 +80,7 @@ namespace Client.Simulation.Tests.MagicWords
         protected void _Advance(float seconds)
         {
             Time.DeltaSeconds = seconds;
+
             try
             {
                 Pipeline.Run();

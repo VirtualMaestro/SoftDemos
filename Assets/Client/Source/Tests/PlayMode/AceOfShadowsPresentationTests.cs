@@ -94,11 +94,13 @@ namespace Client.Adapters.Tests
             var ownedSprites = new HashSet<Sprite> { sceneView.Background.sprite };
             var cardBack = cardViews[0].GetComponent<SpriteRenderer>().sprite;
             var sharedMaterial = cardViews[0].GetComponent<SpriteRenderer>().sharedMaterial;
+
             foreach (var cardView in cardViews)
             {
                 ownedSprites.Add(cardView.GetComponent<SpriteRenderer>().sprite);
                 Assert.That(cardView.GetComponent<SpriteRenderer>().sharedMaterial, Is.SameAs(sharedMaterial));
             }
+
             Assert.That(entryPoint.World.Get<DeckStateComp>().IsDealt, Is.True);
             Assert.That(sceneView.SourceCounter.text, Is.EqualTo("144"));
 
@@ -109,6 +111,7 @@ namespace Client.Adapters.Tests
                 "The ×8 deck did not complete.",
                 CompletionTimeoutSeconds);
             Assert.That(sceneView.CompletionLabel.gameObject.activeSelf, Is.True);
+
             foreach (var cardView in cardViews)
             {
                 var renderer = cardView.GetComponent<SpriteRenderer>();
@@ -116,6 +119,7 @@ namespace Client.Adapters.Tests
                 Assert.That(renderer.sprite, Is.Not.SameAs(cardBack));
                 Assert.That(renderer.flipX, Is.True);
             }
+
             Assert.That(ownedSprites.Count, Is.EqualTo(15),
                 "The scene should own one background sprite and all 14 atlas copies.");
 
@@ -126,6 +130,7 @@ namespace Client.Adapters.Tests
             Assert.That(entryPoint.Views.Count, Is.Zero);
             Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
             Assert.That(entryPoint.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+
             foreach (var sprite in ownedSprites)
                 Assert.That(sprite == null, Is.True, "Closing the demo must destroy every owned sprite copy.");
 
@@ -173,6 +178,7 @@ namespace Client.Adapters.Tests
             float timeoutSeconds)
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
+
             while (condition() == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), failureMessage);

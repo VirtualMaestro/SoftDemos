@@ -17,10 +17,12 @@ namespace Client.Simulation.Tests.MagicWords
             _LoadRealPayload();
 
             var lineIndices = new List<int>();
+
             foreach (var entityId in World.Where(out LineAspect aspect))
                 lineIndices.Add(aspect.Lines.Read(entityId).Index);
 
             var speakerNames = new List<string>();
+
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 speakerNames.Add(aspect.Speakers.Read(entityId).Name);
 
@@ -57,6 +59,7 @@ namespace Client.Simulation.Tests.MagicWords
             _Load();
 
             var emojiNames = new HashSet<string>(System.StringComparer.Ordinal);
+
             foreach (var entityId in World.Where(out LineAspect aspect))
             {
                 ref readonly var line = ref aspect.Lines.Read(entityId);
@@ -107,6 +110,7 @@ namespace Client.Simulation.Tests.MagicWords
         private Dictionary<string, int> _SpeakerEntities()
         {
             var result = new Dictionary<string, int>(System.StringComparer.Ordinal);
+
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
                 result.Add(aspect.Speakers.Read(entityId).Name, entityId);
 

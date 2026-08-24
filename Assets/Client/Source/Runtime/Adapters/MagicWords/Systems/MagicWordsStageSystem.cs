@@ -197,6 +197,7 @@ namespace Client.Adapters.MagicWords.Systems
             }
 
             _sprites.Clear();
+
             foreach (var sprite in _atlasSprites)
             {
                 var spriteName = sprite.name.Replace("(Clone)", string.Empty).Trim();

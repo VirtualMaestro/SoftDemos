@@ -127,12 +127,14 @@ namespace Client.Adapters.Shell.Systems
             // Share one copy across all buttons. GetSprite allocates a new Sprite on each call.
             // SharedUiSprites lends this copy out. This system stays the owner.
             var buttonSprite = _TakeSprite(sharedAtlas, ButtonSpriteName);
+
             foreach (var button in _skin.Buttons)
                 button.sprite = buttonSprite;
 
             _uiSprites.Button = buttonSprite;
 
             var iconCount = Mathf.Min(_skin.DemoIconCount, _demos.Length);
+
             for (var i = 0; i < iconCount; i++)
                 _ApplyHiddenUntilLoaded(_skin.DemoIcons[i], _TakeSprite(menuAtlas, _demos[i].IconName));
 

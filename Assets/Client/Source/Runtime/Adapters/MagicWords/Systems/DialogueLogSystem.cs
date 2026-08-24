@@ -97,6 +97,7 @@ namespace Client.Adapters.MagicWords.Systems
 
             // Method-group delegates allocate, but only on frames that reveal a new line.
             _pendingLines.Sort(_CompareLineIndices);
+
             foreach (var entityId in _pendingLines)
             {
                 var speakerId = _lines.Read(entityId).Speaker.TryGetID(out var resolvedSpeakerId)

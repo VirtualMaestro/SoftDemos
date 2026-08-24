@@ -173,6 +173,7 @@ namespace Client.Simulation.Tests.AceOfShadows
 
             for (var move = 0; move < 144; move++)
                 _Tick(1f);
+
             _Tick(0f);
 
             ref var state = ref World.Get<DeckStateComp>();
@@ -248,8 +249,10 @@ namespace Client.Simulation.Tests.AceOfShadows
             _Tick(1f);
 
             var depths = new List<int>();
+
             foreach (var entityId in World.Where(out MovingCardAspect aspect))
                 depths.Add(aspect.Moving.Read(entityId).TargetOrder);
+
             depths.Sort();
             Assert.That(depths, Is.EqualTo(new[] { 0, 1 }));
 
@@ -383,8 +386,10 @@ namespace Client.Simulation.Tests.AceOfShadows
         private int _CountCards()
         {
             var count = 0;
+
             foreach (var _ in World.Where(out CardAspect _))
                 count++;
+
             return count;
         }
 
@@ -414,24 +419,30 @@ namespace Client.Simulation.Tests.AceOfShadows
         private int _CountStacks()
         {
             var count = 0;
+
             foreach (var _ in World.Where(out StackAspect _))
                 count++;
+
             return count;
         }
 
         private int _CountMovingCards()
         {
             var count = 0;
+
             foreach (var _ in World.Where(out MovingCardAspect _))
                 count++;
+
             return count;
         }
 
         private int _CountMoveCommands()
         {
             var count = 0;
+
             foreach (var _ in World.Where(out CommandCardAspect _))
                 count++;
+
             return count;
         }
 
@@ -461,6 +472,7 @@ namespace Client.Simulation.Tests.AceOfShadows
         private entlong _GetOnlyMovingEntity()
         {
             var result = -1;
+
             foreach (var entityId in World.Where(out MovingCardAspect _))
             {
                 Assert.That(result, Is.EqualTo(-1), "Expected exactly one moving card.");
@@ -474,6 +486,7 @@ namespace Client.Simulation.Tests.AceOfShadows
         private int[] _GetCardOrders(int stackIndex)
         {
             var orders = new List<int>();
+
             foreach (var entityId in World.Where(out CardAspect aspect))
             {
                 ref readonly var card = ref aspect.Cards.Read(entityId);
