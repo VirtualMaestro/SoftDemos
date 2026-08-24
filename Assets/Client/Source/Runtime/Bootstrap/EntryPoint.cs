@@ -56,6 +56,14 @@ namespace Client.Bootstrap
         public CardMovePlayerService CardMoves => _cardMovePlayerService;
         public StageReadyChannel StageReady => _stageReady;
 
+        private void OnValidate()
+        {
+            Debug.Assert(menuScreen != null, $"'{nameof(menuScreen)}' is not assigned on {nameof(EntryPoint)}.", this);
+            Debug.Assert(demoHud != null, $"'{nameof(demoHud)}' is not assigned on {nameof(EntryPoint)}.", this);
+            Debug.Assert(loadingIndicator != null, $"'{nameof(loadingIndicator)}' is not assigned on {nameof(EntryPoint)}.", this);
+            Debug.Assert(shellSkin != null, $"'{nameof(shellSkin)}' is not assigned on {nameof(EntryPoint)}.", this);
+        }
+
         private void Start()
         {
             _log = new UnityLogService("Bootstrap");

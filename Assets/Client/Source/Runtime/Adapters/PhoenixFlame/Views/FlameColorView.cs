@@ -35,8 +35,6 @@ namespace Client.Adapters.PhoenixFlame.Views
 
         private void Awake()
         {
-            _ThrowIfMissingReference();
-
             _flameRenderer = flameParticles.GetComponent<ParticleSystemRenderer>();
             _smokeRenderer = smokeParticles.GetComponent<ParticleSystemRenderer>();
             _sparkRenderer = sparkParticles.GetComponent<ParticleSystemRenderer>();
@@ -139,7 +137,7 @@ namespace Client.Adapters.PhoenixFlame.Views
             targetRenderer.SetPropertyBlock(block);
         }
 
-        private void _ThrowIfMissingReference()
+        private void OnValidate()
         {
             Debug.Assert(flameParticles != null, $"'{nameof(flameParticles)}' is not assigned on {nameof(FlameColorView)}.", this);
             Debug.Assert(smokeParticles != null, $"'{nameof(smokeParticles)}' is not assigned on {nameof(FlameColorView)}.", this);

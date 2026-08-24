@@ -25,11 +25,17 @@ namespace Client.Adapters.PhoenixFlame.Views
 
         public event Action OnAdvancePressed;
 
+        private void OnValidate()
+        {
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(flameAnimator != null, $"'{nameof(flameAnimator)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(flameColor != null, $"'{nameof(flameColor)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(advanceButton != null, $"'{nameof(advanceButton)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(phaseLabel != null, $"'{nameof(phaseLabel)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+        }
+
         private void Awake()
         {
-            if (_HasEveryReference() == false)
-                return;
-
             advanceButton.onClick.AddListener(_OnAdvancePressed);
         }
 
@@ -43,26 +49,6 @@ namespace Client.Adapters.PhoenixFlame.Views
         private void _OnAdvancePressed()
         {
             OnAdvancePressed?.Invoke();
-        }
-
-        private bool _HasEveryReference()
-        {
-            var isComplete = true;
-            isComplete &= _Check(background, nameof(background));
-            isComplete &= _Check(flameAnimator, nameof(flameAnimator));
-            isComplete &= _Check(flameColor, nameof(flameColor));
-            isComplete &= _Check(advanceButton, nameof(advanceButton));
-            isComplete &= _Check(phaseLabel, nameof(phaseLabel));
-            return isComplete;
-        }
-
-        private bool _Check(UnityEngine.Object reference, string fieldName)
-        {
-            if (reference != null)
-                return true;
-
-            Debug.LogError($"{fieldName} is not assigned on {nameof(PhoenixFlameScreen)}.", this);
-            return false;
         }
     }
 }

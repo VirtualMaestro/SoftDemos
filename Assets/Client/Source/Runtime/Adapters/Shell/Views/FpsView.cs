@@ -13,7 +13,9 @@ namespace Client.Adapters.Shell.Views
         private float _elapsed;
         private int _frames;
 
-        private void Awake()
+        // Wires the label from the required component the moment the script lands on the object,
+        // so the slot is filled in the scene file rather than only at runtime.
+        private void OnValidate()
         {
             if (label == null)
                 label = GetComponent<TMP_Text>();

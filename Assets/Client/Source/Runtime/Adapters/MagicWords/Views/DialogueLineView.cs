@@ -25,9 +25,18 @@ namespace Client.Adapters.MagicWords.Views
 
         public CanvasGroup Group => group;
 
-        private void Awake()
+        private void OnValidate()
         {
-            _HasEveryReference();
+            Debug.Assert(group != null, $"'{nameof(group)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(leftSide != null, $"'{nameof(leftSide)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(rightSide != null, $"'{nameof(rightSide)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(leftAvatar != null, $"'{nameof(leftAvatar)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(rightAvatar != null, $"'{nameof(rightAvatar)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(leftFrame != null, $"'{nameof(leftFrame)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(rightFrame != null, $"'{nameof(rightFrame)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(bubble != null, $"'{nameof(bubble)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(speakerLabel != null, $"'{nameof(speakerLabel)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(bodyLabel != null, $"'{nameof(bodyLabel)}' is not assigned on {nameof(DialogueLineView)}.", this);
         }
 
         private void _Configure(
@@ -70,31 +79,6 @@ namespace Client.Adapters.MagicWords.Views
                 leftAvatar.sprite = sprite;
             else
                 rightAvatar.sprite = sprite;
-        }
-
-        private bool _HasEveryReference()
-        {
-            var isComplete = true;
-            isComplete &= _Check(group, nameof(group));
-            isComplete &= _Check(leftSide, nameof(leftSide));
-            isComplete &= _Check(rightSide, nameof(rightSide));
-            isComplete &= _Check(leftAvatar, nameof(leftAvatar));
-            isComplete &= _Check(rightAvatar, nameof(rightAvatar));
-            isComplete &= _Check(leftFrame, nameof(leftFrame));
-            isComplete &= _Check(rightFrame, nameof(rightFrame));
-            isComplete &= _Check(bubble, nameof(bubble));
-            isComplete &= _Check(speakerLabel, nameof(speakerLabel));
-            isComplete &= _Check(bodyLabel, nameof(bodyLabel));
-            return isComplete;
-        }
-
-        private bool _Check(Object reference, string fieldName)
-        {
-            if (reference != null)
-                return true;
-
-            Debug.LogError($"{fieldName} is not assigned on {nameof(DialogueLineView)}.", this);
-            return false;
         }
     }
 }

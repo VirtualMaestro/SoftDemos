@@ -28,6 +28,14 @@ namespace Client.Adapters.Shell.Views
         /// <summary>How many demo icons this skin can paint. <c>EntryPoint</c> checks it against the demo list.</summary>
         public int DemoIconCount => demoIcons == null ? 0 : demoIcons.Length;
 
+        private void OnValidate()
+        {
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(ShellSkinView)}.", this);
+            Debug.Assert(panel != null, $"'{nameof(panel)}' is not assigned on {nameof(ShellSkinView)}.", this);
+            Debug.Assert(backIcon != null, $"'{nameof(backIcon)}' is not assigned on {nameof(ShellSkinView)}.", this);
+            Debug.Assert(spinner != null, $"'{nameof(spinner)}' is not assigned on {nameof(ShellSkinView)}.", this);
+        }
+
         /// <summary>Reports every unassigned target through <paramref name="log"/>. It does not throw.</summary>
         /// <remarks>A missing reference gives one flat rectangle on screen. The game keeps running.</remarks>
         public bool HasEveryReference(ILogService log)

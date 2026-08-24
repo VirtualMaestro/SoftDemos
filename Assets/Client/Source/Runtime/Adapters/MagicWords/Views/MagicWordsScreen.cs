@@ -27,11 +27,19 @@ namespace Client.Adapters.MagicWords.Views
         public event Action OnSkipPressed;
         public event Action OnAvatarModePressed;
 
+        private void OnValidate()
+        {
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(logScroll != null, $"'{nameof(logScroll)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(logContent != null, $"'{nameof(logContent)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(logList != null, $"'{nameof(logList)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(avatarModeButton != null, $"'{nameof(avatarModeButton)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(avatarModeLabel != null, $"'{nameof(avatarModeLabel)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(statusLabel != null, $"'{nameof(statusLabel)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+        }
+
         private void Awake()
         {
-            if (_HasEveryReference() == false)
-                return;
-
             avatarModeButton.onClick.AddListener(_OnAvatarModePressed);
         }
 
@@ -49,28 +57,6 @@ namespace Client.Adapters.MagicWords.Views
         private void _OnAvatarModePressed()
         {
             OnAvatarModePressed?.Invoke();
-        }
-
-        private bool _HasEveryReference()
-        {
-            var isComplete = true;
-            isComplete &= _Check(background, nameof(background));
-            isComplete &= _Check(logScroll, nameof(logScroll));
-            isComplete &= _Check(logContent, nameof(logContent));
-            isComplete &= _Check(logList, nameof(logList));
-            isComplete &= _Check(avatarModeButton, nameof(avatarModeButton));
-            isComplete &= _Check(avatarModeLabel, nameof(avatarModeLabel));
-            isComplete &= _Check(statusLabel, nameof(statusLabel));
-            return isComplete;
-        }
-
-        private bool _Check(UnityEngine.Object reference, string fieldName)
-        {
-            if (reference != null)
-                return true;
-
-            Debug.LogError($"{fieldName} is not assigned on {nameof(MagicWordsScreen)}.", this);
-            return false;
         }
     }
 }

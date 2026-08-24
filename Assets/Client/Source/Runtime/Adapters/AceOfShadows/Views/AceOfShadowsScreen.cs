@@ -33,11 +33,20 @@ namespace Client.Adapters.AceOfShadows.Views
 
         public event Action OnSpeedButtonPressed;
 
+        private void OnValidate()
+        {
+            Debug.Assert(cardRoot != null, $"'{nameof(cardRoot)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(sourceCounter != null, $"'{nameof(sourceCounter)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(targetCounter != null, $"'{nameof(targetCounter)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(completionLabel != null, $"'{nameof(completionLabel)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(speedButton != null, $"'{nameof(speedButton)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(speedLabel != null, $"'{nameof(speedLabel)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(cardPrefab != null, $"'{nameof(cardPrefab)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+        }
+
         private void Awake()
         {
-            if (_HasEveryReference() == false)
-                return;
-
             speedButton.onClick.AddListener(_OnSpeedButtonPressed);
         }
 
@@ -50,29 +59,6 @@ namespace Client.Adapters.AceOfShadows.Views
         private void _OnSpeedButtonPressed()
         {
             OnSpeedButtonPressed?.Invoke();
-        }
-
-        private bool _HasEveryReference()
-        {
-            var isComplete = true;
-            isComplete &= _Check(cardRoot, nameof(cardRoot));
-            isComplete &= _Check(background, nameof(background));
-            isComplete &= _Check(sourceCounter, nameof(sourceCounter));
-            isComplete &= _Check(targetCounter, nameof(targetCounter));
-            isComplete &= _Check(completionLabel, nameof(completionLabel));
-            isComplete &= _Check(speedButton, nameof(speedButton));
-            isComplete &= _Check(speedLabel, nameof(speedLabel));
-            isComplete &= _Check(cardPrefab, nameof(cardPrefab));
-            return isComplete;
-        }
-
-        private bool _Check(UnityEngine.Object reference, string fieldName)
-        {
-            if (reference != null)
-                return true;
-
-            Debug.LogError($"{fieldName} is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            return false;
         }
     }
 }

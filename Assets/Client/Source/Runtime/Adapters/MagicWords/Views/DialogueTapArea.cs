@@ -11,7 +11,7 @@ namespace Client.Adapters.MagicWords.Views
         [FormerlySerializedAs("sceneView")]
         [SerializeField] private MagicWordsScreen screen;
 
-        private void Awake()
+        private void OnValidate()
         {
             Debug.Assert(screen != null, $"'{nameof(screen)}' is not assigned on {nameof(DialogueTapArea)}.", this);
         }
