@@ -87,8 +87,7 @@ namespace Client.Simulation.MagicWords.Systems
 
                     load.HandleId = handleId;
                     load.State = AvatarLoadState.Ready;
-                    ref readonly var speaker = ref aspect.Speakers.Read(entityId);
-                    _log.Info($"Avatar for '{speaker.Name}' is ready.");
+                    _log.Info($"Avatar for '{aspect.Speakers.Read(entityId).Name}' is ready.");
                     continue;
                 }
 
@@ -99,14 +98,14 @@ namespace Client.Simulation.MagicWords.Systems
 
         private void _Fail(int entityId, ref AvatarLoadComp load, int requestId, string reason)
         {
-            ref readonly var speaker = ref _world.GetPool<SpeakerComp>().Read(entityId);
             load.State = AvatarLoadState.Failed;
             load.RequestId = 0;
             load.HandleId = 0;
             _imageSource.Release(requestId);
 
             _log.Error(
-                $"Avatar request {requestId} for '{speaker.Name}' ({_avatars.Read(entityId).Url}) {reason}.");
+                $"Avatar request {requestId} for '{_world.GetPool<SpeakerComp>().Read(entityId).Name}' " +
+                $"({_avatars.Read(entityId).Url}) {reason}.");
         }
 
         public void Inject(EcsWorld obj)
