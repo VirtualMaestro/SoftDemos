@@ -76,7 +76,7 @@ namespace Client.Simulation.MagicWords.Systems
 
         private sealed class LoadCommandAspect : EcsAspect
         {
-            public EcsPool<LoadDialogueCommand> Commands = Inc;
+            public readonly EcsPool<LoadDialogueCommand> Commands = Inc;
         }
     }
 }

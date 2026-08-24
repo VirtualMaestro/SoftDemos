@@ -57,12 +57,12 @@ namespace Client.Simulation.PhoenixFlame.Systems
 
         private sealed class StartCommandAspect : EcsAspect
         {
-            public EcsPool<StartFlameCommand> Commands = Inc;
+            public readonly EcsPool<StartFlameCommand> Commands = Inc;
         }
 
         private sealed class ResetCommandAspect : EcsAspect
         {
-            public EcsPool<ResetFlameCommand> Commands = Inc;
+            public readonly EcsPool<ResetFlameCommand> Commands = Inc;
         }
     }
 }

@@ -162,15 +162,15 @@ namespace Client.Simulation.Tests.MagicWords
 
         private sealed class SpeakerAspect : EcsAspect
         {
-            public EcsPool<SpeakerComp> Speakers = Inc;
-            public EcsPool<AvatarLoadComp> Loads = Inc;
-            public EcsPool<AvatarComp> Avatars = Opt;
+            public readonly EcsPool<SpeakerComp> Speakers = Inc;
+            public readonly EcsPool<AvatarLoadComp> Loads = Inc;
+            public readonly EcsPool<AvatarComp> Avatars = Opt;
         }
 
         private sealed class LineAspect : EcsAspect
         {
-            public EcsPool<DialogueLineComp> Lines = Inc;
-            public EcsPool<DialogueTextComp> Texts = Inc;
+            public readonly EcsPool<DialogueLineComp> Lines = Inc;
+            public readonly EcsPool<DialogueTextComp> Texts = Inc;
         }
     }
 }

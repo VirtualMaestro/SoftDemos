@@ -130,30 +130,30 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         private sealed class UnboundAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<ViewHandleComp> Views = Exc;
-            public EcsTagPool<CardSeatedTag> Seated = Opt;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<ViewHandleComp> Views = Exc;
+            public readonly EcsTagPool<CardSeatedTag> Seated = Opt;
         }
 
         private sealed class MovingAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> _ = Inc;
-            public EcsPool<ViewHandleComp> Views = Inc;
-            public EcsTagPool<CardSeatedTag> Seated = Inc;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<MovingComp> _ = Inc;
+            public readonly EcsPool<ViewHandleComp> Views = Inc;
+            public readonly EcsTagPool<CardSeatedTag> Seated = Inc;
         }
 
         private sealed class RestingAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> _ = Exc;
-            public EcsPool<ViewHandleComp> Views = Inc;
-            public EcsTagPool<CardSeatedTag> Seated = Exc;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<MovingComp> _ = Exc;
+            public readonly EcsPool<ViewHandleComp> Views = Inc;
+            public readonly EcsTagPool<CardSeatedTag> Seated = Exc;
         }
 
         private sealed class SeatedAspect : EcsAspect
         {
-            public EcsTagPool<CardSeatedTag> Seated = Inc;
+            public readonly EcsTagPool<CardSeatedTag> Seated = Inc;
         }
     }
 }

@@ -150,13 +150,13 @@ namespace Client.Simulation.MagicWords.Systems
 
         private sealed class SkipAspect : EcsAspect
         {
-            public EcsPool<SkipDialogueCommand> Commands = Inc;
+            public readonly EcsPool<SkipDialogueCommand> Commands = Inc;
         }
 
         private sealed class PendingLineAspect : EcsAspect
         {
-            public EcsPool<DialogueLineComp> Lines = Inc;
-            public EcsTagPool<LineVisibleTag> Visible = Exc;
+            public readonly EcsPool<DialogueLineComp> Lines = Inc;
+            public readonly EcsTagPool<LineVisibleTag> Visible = Exc;
         }
     }
 }

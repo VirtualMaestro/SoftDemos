@@ -172,8 +172,8 @@ namespace Client.Simulation.Tests.MagicWords
 
         private sealed class VisibleLineAspect : EcsAspect
         {
-            public EcsPool<DialogueLineComp> Lines = Inc;
-            public EcsTagPool<LineVisibleTag> Visible = Inc;
+            public readonly EcsPool<DialogueLineComp> Lines = Inc;
+            public readonly EcsTagPool<LineVisibleTag> Visible = Inc;
         }
     }
 }

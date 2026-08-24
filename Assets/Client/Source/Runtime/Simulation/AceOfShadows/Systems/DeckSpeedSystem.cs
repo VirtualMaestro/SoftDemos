@@ -66,7 +66,7 @@ namespace Client.Simulation.AceOfShadows.Systems
 
         private sealed class CommandAspect : EcsAspect
         {
-            public EcsPool<SetDeckSpeedCommand> Commands = Inc;
+            public readonly EcsPool<SetDeckSpeedCommand> Commands = Inc;
         }
     }
 }

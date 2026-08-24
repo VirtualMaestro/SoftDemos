@@ -171,12 +171,12 @@ namespace Client.Adapters.Tests
 
         private sealed class LineAspect : EcsAspect
         {
-            public EcsPool<DialogueLineComp> Lines = Inc;
+            public readonly EcsPool<DialogueLineComp> Lines = Inc;
         }
 
         private sealed class SpeakerAspect : EcsAspect
         {
-            public EcsPool<SpeakerComp> Speakers = Inc;
+            public readonly EcsPool<SpeakerComp> Speakers = Inc;
         }
     }
 }

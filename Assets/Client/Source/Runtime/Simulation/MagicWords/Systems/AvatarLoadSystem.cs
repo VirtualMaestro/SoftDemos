@@ -122,12 +122,12 @@ namespace Client.Simulation.MagicWords.Systems
 
         private sealed class ReloadCommandAspect : EcsAspect
         {
-            public EcsPool<ReloadAvatarsCommand> _ = Inc;
+            public readonly EcsPool<ReloadAvatarsCommand> _ = Inc;
         }
 
         private sealed class RequestAspect : EcsAspect
         {
-            public EcsPool<RequestAvatarCommand> _ = Inc;
+            public readonly EcsPool<RequestAvatarCommand> _ = Inc;
             public readonly EcsPool<SpeakerComp> Speakers = Inc;
             public readonly EcsPool<AvatarLoadComp> Loads = Inc;
         }
@@ -135,7 +135,7 @@ namespace Client.Simulation.MagicWords.Systems
         private sealed class SpeakerAspect : EcsAspect
         {
             public readonly EcsPool<SpeakerComp> Speakers = Inc;
-            public EcsPool<AvatarComp> _ = Inc;
+            public readonly EcsPool<AvatarComp> _ = Inc;
             public readonly EcsPool<AvatarLoadComp> Loads = Inc;
         }
     }

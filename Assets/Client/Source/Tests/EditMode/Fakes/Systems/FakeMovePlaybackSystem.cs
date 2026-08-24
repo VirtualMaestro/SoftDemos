@@ -96,9 +96,9 @@ namespace Client.Simulation.Tests.Fakes.Systems
 
         private sealed class MoveAspect : EcsAspect
         {
-            public EcsPool<MoveCommand> Commands = Inc;
-            public EcsPool<MovingComp> Moving = Opt;
-            public EcsTagPool<MoveCompletedTag> Completed = Opt;
+            public readonly EcsPool<MoveCommand> Commands = Inc;
+            public readonly EcsPool<MovingComp> Moving = Opt;
+            public readonly EcsTagPool<MoveCompletedTag> Completed = Opt;
         }
     }
 }

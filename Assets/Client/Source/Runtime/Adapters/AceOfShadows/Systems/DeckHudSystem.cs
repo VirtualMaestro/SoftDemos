@@ -111,7 +111,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         private sealed class StackAspect : EcsAspect
         {
-            public EcsPool<StackComp> Stacks = Inc;
+            public readonly EcsPool<StackComp> Stacks = Inc;
         }
     }
 }

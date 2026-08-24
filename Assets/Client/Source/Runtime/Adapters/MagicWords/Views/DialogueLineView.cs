@@ -52,12 +52,7 @@ namespace Client.Adapters.MagicWords.Views
         /// <summary>VList binding: renders the pooled line from its data record.</summary>
         public void OnShow(IItemData itemData)
         {
-            if (itemData is not DialogueLineItemData data)
-            {
-                Debug.LogError($"{nameof(DialogueLineView)} received unexpected item data " +
-                               $"'{itemData?.GetType().Name ?? "null"}'.", this);
-                return;
-            }
+            var data = (DialogueLineItemData) itemData ;
 
             _Configure(data.SpeakerName, data.Side, data.Bubble, data.Frame, data.Emoji, data.Body);
             _SetAvatar(data.Avatar);

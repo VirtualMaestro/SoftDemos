@@ -87,7 +87,6 @@ namespace Client.Simulation.Shared.Navigation.Systems
                 return;
 
             var requestId = state.PendingRequestId;
-            var address = _catalog[state.ActiveDemoIndex];
             _sceneService.Release(requestId);
             state.PendingRequestId = -1;
 
@@ -100,8 +99,8 @@ namespace Client.Simulation.Shared.Navigation.Systems
                 }
 
                 state.LastOperationFailed = true;
+                _log.Error($"Load request #{requestId} failed for address '{_catalog[state.ActiveDemoIndex]}'.");
                 state.ActiveDemoIndex = -1;
-                _log.Error($"Load request #{requestId} failed for address '{address}'.");
                 _Transition(ref state, ScreenId.Menu);
                 return;
             }
@@ -109,7 +108,7 @@ namespace Client.Simulation.Shared.Navigation.Systems
             if (status == AsyncOpStatus.Failed)
             {
                 state.LastOperationFailed = true;
-                _log.Error($"Unload request #{requestId} failed for address '{address}'.");
+                _log.Error($"Unload request #{requestId} failed for address '{_catalog[state.ActiveDemoIndex]}'.");
             }
 
             state.ActiveDemoIndex = -1;
@@ -130,7 +129,7 @@ namespace Client.Simulation.Shared.Navigation.Systems
 
         private sealed class CloseCommandAspect : EcsAspect
         {
-            public EcsPool<CloseDemoCommand> _ = Inc;
+            public readonly EcsPool<CloseDemoCommand> _ = Inc;
         }
     }
 }

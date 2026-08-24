@@ -235,10 +235,10 @@ namespace Client.Adapters.MagicWords.Systems
 
         private sealed class VisibleLineAspect : EcsAspect
         {
-            public EcsTagPool<LineVisibleTag> Visible = Inc;
-            public EcsPool<DialogueLineComp> Lines = Inc;
-            public EcsPool<DialogueTextComp> Texts = Inc;
-            public EcsTagPool<DialogueLineBoundTag> Bound = Exc;
+            public readonly EcsTagPool<LineVisibleTag> Visible = Inc;
+            public readonly EcsPool<DialogueLineComp> Lines = Inc;
+            public readonly EcsPool<DialogueTextComp> Texts = Inc;
+            public readonly EcsTagPool<DialogueLineBoundTag> Bound = Exc;
         }
     }
 }

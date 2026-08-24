@@ -276,8 +276,8 @@ namespace Client.Adapters.Tests
 
         private sealed class SpeakerLoadAspect : EcsAspect
         {
-            public EcsPool<SpeakerComp> Speakers = Inc;
-            public EcsPool<AvatarLoadComp> Loads = Inc;
+            public readonly EcsPool<SpeakerComp> Speakers = Inc;
+            public readonly EcsPool<AvatarLoadComp> Loads = Inc;
         }
     }
 }

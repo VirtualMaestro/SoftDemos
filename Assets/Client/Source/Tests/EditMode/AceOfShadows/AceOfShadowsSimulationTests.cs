@@ -488,24 +488,24 @@ namespace Client.Simulation.Tests.AceOfShadows
 
         private sealed class CardAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<CardComp> Cards = Inc;
         }
 
         private sealed class StackAspect : EcsAspect
         {
-            public EcsPool<StackComp> Stacks = Inc;
+            public readonly EcsPool<StackComp> Stacks = Inc;
         }
 
         private sealed class MovingCardAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MovingComp> Moving = Inc;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<MovingComp> Moving = Inc;
         }
 
         private sealed class CommandCardAspect : EcsAspect
         {
-            public EcsPool<CardComp> Cards = Inc;
-            public EcsPool<MoveCommand> Commands = Inc;
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<MoveCommand> Commands = Inc;
         }
     }
 }

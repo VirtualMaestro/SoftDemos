@@ -54,7 +54,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
 
         private sealed class CommandAspect : EcsAspect
         {
-            public EcsPool<AdvanceFlamePhaseCommand> Commands = Inc;
+            public readonly EcsPool<AdvanceFlamePhaseCommand> Commands = Inc;
         }
     }
 }
