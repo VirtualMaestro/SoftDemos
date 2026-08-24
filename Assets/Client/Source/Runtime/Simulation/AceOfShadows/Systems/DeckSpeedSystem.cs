@@ -58,6 +58,7 @@ namespace Client.Simulation.AceOfShadows.Systems
 
             if (state.SecondsUntilNextMove > interval)
                 state.SecondsUntilNextMove = interval;
+
             state.SpeedMultiplier = multiplier;
         }
 

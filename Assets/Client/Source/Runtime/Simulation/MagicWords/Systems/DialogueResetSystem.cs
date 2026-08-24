@@ -78,9 +78,7 @@ namespace Client.Simulation.MagicWords.Systems
 
                 if (load.State != AvatarLoadState.Loading &&
                     load.State != AvatarLoadState.Ready)
-                {
                     continue;
-                }
 
                 _imageSource.Release(load.RequestId);
                 load.RequestId = 0;

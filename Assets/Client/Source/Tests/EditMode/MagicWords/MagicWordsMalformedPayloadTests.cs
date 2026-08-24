@@ -53,11 +53,9 @@ namespace Client.Simulation.Tests.MagicWords
             });
 
             foreach (var entityId in World.Where(out SpeakerAspect aspect))
-            {
                 Assert.That(
                     aspect.Loads.Read(entityId).State,
                     Is.EqualTo(AvatarLoadState.Missing));
-            }
         }
 
         [Test]

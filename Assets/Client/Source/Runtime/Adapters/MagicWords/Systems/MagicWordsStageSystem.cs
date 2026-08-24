@@ -247,6 +247,7 @@ namespace Client.Adapters.MagicWords.Systems
 
             if (resetDialogue)
                 _world.GetPool<ResetDialogueCommand>().Add(_world.NewEntity());
+
             _stageReady.ClearDemo();
             _tweens.KillFades();
             // The dialogue log destroys its own views when it sees the change. That happens later

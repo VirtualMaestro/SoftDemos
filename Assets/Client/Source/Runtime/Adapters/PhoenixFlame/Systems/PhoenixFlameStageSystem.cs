@@ -182,6 +182,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 _log.Error($"The flame transition is {AuthoredTransitionSeconds}s in " +
                     $"PhoenixFlame.controller but {flame.TransitionDurationSeconds}s in the " +
                     "simulation; the phase label and the colour will disagree.");
+
             _ApplyInteractable(true);
             _ApplyLabel(flame.CurrentPhase);
             _TransitionTo(StageState.Ready);

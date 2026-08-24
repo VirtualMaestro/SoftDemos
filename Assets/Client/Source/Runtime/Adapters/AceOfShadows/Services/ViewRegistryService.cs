@@ -22,6 +22,7 @@ namespace Client.Adapters.AceOfShadows.Services
 
             if (card != null)
                 _cards.Add(id, card);
+
             return id;
         }
 
