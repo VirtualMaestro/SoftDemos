@@ -154,7 +154,7 @@ namespace Client.Simulation.Tests
         {
             var assets = new FakeAssetService { CompleteAfterPolls = 2, TerminalStatus = AsyncOpStatus.Done };
 
-            var requestId = assets.BeginLoad("some/address");
+            var requestId = assets.BeginLoad("art/menu/background");
 
             Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending), $"{assets}");
             Assert.That(assets.ResolveHandle(requestId), Is.Zero,
@@ -175,7 +175,7 @@ namespace Client.Simulation.Tests
         {
             var assets = new FakeAssetService { CompleteAfterPolls = 1, TerminalStatus = AsyncOpStatus.Failed };
 
-            var requestId = assets.BeginLoad("missing/address");
+            var requestId = assets.BeginLoad("art/menu/missing");
 
             Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed), $"{assets}");
             Assert.That(assets.ResolveHandle(requestId), Is.Zero,
