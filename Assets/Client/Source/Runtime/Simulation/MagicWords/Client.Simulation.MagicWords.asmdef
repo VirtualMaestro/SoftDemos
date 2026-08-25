@@ -2,7 +2,7 @@
     "name": "Client.Simulation.MagicWords",
     "rootNamespace": "Client.Simulation.MagicWords",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "DCFApixels.DragonECS"
     ],
     "includePlatforms": [],

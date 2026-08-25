@@ -1,4 +1,4 @@
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.PhoenixFlame;
 using Client.Simulation.PhoenixFlame.Components;
 using Client.Simulation.Tests.Fakes.Services;

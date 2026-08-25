@@ -2,7 +2,7 @@
     "name": "Client.Simulation.PhoenixFlame",
     "rootNamespace": "Client.Simulation.PhoenixFlame",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "DCFApixels.DragonECS"
     ],
     "includePlatforms": [],

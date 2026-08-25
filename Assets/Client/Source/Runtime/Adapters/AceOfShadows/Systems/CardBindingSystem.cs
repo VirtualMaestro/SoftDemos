@@ -3,8 +3,8 @@ using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Shared.Components;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Components;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.AceOfShadows.Systems

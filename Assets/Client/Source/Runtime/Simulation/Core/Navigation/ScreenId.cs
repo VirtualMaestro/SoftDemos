@@ -1,4 +1,4 @@
-namespace Client.Simulation.Shared.Navigation
+namespace Client.Simulation.Core.Navigation
 {
     public enum ScreenId
     {

@@ -1,7 +1,7 @@
 using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
-namespace Client.Simulation.Shared.Navigation.Components
+namespace Client.Simulation.Core.Navigation.Components
 {
     /// <summary>
     /// Which screen the app is on, which demo it belongs to and the scene request still in flight. It is

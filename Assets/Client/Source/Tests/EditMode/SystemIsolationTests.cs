@@ -24,7 +24,7 @@ namespace Client.Simulation.Tests
         /// <summary>Every assembly that may define systems. Test assemblies define fakes, not systems.</summary>
         private static readonly string[] ProductAssemblies =
         {
-            "Client.Simulation.Shared",
+            "Client.Simulation.Core",
             "Client.Simulation.AceOfShadows",
             "Client.Simulation.MagicWords",
             "Client.Simulation.PhoenixFlame",

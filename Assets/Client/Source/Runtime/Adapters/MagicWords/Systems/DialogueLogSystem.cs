@@ -5,7 +5,7 @@ using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Vendor.OptVList;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;

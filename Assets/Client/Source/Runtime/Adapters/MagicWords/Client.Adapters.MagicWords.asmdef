@@ -2,7 +2,7 @@
     "name": "Client.Adapters.MagicWords",
     "rootNamespace": "Client.Adapters.MagicWords",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "Client.Simulation.MagicWords",
         "Client.Adapters.Shared",
         "Client.Adapters.Vendor",

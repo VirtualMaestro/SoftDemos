@@ -1,6 +1,6 @@
 {
-    "name": "Client.Simulation.Shared",
-    "rootNamespace": "Client.Simulation.Shared",
+    "name": "Client.Simulation.Core",
+    "rootNamespace": "Client.Simulation.Core",
     "references": [
         "DCFApixels.DragonECS"
     ],

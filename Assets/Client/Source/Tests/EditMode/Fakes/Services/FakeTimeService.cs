@@ -1,4 +1,4 @@
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 
 namespace Client.Simulation.Tests.Fakes.Services
 {

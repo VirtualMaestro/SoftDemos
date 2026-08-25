@@ -1,6 +1,6 @@
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.Tests.Fakes.Services;
 using Client.Simulation.Tests.Fakes.Systems;
 using DCFApixels.DragonECS;

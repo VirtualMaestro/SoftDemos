@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using MyGameDevTools.SceneLoading;
 
 namespace Client.Adapters.Shared.Services

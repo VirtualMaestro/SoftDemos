@@ -1,7 +1,7 @@
-using Client.Simulation.Shared.Navigation.Systems;
+using Client.Simulation.Core.Navigation.Systems;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.Shared.Navigation
+namespace Client.Simulation.Core.Navigation
 {
     public sealed class NavigationModule : IEcsModule
     {

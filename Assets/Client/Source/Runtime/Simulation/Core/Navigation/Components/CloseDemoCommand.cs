@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.Shared.Navigation.Components
+namespace Client.Simulation.Core.Navigation.Components
 {
     /// <summary>Asks for the open demo to be unloaded and the menu brought back.</summary>
     /// <remarks>

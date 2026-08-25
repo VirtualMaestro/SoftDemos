@@ -9,7 +9,7 @@
         "Client.Adapters.MagicWords",
         "Client.Adapters.PhoenixFlame",
         "Client.Adapters.Shell",
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "Client.Simulation.AceOfShadows",
         "Client.Simulation.MagicWords",
         "Client.Simulation.PhoenixFlame",

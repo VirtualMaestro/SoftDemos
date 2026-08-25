@@ -1,5 +1,5 @@
 using System;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;

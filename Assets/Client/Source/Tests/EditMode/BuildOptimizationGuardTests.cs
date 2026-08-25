@@ -175,7 +175,7 @@ namespace Client.Simulation.Tests
         {
             Assert.That(File.Exists(LinkXmlPath), Is.True, $"'{LinkXmlPath}' is missing.");
             var text = File.ReadAllText(LinkXmlPath);
-            Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.Shared\""));
+            Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.Core\""));
             Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.AceOfShadows\""));
             Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.MagicWords\""));
             Assert.That(text, Does.Contain("<assembly fullname=\"Client.Simulation.PhoenixFlame\""));

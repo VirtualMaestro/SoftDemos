@@ -2,7 +2,7 @@
     "name": "Client.Adapters.Shell",
     "rootNamespace": "Client.Adapters.Shell",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "Client.Adapters.Shared",
         "DCFApixels.DragonECS",
         "DCFApixels.DragonECS.Unity",

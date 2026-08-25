@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Client.Simulation.MagicWords.Ports;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 
@@ -32,7 +32,7 @@ namespace Client.Simulation.Tests
         /// <summary>Every assembly that may define systems or modules.</summary>
         private static readonly string[] ProductAssemblies =
         {
-            "Client.Simulation.Shared",
+            "Client.Simulation.Core",
             "Client.Simulation.AceOfShadows",
             "Client.Simulation.MagicWords",
             "Client.Simulation.PhoenixFlame",

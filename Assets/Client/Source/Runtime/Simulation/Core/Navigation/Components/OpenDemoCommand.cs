@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.Shared.Navigation.Components
+namespace Client.Simulation.Core.Navigation.Components
 {
     /// <summary>Asks for the demo at this catalog index to be loaded. The index, not a scene name, is
     /// what crosses the boundary: the simulation does not know addresses.</summary>

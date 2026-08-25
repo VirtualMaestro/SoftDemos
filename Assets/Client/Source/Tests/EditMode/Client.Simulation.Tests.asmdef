@@ -2,7 +2,7 @@
     "name": "Client.Simulation.Tests",
     "rootNamespace": "Client.Simulation.Tests",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "Client.Simulation.AceOfShadows",
         "Client.Simulation.MagicWords",
         "Client.Simulation.PhoenixFlame",

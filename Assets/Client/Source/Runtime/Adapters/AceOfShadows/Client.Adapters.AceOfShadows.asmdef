@@ -2,7 +2,7 @@
     "name": "Client.Adapters.AceOfShadows",
     "rootNamespace": "Client.Adapters.AceOfShadows",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "Client.Simulation.AceOfShadows",
         "Client.Adapters.Shared",
         "DCFApixels.DragonECS",

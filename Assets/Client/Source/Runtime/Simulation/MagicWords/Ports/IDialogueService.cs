@@ -1,5 +1,5 @@
 using Client.Simulation.MagicWords.Payload;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 
 namespace Client.Simulation.MagicWords.Ports
 {

@@ -2,7 +2,7 @@
     "name": "Client.Adapters.Shared",
     "rootNamespace": "Client.Adapters.Shared",
     "references": [
-        "Client.Simulation.Shared",
+        "Client.Simulation.Core",
         "DCFApixels.DragonECS",
         "DCFApixels.DragonECS.Unity",
         "MyGameDevTools.SceneLoading",

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Compilation;
@@ -17,7 +17,7 @@ namespace Client.Simulation.Tests
     /// </remarks>
     public sealed class ArchitectureTests
     {
-        private const string SharedAssembly = "Client.Simulation.Shared";
+        private const string SharedAssembly = "Client.Simulation.Core";
 
         /// <summary>Every engine-free simulation assembly.</summary>
         private static readonly string[] SimulationAssemblies =
@@ -41,7 +41,7 @@ namespace Client.Simulation.Tests
         };
 
         /// <summary>Prefixes of assemblies the simulation may legitimately compile against.</summary>
-        /// <remarks><c>Client.Simulation.Shared</c> is allowed for the feature assemblies only;
+        /// <remarks><c>Client.Simulation.Core</c> is allowed for the feature assemblies only;
         /// the Shared assembly itself is checked against the base prefixes.</remarks>
         private static readonly string[] AllowedCompiledReferencePrefixes =
         {
@@ -152,7 +152,7 @@ namespace Client.Simulation.Tests
         public void SharedPorts_LiveInTheSharedAssembly()
         {
             Assert.That(typeof(ILogService).Assembly.GetName().Name, Is.EqualTo(SharedAssembly),
-                "ILogService moved out of the Client.Simulation.Shared assembly.");
+                "ILogService moved out of the Client.Simulation.Core assembly.");
         }
 
         /// <summary>Converts an asmdef reference to an assembly name. It can be a name or a GUID.</summary>

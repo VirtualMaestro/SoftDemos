@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using Client.Simulation.MagicWords.Payload;

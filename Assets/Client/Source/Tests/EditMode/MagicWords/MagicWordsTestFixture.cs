@@ -1,7 +1,7 @@
 // Captured payload: 17 dialogue lines and 5 avatar entries.
 
 using System.IO;
-using Client.Simulation.Shared.Ports;
+using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
