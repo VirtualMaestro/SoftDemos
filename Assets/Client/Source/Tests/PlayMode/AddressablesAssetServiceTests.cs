@@ -17,7 +17,7 @@ namespace Client.Adapters.Tests
         /// <summary>Shipped six-token TMP sprite asset used to verify real content loading.</summary>
         private const string KnownAddress = "art/magic-words/emoji";
 
-        private const string MissingAddress = "dev/this-address-does-not-exist";
+        private const string MissingAddress = "dev/missing/does-not-exist";
         private const float TimeoutSeconds = 15f;
 
         private AddressablesAssetService _source;
