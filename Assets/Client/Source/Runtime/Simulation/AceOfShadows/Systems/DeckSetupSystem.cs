@@ -30,7 +30,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             foreach (var entityId in _world.Where(out ResetCommandAspect _))
             {
                 if (state.IsDealt)
-                    _Reset(ref state);
+                    _Reset();
                 else
                     _log.Warn("ResetDeckCommand ignored because the deck is not dealt.");
 
@@ -40,7 +40,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             foreach (var entityId in _world.Where(out DealCommandAspect _))
             {
                 if (state.IsDealt)
-                    _Reset(ref state);
+                    _Reset();
 
                 _Deal(ref state);
                 _world.DelEntity(entityId);
@@ -80,7 +80,11 @@ namespace Client.Simulation.AceOfShadows.Systems
             state.IsDealt = true;
         }
 
-        private void _Reset(ref DeckStateComp state)
+        /// <summary>
+        /// Takes no state: the world component IS the state, and a parameter that only ever gets
+        /// wiped hides the write from the call site while carrying nothing in.
+        /// </summary>
+        private void _Reset()
         {
             foreach (var entityId in _world.Where(out CardAspect _))
                 _world.DelEntity(entityId);
@@ -88,7 +92,9 @@ namespace Client.Simulation.AceOfShadows.Systems
             foreach (var entityId in _world.Where(out StackAspect _))
                 _world.DelEntity(entityId);
 
-            state = default;
+            // Wipes the counters _Deal never touches - MovesIssued, MovesCompleted, IsComplete -
+            // which is what stops a re-deal inheriting the previous run's progress.
+            _world.Get<DeckStateComp>() = default;
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

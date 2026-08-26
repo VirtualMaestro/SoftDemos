@@ -27,7 +27,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
                 // Resetting an inactive flame is a no-op, not a mistake: closing a demo that was
                 // never opened is a normal path, so it is consumed silently.
                 if (state.IsActive)
-                    _Reset(ref state);
+                    _Reset();
 
                 _world.DelEntity(entityId);
             }
@@ -35,7 +35,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
             foreach (var entityId in _world.Where(out StartCommandAspect _))
             {
                 if (state.IsActive)
-                    _Reset(ref state);
+                    _Reset();
 
                 _Start(ref state);
                 _world.DelEntity(entityId);
@@ -51,7 +51,9 @@ namespace Client.Simulation.PhoenixFlame.Systems
             state.TransitionDurationSeconds = _config.TransitionDurationSeconds;
         }
 
-        private static void _Reset(ref FlameStateComp state) => state = default;
+        /// <summary>Takes no state: the world component IS the state, and a parameter that only
+        /// ever gets wiped carries nothing in.</summary>
+        private void _Reset() => _world.Get<FlameStateComp>() = default;
 
         public void Inject(EcsWorld obj) => _world = obj;
 
