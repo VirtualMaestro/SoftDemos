@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
@@ -10,7 +11,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// stores the image handle or a Failed state; on reload releases everything and re-requests.
     /// </summary>
     internal sealed class AvatarLoadSystem :
-        IEcsRun,
+        IEcsSim,
         IEcsInject<EcsWorld>,
         IEcsInject<IImageLoadService>,
         IEcsInject<ILogService>
@@ -22,15 +23,11 @@ namespace Client.Simulation.MagicWords.Systems
         private EcsPool<RequestAvatarCommand> _requests;
         private EcsPool<AvatarComp> _avatars;
 
-        public void Run()
+        public void Sim()
         {
-            var reload = false;
-
-            foreach (var entityId in _world.Where(out ReloadCommandAspect _))
-            {
-                _reloads.Del(entityId);
-                reload = true;
-            }
+            // Both commands below are read and never deleted: DialogueCleanupSystem owns the one
+            // frame they live, so a reload asked for this frame cannot be seen again on the next.
+            var reload = _reloads.Count > 0;
 
             if (reload)
             {
@@ -45,7 +42,12 @@ namespace Client.Simulation.MagicWords.Systems
                     load.RequestId = 0;
                     load.HandleId = 0;
                     load.State = AvatarLoadState.NotRequested;
-                    _requests.Add(entityId);
+
+                    // A request from this frame's playback sits on a NotRequested speaker, which
+                    // the guard above already skipped — so this never doubles. The check is the
+                    // cheap half of not depending on that reading staying true.
+                    if (_requests.Has(entityId) == false)
+                        _requests.Add(entityId);
                 }
 
                 _log.Info("Reloading avatars.");
@@ -62,8 +64,6 @@ namespace Client.Simulation.MagicWords.Systems
                     load.RequestId = _imageSource.BeginLoad(speaker.Name, avatar.Url);
                     load.State = AvatarLoadState.Loading;
                 }
-
-                _requests.Del(entityId);
             }
 
             foreach (var entityId in _world.Where(out SpeakerAspect aspect))
@@ -119,11 +119,6 @@ namespace Client.Simulation.MagicWords.Systems
 
         public void Inject(IImageLoadService obj) => _imageSource = obj;
         public void Inject(ILogService obj) => _log = obj;
-
-        private sealed class ReloadCommandAspect : EcsAspect
-        {
-            public readonly EcsPool<ReloadAvatarsCommand> _ = Inc;
-        }
 
         private sealed class RequestAspect : EcsAspect
         {

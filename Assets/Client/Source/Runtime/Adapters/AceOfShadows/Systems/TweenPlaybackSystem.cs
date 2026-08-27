@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Simulation.AceOfShadows.Components;
@@ -7,17 +8,18 @@ using DCFApixels.DragonECS;
 
 namespace Client.Adapters.AceOfShadows.Systems
 {
-    /// <summary>Runs the flight, tween and completion cycle through <see cref="CardMovePlayerService"/>.</summary>
+    /// <summary>Starts one tween per flight through <see cref="CardMovePlayerService"/>.</summary>
     /// <remarks>
     /// The simulation puts a card in flight with a <c>MovingComp</c> carrying a slot index and a
-    /// duration. This system moves the entity's view to that slot, marks the entity with its own
-    /// <see cref="TweenRunningTag"/> so it starts one tween per flight, and when the tween ends the
-    /// player queues the entity. The next <see cref="LateRun"/> drains the queue and adds
-    /// <see cref="MoveCompletedCommand"/>, which is the simulation's cue to land the card and drop
-    /// the flight. The queue matters: it keeps every world change on one thread at one point in the
-    /// frame — the player never touches the world, THIS is the one place that writes them.
+    /// duration. This system moves the entity's view to that slot and marks the entity with its own
+    /// <see cref="TweenRunningTag"/> so it starts one tween per flight.
+    /// <para>It does not report the completion. A tween that ends leaves its entity in the player's
+    /// queue, and <c>AceOfShadowsInputSystem</c> drains that queue into <c>MoveCompletedCommand</c>
+    /// on the next frame's Input — a one-frame component written here would be deleted by this same
+    /// frame's Cleanup, unseen by any Sim. The queue is what makes the hand-off legal: the player
+    /// never touches the world, and the world is written from one phase body.</para>
     /// </remarks>
-    public sealed class TweenPlaybackSystem : IEcsInit, IEcsLateRun, IEcsDestroy,
+    public sealed class TweenPlaybackSystem : IEcsInit, IEcsPresent, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<CardMovePlayerService>,
         IEcsInject<CardViewChannel>
@@ -29,25 +31,20 @@ namespace Client.Adapters.AceOfShadows.Systems
         private CardMovePlayerService _tweenPlayer;
         private CardViewChannel _cardViewChannel;
 
-        private EcsTagPool<MoveCompletedCommand> _completedTweens;
         private EcsTagPool<TweenRunningTag> _runningTweens;
 
         public void Init()
         {
             // The component's marker interface picks the pool type, so a tag gets EcsTagPool.
-            _completedTweens = _world.GetPool<MoveCompletedCommand>();
             _runningTweens = _world.GetPool<TweenRunningTag>();
         }
 
-        public void LateRun()
+        public void Present()
         {
-            _HandleCompletedTweens();
-
-            // No views registered means the stage is closed or closing — the stage system runs
-            // earlier in LateRun, so on the teardown frame this cancels in the SAME frame the
-            // views died, before any move could read as failed. The cards in flight are the
-            // simulation's and its reset deletes them; the tween marker is this system's, and
-            // dropping it is all a cancellation is.
+            // No views registered means the stage is closed or closing — the input half runs
+            // earlier in the frame, so on the teardown frame this cancels before any move could
+            // read as failed. The cards in flight are the simulation's and its reset deletes them;
+            // the tween marker is this system's, and dropping it is all a cancellation is.
             if (_cardViewChannel.Handles.Count == 0)
                 _ForgetRunningTweens();
             else
@@ -57,28 +54,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         public void Destroy()
         {
             _tweenPlayer.KillAll();
-        }
-
-        private void _HandleCompletedTweens()
-        {
-            if (!_tweenPlayer.HasCompletedTweens)
-                return;
-
-            foreach (var completion in _tweenPlayer.Completions)
-            {
-                // The entity can die while its tween runs. entlong holds a generation, so a
-                // recycled id reads as dead.
-                if (!completion.TryGetID(out var entityId))
-                {
-                    _log.Warn("A tween completed for an entity that no longer exists. Ignoring.");
-                    continue;
-                }
-
-                _runningTweens.TryDel(entityId);
-                _completedTweens.TryAdd(entityId);
-            }
-
-            _tweenPlayer.ClearCompletions();
         }
 
         private void _ForgetRunningTweens()
@@ -97,10 +72,14 @@ namespace Client.Adapters.AceOfShadows.Systems
 
                 if (_viewRegistry.TryResolve(handleId, out var view, out var card) == false)
                 {
-                    // Report a failure as a completion. The simulation must not wait forever.
+                    // Report a failure as a completion, through the queue rather than the world:
+                    // the simulation must not wait forever, and a *Command written in Present dies
+                    // in this frame's Cleanup before any Sim sees it. Input drains it next frame.
                     _log.Error($"Entity {entityId}: view handle #{handleId} does not resolve. " +
                                "Reporting the flight as finished so the simulation can land it.");
-                    _completedTweens.TryAdd(entityId);
+                    _tweenPlayer.ReportCompleted(_world.GetEntityLong(entityId));
+                    // Marked as running so the report is made once. Input drops the tag with it.
+                    _runningTweens.TryAdd(entityId);
                     continue;
                 }
 

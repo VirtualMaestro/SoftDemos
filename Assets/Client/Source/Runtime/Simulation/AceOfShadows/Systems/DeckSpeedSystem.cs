@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
@@ -8,7 +9,7 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Consumes speed-change commands: clamps the multiplier to 1–8 and recomputes the move
     /// interval and duration.
     /// </summary>
-    internal sealed class DeckSpeedSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class DeckSpeedSystem : IEcsSim, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private readonly AceOfShadowsConfig _config;
 
@@ -20,7 +21,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             _config = config;
         }
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<DeckStateComp>();
 
@@ -35,8 +36,6 @@ namespace Client.Simulation.AceOfShadows.Systems
                     _log.Warn($"SetDeckSpeedCommand ignored invalid multiplier {requestedMultiplier}.");
                 else
                     _Apply(ref state, requestedMultiplier);
-
-                _world.DelEntity(entityId);
             }
         }
 

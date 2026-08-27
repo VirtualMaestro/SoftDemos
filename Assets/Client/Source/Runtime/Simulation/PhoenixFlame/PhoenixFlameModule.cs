@@ -23,6 +23,7 @@ namespace Client.Simulation.PhoenixFlame
             builder.Add(new FlameSetupSystem(_config));
             builder.Add(new FlamePhaseRequestSystem());
             builder.Add(new FlameTransitionSystem());
+            builder.Add(new FlameCleanupSystem());
         }
     }
 }

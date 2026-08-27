@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
@@ -72,7 +73,7 @@ namespace Client.Adapters.Tests
 
             commandEntityId = _world.NewEntity();
             _world.GetPool<ResetDialogueCommand>().Add(commandEntityId);
-            _pipeline.Run();
+            _Tick();
 
             Assert.That(_CountLines(), Is.Zero);
             Assert.That(_CountSpeakers(), Is.Zero);
@@ -125,7 +126,7 @@ namespace Client.Adapters.Tests
 
             while (_world.Get<DialogueStateComp>().State != DialogueLoadState.Ready)
             {
-                _pipeline.Run();
+                _Tick();
                 Assert.That(_world.Get<DialogueStateComp>().State, Is.Not.EqualTo(DialogueLoadState.Failed));
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     $"Dialogue did not reach Ready within {TimeoutSeconds}s.");
@@ -140,11 +141,24 @@ namespace Client.Adapters.Tests
 
             while (loads.Read(speakerEntityId).State is AvatarLoadState.NotRequested or AvatarLoadState.Loading)
             {
-                _pipeline.Run();
+                _Tick();
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     $"Avatar did not settle within {TimeoutSeconds}s.");
                 yield return null;
             }
+        }
+
+        /// <summary>One headless tick: <c>Input(); Sim(); Cleanup();</c> — the server driver's shape.</summary>
+        /// <remarks>
+        /// This fixture builds the simulation module and nothing else, so Present has no system to
+        /// call. Cleanup still closes the tick: the commands this test writes by hand are one frame
+        /// long and the assertions below depend on them being gone by the next one.
+        /// </remarks>
+        private void _Tick()
+        {
+            _pipeline.Input();
+            _pipeline.Sim();
+            _pipeline.Cleanup();
         }
 
         private int _CountSpeakers()

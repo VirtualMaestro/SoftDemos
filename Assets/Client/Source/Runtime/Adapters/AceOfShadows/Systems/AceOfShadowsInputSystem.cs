@@ -1,4 +1,5 @@
 using System;
+using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
@@ -6,6 +7,7 @@ using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.Core.Components;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
@@ -18,16 +20,16 @@ namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>
     /// Runs the card demo's screen lifecycle: loads atlas+background, spawns the card view pool,
-    /// drains the speed button into a command, tears everything down on close.
+    /// drains the speed button and the finished tweens into commands, tears everything down on close.
     /// </summary>
     /// <remarks>
     /// The demo's drawing lives in <see cref="CardBindingSystem"/>, <see cref="DeckHudSystem"/>
     /// and <see cref="TweenPlaybackSystem"/>: they are the half that reads the world and paints it,
-    /// so this system keeps nothing but the decisions. What is left here is the port polling, the
-    /// content it owns and must destroy, and every world write — an Input phase in everything but
-    /// the interface name, which arrives in the flip.
+    /// so this system keeps the decisions. What is here is what the Input phase is for — the port
+    /// polling, the recorded press, the tween player's completion queue, the content it owns and
+    /// must destroy, and every write into the world.
     /// </remarks>
-    public sealed class AceOfShadowsInputSystem : IEcsLateRun, IEcsDestroy,
+    public sealed class AceOfShadowsInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
@@ -69,15 +71,23 @@ namespace Client.Adapters.AceOfShadows.Systems
         private int _screenHeight = -1;
         private int _speedIndex;
         private bool _contentReady;
+        private EcsTagPool<MoveCompletedCommand> _completedMoves;
+        private EcsTagPool<TweenRunningTag> _runningTweens;
 
         public AceOfShadowsInputSystem(AceOfShadowsConfig config)
         {
             _config = config;
         }
 
-        public void LateRun()
+        public void Input()
         {
-            if (_aosScreen != null && _state != StageState.Closing &&
+            _DrainCompletedTweens();
+
+            // Not "_aosScreen != null": what must be torn down is this system's own state — the
+            // requests, the sprites, the view pool — and that is what a non-Idle state says. The
+            // screen is a Unity object that can be destroyed by the scene unload before this phase
+            // runs again, and gating teardown on it leaked every request on the frames where it was.
+            if (_state != StageState.Idle && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  !_screens.TryGet<AceOfShadowsScreen>(out _)))
                 _TransitionTo(StageState.Closing);
@@ -102,6 +112,39 @@ namespace Client.Adapters.AceOfShadows.Systems
         public void Destroy()
         {
             _Teardown(false);
+        }
+
+        /// <summary>Turns the tween player's finished flights into <c>MoveCompletedCommand</c>s.</summary>
+        /// <remarks>
+        /// The completion happens on a DOTween callback, at whatever point in the frame the tween
+        /// ends; the player queues the entity and touches nothing else. This is where that leaves
+        /// the outside world and enters the simulation's, which is the definition of the Input
+        /// phase — and the reason <see cref="TweenPlaybackSystem"/>, which draws, cannot do it: a
+        /// one-frame component produced in Present is deleted unread, which <c>DEU0131</c> reports.
+        /// <para>The cost is one frame of lag on a landing, and it is the last one in the project.
+        /// It is a property of where the completion enters, not of where somebody put an
+        /// <c>Add</c> call in the builder.</para>
+        /// </remarks>
+        private void _DrainCompletedTweens()
+        {
+            if (_cardMovePlayer.HasCompletedTweens == false)
+                return;
+
+            foreach (var completion in _cardMovePlayer.Completions)
+            {
+                // The entity can die while its tween runs. entlong holds a generation, so a
+                // recycled id reads as dead.
+                if (completion.TryGetID(out var entityId) == false)
+                {
+                    _log.Warn("A tween completed for an entity that no longer exists. Ignoring.");
+                    continue;
+                }
+
+                _runningTweens.TryDel(entityId);
+                _completedMoves.TryAdd(entityId);
+            }
+
+            _cardMovePlayer.ClearCompletions();
         }
 
         private void _BeginLoadingIfNeeded()
@@ -336,7 +379,13 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         private void _TransitionTo(StageState next) => _state = next;
 
-        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _completedMoves = obj.GetPool<MoveCompletedCommand>();
+            _runningTweens = obj.GetPool<TweenRunningTag>();
+        }
+
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;

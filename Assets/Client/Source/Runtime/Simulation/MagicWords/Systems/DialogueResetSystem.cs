@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
@@ -9,7 +10,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// line entities, and zeroes the dialogue state.
     /// </summary>
     internal sealed class DialogueResetSystem :
-        IEcsRun,
+        IEcsSim,
         IEcsDestroy,
         IEcsInject<EcsWorld>,
         IEcsInject<IDialogueService>,
@@ -18,18 +19,12 @@ namespace Client.Simulation.MagicWords.Systems
         private EcsWorld _world;
         private IDialogueService _dialogueSource;
         private IImageLoadService _imageSource;
+        private EcsPool<ResetDialogueCommand> _resetCommands;
 
-        public void Run()
+        public void Sim()
         {
-            var hasResetCommand = false;
-
-            foreach (var entityId in _world.Where(out ResetCommandAspect _))
-            {
-                _world.DelEntity(entityId);
-                hasResetCommand = true;
-            }
-
-            if (hasResetCommand == false)
+            // Reads the command and never deletes it: DialogueCleanupSystem owns its one frame.
+            if (_resetCommands.Count == 0)
                 return;
 
             _ReleaseDialogueRequest();
@@ -45,8 +40,8 @@ namespace Client.Simulation.MagicWords.Systems
             playback = default;
             ref var state = ref _world.Get<DialogueStateComp>();
             state = default;
-            ref var payload = ref _world.Get<DialoguePayloadEvent>();
-            payload = default;
+            // The payload event needs no wipe here: it lives one frame and cleanup ends it, so a
+            // reset cannot leave a stale payload behind for anyone to ingest.
         }
 
         void IEcsDestroy.Destroy()
@@ -88,14 +83,14 @@ namespace Client.Simulation.MagicWords.Systems
             }
         }
 
-        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _resetCommands = obj.GetPool<ResetDialogueCommand>();
+        }
+
         public void Inject(IDialogueService obj) => _dialogueSource = obj;
         public void Inject(IImageLoadService obj) => _imageSource = obj;
-
-        private sealed class ResetCommandAspect : EcsAspect
-        {
-            public readonly EcsPool<ResetDialogueCommand> Commands = Inc;
-        }
 
         private sealed class SpeakerAspect : EcsAspect
         {

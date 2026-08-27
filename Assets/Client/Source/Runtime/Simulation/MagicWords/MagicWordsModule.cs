@@ -19,6 +19,7 @@ namespace Client.Simulation.MagicWords
             builder.Add(new DialogueIngestSystem(_config));
             builder.Add(new DialoguePlaybackSystem(_config));
             builder.Add(new AvatarLoadSystem());
+            builder.Add(new DialogueCleanupSystem());
         }
     }
 }

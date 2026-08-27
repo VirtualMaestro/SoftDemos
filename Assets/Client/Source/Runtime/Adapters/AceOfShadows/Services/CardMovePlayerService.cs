@@ -30,6 +30,15 @@ namespace Client.Adapters.AceOfShadows.Services
 
         public void ClearCompletions() => _completedTweens.Clear();
 
+        /// <summary>Queues a completion for a flight that will never run.</summary>
+        /// <remarks>
+        /// The caller found no view to move. The simulation is waiting for this card either way, so
+        /// the failure enters by the same door a real completion does — which keeps the queue the
+        /// one and only source of completions, and keeps the world write in the one phase that is
+        /// allowed to make it.
+        /// </remarks>
+        public void ReportCompleted(entlong entity) => _completedTweens.Add(entity);
+
         public void StartMove(Transform view, CardView card, Vector3 target,
             float duration, entlong entity)
         {

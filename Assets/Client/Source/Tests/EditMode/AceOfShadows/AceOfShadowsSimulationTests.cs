@@ -109,7 +109,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             ref var moving = ref World.GetPool<MovingComp>().Add(cardId);
             moving.TargetStack = 1;
             moving.DurationSeconds = 0.5f;
-            Pipeline.Run();
+            Pipeline.Tick();
             Assert.That(Playback.InFlightCount, Is.EqualTo(1));
         }
 
@@ -134,6 +134,13 @@ namespace Client.Simulation.Tests.AceOfShadows
             Assert.That(_CountCards(), Is.EqualTo(144), $"{state}");
         }
 
+        /// <summary>Issuing the last move is not landing it, and landing it takes exactly one tick.</summary>
+        /// <remarks>
+        /// It used to take two. The adapter reported a completion in <c>LateRun</c> and the
+        /// simulation read it in the next frame's <c>Run</c>, so every landing carried a frame of
+        /// lag nobody had chosen. Under the phases the completion enters in Input and the Sim of
+        /// the same tick lands it, and the second tick this test used to need is gone.
+        /// </remarks>
         [Test]
         public void Completion_IsNotFlaggedUntilTheLastMoveLands()
         {
@@ -147,9 +154,8 @@ namespace Client.Simulation.Tests.AceOfShadows
             Assert.That(issued.IsComplete, Is.False, $"{issued}");
 
             _Tick(0f);
-            Assert.That(World.Get<DeckStateComp>().IsComplete, Is.False);
-            _Tick(0f);
-            Assert.That(World.Get<DeckStateComp>().IsComplete, Is.True);
+            Assert.That(World.Get<DeckStateComp>().IsComplete, Is.True,
+                "The last flight finishes in this tick's Input and lands in the same tick's Sim.");
         }
 
         [Test]
@@ -229,7 +235,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             Time.DeltaSeconds = 0f;
             World.GetPool<ResetDeckCommand>().Add(World.NewEntity());
             World.GetPool<DealDeckCommand>().Add(World.NewEntity());
-            Pipeline.Run();
+            Pipeline.Tick();
 
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.IsDealt, Is.True, $"{state}");
@@ -313,7 +319,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             Time.DeltaSeconds = 0.125f;
             World.GetPool<SetDeckSpeedCommand>().Add(World.NewEntity()).Multiplier = 8f;
 
-            Pipeline.Run();
+            Pipeline.Tick();
 
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.MovesIssued, Is.EqualTo(1), $"{state}");
@@ -382,7 +388,7 @@ namespace Client.Simulation.Tests.AceOfShadows
         {
             Time.DeltaSeconds = 0f;
             World.GetPool<SetDeckSpeedCommand>().Add(World.NewEntity()).Multiplier = multiplier;
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         private void _SetStackCount(int stackIndex, int count)

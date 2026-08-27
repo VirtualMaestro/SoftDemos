@@ -41,27 +41,27 @@ namespace Client.Simulation.Tests.PhoenixFlame
         {
             Time.DeltaSeconds = 0f;
             World.GetPool<StartFlameCommand>().Add(World.NewEntity());
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Advance()
         {
             Time.DeltaSeconds = 0f;
             World.GetPool<AdvanceFlamePhaseCommand>().Add(World.NewEntity());
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Reset()
         {
             Time.DeltaSeconds = 0f;
             World.GetPool<ResetFlameCommand>().Add(World.NewEntity());
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Tick(float seconds)
         {
             Time.DeltaSeconds = seconds;
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         private void _Build(PhoenixFlameConfig config)

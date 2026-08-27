@@ -1,4 +1,5 @@
 using System;
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.Tests.Fakes.Services;
@@ -184,7 +185,7 @@ namespace Client.Simulation.Tests
 
         /// <summary>Throwaway probe: exists only to prove the injection arrived.</summary>
         private sealed class AllPortsProbeSystem :
-            IEcsRun,
+            IEcsSim,
             IEcsInject<ITimeService>,
             IEcsInject<ILogService>,
             IEcsInject<ISceneService>,
@@ -199,7 +200,7 @@ namespace Client.Simulation.Tests
             public IDialogueService Dialogue { get; private set; }
             public IImageLoadService Images { get; private set; }
 
-            public void Run() { }
+            public void Sim() { }
 
             public override string ToString() =>
                 $"AllPortsProbeSystem(time={_Describe(Time)}, " +
@@ -217,11 +218,11 @@ namespace Client.Simulation.Tests
         }
 
         /// <summary>Single-port probe for the negative and AddNode cases.</summary>
-        private sealed class TimeProbeSystem : IEcsRun, IEcsInject<ITimeService>
+        private sealed class TimeProbeSystem : IEcsSim, IEcsInject<ITimeService>
         {
             public ITimeService Time { get; private set; }
 
-            public void Run() { }
+            public void Sim() { }
 
             public override string ToString() =>
                 $"TimeProbeSystem(time={(Time == null ? "<null>" : Time.ToString())})";

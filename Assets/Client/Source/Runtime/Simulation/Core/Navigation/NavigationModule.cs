@@ -15,6 +15,7 @@ namespace Client.Simulation.Core.Navigation
         public void Import(EcsPipeline.Builder builder)
         {
             builder.Add(new NavigationSystem(_catalog));
+            builder.Add(new NavigationCleanupSystem());
         }
     }
 }

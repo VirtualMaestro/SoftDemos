@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.Core.Navigation.Components;
 using DCFApixels.DragonECS;
@@ -15,7 +16,7 @@ namespace Client.Adapters.Shell.Systems
     /// <c>MenuScreen.SetDemos</c> enabling the buttons and <c>BuildAndInit</c> injecting the world.
     /// A recorded press just waits for the first tick.</para>
     /// </remarks>
-    public sealed class ShellInputSystem : IEcsLateRun, IEcsInject<EcsWorld>
+    public sealed class ShellInputSystem : IEcsInput, IEcsInject<EcsWorld>
     {
         private readonly MenuScreen _menu;
         private readonly DemoHudView _demoHud;
@@ -30,7 +31,7 @@ namespace Client.Adapters.Shell.Systems
             _demoHud = demoHud;
         }
 
-        public void LateRun()
+        public void Input()
         {
             if (_menu.RequestedDemoIndex != MenuScreen.NoDemoRequested)
             {

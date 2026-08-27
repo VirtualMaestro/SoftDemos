@@ -52,14 +52,12 @@ namespace Client.Adapters.Tests
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
             var world = entryPoint.World;
 
-            // T6: an advance asked for before the flame starts is dropped by the simulation, not
-            // queued. The stage keeps the button off for the whole load so this cannot come from a
-            // real press — the command is written by hand to prove the guard behind it.
-            LogAssert.Expect(LogType.Warning, new Regex(
-                @"AdvanceFlamePhaseCommand ignored because the flame is not active"));
-            world.GetPool<AdvanceFlamePhaseCommand>().Add(world.NewEntity());
-            yield return null;
-            yield return null;
+            // The "an advance before the flame starts is dropped, not queued" guard used to be
+            // proved here by writing AdvanceFlamePhaseCommand by hand. It cannot be: a command
+            // written from a test coroutine is written outside every phase, and this frame's
+            // Cleanup deletes it before any Sim reads it — the defect DEU0130 reports in product
+            // code, reproduced by a test. The guard is covered where a fixture owns the driver:
+            // PhoenixFlameSimulationTests, twice.
             Assert.That(world.Get<FlameStateComp>().IsTransitioning, Is.False);
             Assert.That(world.Get<FlameStateComp>().PhaseChangeCount, Is.Zero);
 
@@ -173,7 +171,7 @@ namespace Client.Adapters.Tests
             yield return _WaitForAnimatorState(animator, OrangeStateHash, 2f);
             Assert.That(world.Get<FlameStateComp>().PhaseChangeCount, Is.EqualTo(3));
 
-            world.GetPool<CloseDemoCommand>().Add(world.NewEntity());
+            ShellInput.PressClose();
             yield return _WaitForState(world, ScreenId.Unloading, LoadTimeoutSeconds);
             yield return _WaitForState(world, ScreenId.Menu, LoadTimeoutSeconds);
             yield return null;
@@ -243,13 +241,13 @@ namespace Client.Adapters.Tests
 
         private static IEnumerator _Open(EcsWorld world)
         {
-            world.GetPool<OpenDemoCommand>().Add(world.NewEntity()).DemoIndex = PhoenixFlameDemoIndex;
+            ShellInput.PressDemo(PhoenixFlameDemoIndex);
             yield return _WaitForState(world, ScreenId.Demo, LoadTimeoutSeconds);
         }
 
         private static IEnumerator _Close(EcsWorld world)
         {
-            world.GetPool<CloseDemoCommand>().Add(world.NewEntity());
+            ShellInput.PressClose();
             yield return _WaitForState(world, ScreenId.Menu, LoadTimeoutSeconds);
         }
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
@@ -17,7 +18,7 @@ namespace Client.Adapters.Shell.Systems
     /// not retried. Every sprite from <see cref="SpriteAtlas.GetSprite"/> is a copy this system
     /// owns and must destroy in <see cref="Destroy"/>.
     /// </remarks>
-    public sealed class ShellStageSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
+    public sealed class ShellStageSystem : IEcsInput, IEcsDestroy, IEcsInject<EcsWorld>,
         IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>, IEcsInject<SharedUiSprites>
     {
         /// <summary>How many Addressables requests the shell keeps open for the whole session.</summary>
@@ -54,7 +55,7 @@ namespace Client.Adapters.Shell.Systems
             _demos = demos;
         }
 
-        public void LateRun()
+        public void Input()
         {
             switch (_state)
             {

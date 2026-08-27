@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
@@ -12,7 +13,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// Mirrors deck state onto the HUD: stack counters, speed label, completion message, and
     /// counter positions after a layout change.
     /// </summary>
-    public sealed class DeckHudSystem : IEcsLateRun, IEcsInject<EcsWorld>,
+    public sealed class DeckHudSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<ScreenRegistryService>
     {
         private static readonly Vector3 CounterOffset = new(0f, 1.5f, 0f);
@@ -28,7 +29,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         private float _speedMultiplier = float.NaN;
         private bool _isComplete;
 
-        public void LateRun()
+        public void Present()
         {
             if (_screens.TryGet(out AceOfShadowsScreen current) == false)
             {

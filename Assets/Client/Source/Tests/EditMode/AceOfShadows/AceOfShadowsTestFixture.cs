@@ -14,7 +14,7 @@ namespace Client.Simulation.Tests.AceOfShadows
         protected EcsPipeline Pipeline { get; private set; }
         protected FakeTimeService Time { get; private set; }
         protected FakeLogService Log { get; private set; }
-        protected FakeMovePlaybackSystem Playback { get; private set; }
+        protected FakeMovePlayerService Playback { get; private set; }
 
         [SetUp]
         public void SetUp()
@@ -22,13 +22,17 @@ namespace Client.Simulation.Tests.AceOfShadows
             World = new EcsWorld();
             Time = new FakeTimeService();
             Log = new FakeLogService();
-            Playback = new FakeMovePlaybackSystem();
+            Playback = new FakeMovePlayerService();
             Pipeline = EcsPipeline.New()
                 .Inject(World)
                 .Inject<ITimeService>(Time)
                 .Inject<ILogService>(Log)
+                .Inject(Playback)
                 .AddModule(new AceOfShadowsModule(new AceOfShadowsConfig()))
-                .Add(Playback)
+                // The two halves the real adapter has: one starts flights in Present, one drains
+                // the finished ones in Input. Both are needed for a tick to look like a frame.
+                .Add(new FakeMoveCompletionSystem())
+                .Add(new FakeMovePlaybackSystem())
                 .BuildAndInit();
         }
 
@@ -47,7 +51,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             Time.DeltaSeconds = 0f;
             var entityId = World.NewEntity();
             World.GetPool<DealDeckCommand>().Add(entityId);
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Reset()
@@ -55,13 +59,13 @@ namespace Client.Simulation.Tests.AceOfShadows
             Time.DeltaSeconds = 0f;
             var entityId = World.NewEntity();
             World.GetPool<ResetDeckCommand>().Add(entityId);
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Tick(float seconds)
         {
             Time.DeltaSeconds = seconds;
-            Pipeline.Run();
+            Pipeline.Tick();
         }
     }
 }

@@ -62,19 +62,19 @@ namespace Client.Simulation.Tests.MagicWords
         {
             var entityId = World.NewEntity();
             World.GetPool<LoadDialogueCommand>().Add(entityId);
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Reset()
         {
             var entityId = World.NewEntity();
             World.GetPool<ResetDialogueCommand>().Add(entityId);
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Tick()
         {
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         protected void _Advance(float seconds)
@@ -83,7 +83,7 @@ namespace Client.Simulation.Tests.MagicWords
 
             try
             {
-                Pipeline.Run();
+                Pipeline.Tick();
             }
             finally
             {

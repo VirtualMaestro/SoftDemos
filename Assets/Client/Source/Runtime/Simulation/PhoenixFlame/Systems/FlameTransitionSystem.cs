@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
@@ -8,13 +9,13 @@ namespace Client.Simulation.PhoenixFlame.Systems
     /// Counts the running transition down each frame, updates its 0..1 progress, and swaps the
     /// current phase when time runs out.
     /// </summary>
-    internal sealed class FlameTransitionSystem : IEcsRun, IEcsInject<EcsWorld>,
+    internal sealed class FlameTransitionSystem : IEcsSim, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>
     {
         private EcsWorld _world;
         private ITimeService _time;
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<FlameStateComp>();
 

@@ -207,7 +207,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
             World.GetPool<StartFlameCommand>().Add(World.NewEntity());
             World.GetPool<AdvanceFlamePhaseCommand>().Add(World.NewEntity());
 
-            Pipeline.Run();
+            Pipeline.Tick();
 
             ref var state = ref World.Get<FlameStateComp>();
             Assert.That(state.IsActive, Is.True, $"{state}");

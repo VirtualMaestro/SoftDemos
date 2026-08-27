@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
@@ -8,14 +9,14 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Once per interval picks the top card of the source stack and puts it in flight, keeping the
     /// leftover time so the rhythm stays even.
     /// </summary>
-    internal sealed class CardCadenceSystem : IEcsRun, IEcsInject<EcsWorld>,
+    internal sealed class CardCadenceSystem : IEcsSim, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILogService>
     {
         private EcsWorld _world;
         private ITimeService _time;
         private ILogService _log;
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<DeckStateComp>();
 

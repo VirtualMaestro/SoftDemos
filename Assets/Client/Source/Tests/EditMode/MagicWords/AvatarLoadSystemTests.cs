@@ -257,14 +257,14 @@ namespace Client.Simulation.Tests.MagicWords
         private void _RequestAvatar(int speakerEntityId)
         {
             World.GetPool<RequestAvatarCommand>().Add(speakerEntityId);
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         private void _Reload()
         {
             var entityId = World.NewEntity();
             World.GetPool<ReloadAvatarsCommand>().Add(entityId);
-            Pipeline.Run();
+            Pipeline.Tick();
         }
 
         private AvatarLoadState _State(int speakerEntityId) =>

@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
 using DCFApixels.DragonECS;
 
@@ -10,11 +11,11 @@ namespace Client.Adapters.MagicWords.Systems
     /// own entity, so the entity goes with it. This becomes an <c>IEcsCleanup</c> system unchanged
     /// once the phase interfaces exist.
     /// </remarks>
-    public sealed class MagicWordsCleanupSystem : IEcsLateRun, IEcsInject<EcsWorld>
+    public sealed class MagicWordsCleanupSystem : IEcsCleanup, IEcsInject<EcsWorld>
     {
         private EcsWorld _world;
 
-        public void LateRun()
+        public void Cleanup()
         {
             foreach (var entityId in _world.Where(out LogResetAspect _))
                 _world.DelEntity(entityId);

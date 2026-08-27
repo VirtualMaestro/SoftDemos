@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
@@ -18,13 +19,10 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// <remarks>
     /// The Animator, the phase label and the button state moved to
     /// <see cref="PhoenixFlameViewSystem"/>, which is the half that reads the world and draws.
-    /// What is left is the port polling, the content this system owns and must destroy, and every
-    /// world write — an Input phase in everything but the interface name, which arrives in the flip.
-    /// <para>The <c>Starting</c> state exists because the start costs one frame: this system runs
-    /// in <c>LateRun</c> and <c>FlameSetupSystem</c> in <c>Run</c>, so <c>StartFlameCommand</c> is
-    /// taken a frame after it is written. The phases remove that hop and the state goes with it.</para>
+    /// What is left is what the Input phase is for: the port polling, the recorded press, the
+    /// content this system owns and must destroy, and every write into the world.
     /// </remarks>
-    public sealed class PhoenixFlameInputSystem : IEcsLateRun, IEcsDestroy,
+    public sealed class PhoenixFlameInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
     {
@@ -63,9 +61,13 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private int _screenWidth = -1;
         private int _screenHeight = -1;
 
-        public void LateRun()
+        public void Input()
         {
-            if (_flameScreen != null && _state != StageState.Closing &&
+            // Not "_flameScreen != null": what must be torn down is this system's own state, and
+            // that is what a non-Idle state says. The screen is a Unity object the scene unload can
+            // destroy before this phase runs again — see AceOfShadowsInputSystem for the leak that
+            // gating on it caused.
+            if (_state != StageState.Idle && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  _screens.TryGet<PhoenixFlameScreen>(out _) == false))
                 _TransitionTo(StageState.Closing);
@@ -77,9 +79,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
                     break;
                 case StageState.Loading:
                     _ContinueLoading();
-                    break;
-                case StageState.Starting:
-                    _ContinueStarting();
                     break;
                 case StageState.Ready:
                     _RunReady();
@@ -128,21 +127,13 @@ namespace Client.Adapters.PhoenixFlame.Systems
             }
 
             _flameScreen.Background.sprite = _backgroundSprite;
-            // The screen is covered now, so the shell can hand over. Starting waits only for the
-            // simulation to take StartFlameCommand, which changes nothing on screen.
+            // The screen is covered now, so the shell can hand over.
             _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
             _flameScreen.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
+            // FlameSetupSystem takes this in the Sim phase, which is why there is no longer a
+            // Starting state to wait in: the view half finds the flame already active.
             _world.GetPool<StartFlameCommand>().Add(_world.NewEntity());
-            _TransitionTo(StageState.Starting);
-        }
-
-        private void _ContinueStarting()
-        {
-            // The simulation consumes StartFlameCommand on its next Run, so this waits one frame.
-            if (_world.Get<FlameStateComp>().IsActive == false)
-                return;
-
             // Discard a press made during the load. The screen was not running yet.
             _flameScreen.AdvanceRequested = false;
             _TransitionTo(StageState.Ready);

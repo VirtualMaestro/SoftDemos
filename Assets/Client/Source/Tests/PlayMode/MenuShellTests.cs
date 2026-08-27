@@ -32,8 +32,7 @@ namespace Client.Adapters.Tests
             Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
 
             var world = entryPoint.World;
-            var openEntity = world.NewEntity();
-            world.GetPool<OpenDemoCommand>().Add(openEntity).DemoIndex = 0;
+            ShellInput.PressDemo(0);
 
             yield return _WaitForState(world, ScreenId.Demo);
 
@@ -42,13 +41,16 @@ namespace Client.Adapters.Tests
             Assert.That(SceneManager.GetSceneByName(DemoScene).isLoaded, Is.True,
                 $"Addressable scene '{DemoScene}' was not loaded.");
 
-            var closeEntity = world.NewEntity();
-            world.GetPool<CloseDemoCommand>().Add(closeEntity);
+            ShellInput.PressClose();
 
             yield return _WaitForState(world, ScreenId.Menu);
 
             var closed = world.Get<ScreenStateComp>();
             Assert.That(closed.ActiveDemoIndex, Is.EqualTo(-1), $"{closed}");
+            // The unload operation reports Done inside the Sim that reads it, and SceneManager
+            // drops the scene from its own list a frame later. This waits for the engine, not for
+            // the simulation, which already answered.
+            yield return null;
             Assert.That(SceneManager.GetSceneByName(DemoScene).IsValid(), Is.False,
                 $"Addressable scene '{DemoScene}' was not unloaded.");
 
@@ -165,8 +167,7 @@ namespace Client.Adapters.Tests
                 "The menu must appear once the shell skin is applied.");
 
             var world = entryPoint.World;
-            var openEntity = world.NewEntity();
-            world.GetPool<OpenDemoCommand>().Add(openEntity).DemoIndex = 0;
+            ShellInput.PressDemo(0);
 
             var sawIndicator = false;
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
@@ -207,8 +208,7 @@ namespace Client.Adapters.Tests
             Assert.That(backdrop.activeInHierarchy, Is.False,
                 "The menu backdrop must be gone while a demo is open; it draws over the demo.");
 
-            var closeEntity = world.NewEntity();
-            world.GetPool<CloseDemoCommand>().Add(closeEntity);
+            ShellInput.PressClose();
             yield return _WaitForState(world, ScreenId.Menu);
             yield return null;
 

@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
@@ -10,7 +11,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// payload (or a Failed state) when it completes.
     /// </summary>
     internal sealed class DialogueFetchSystem :
-        IEcsRun,
+        IEcsSim,
         IEcsInject<EcsWorld>,
         IEcsInject<IDialogueService>,
         IEcsInject<ILogService>
@@ -19,11 +20,11 @@ namespace Client.Simulation.MagicWords.Systems
         private IDialogueService _dialogueSource;
         private ILogService _log;
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<DialogueStateComp>();
 
-            foreach (var entityId in _world.Where(out LoadCommandAspect _))
+            foreach (var loadEntity in _world.Where(out LoadCommandAspect _))
             {
                 if (state.State == DialogueLoadState.Loading ||
                     state.State == DialogueLoadState.Ready)
@@ -33,8 +34,6 @@ namespace Client.Simulation.MagicWords.Systems
                     state.RequestId = _dialogueSource.BeginLoad();
                     state.State = DialogueLoadState.Loading;
                 }
-
-                _world.DelEntity(entityId);
             }
 
             if (state.State != DialogueLoadState.Loading || state.RequestId == 0)
@@ -56,8 +55,7 @@ namespace Client.Simulation.MagicWords.Systems
                     return;
                 }
 
-                ref var payloadEvent = ref _world.Get<DialoguePayloadEvent>();
-                payloadEvent.Payload = payload;
+                _world.GetPool<DialoguePayloadEvent>().Add(_world.NewEntity()).Payload = payload;
                 return;
             }
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
@@ -21,7 +22,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// than direct calls from the stage system — systems must never hold other systems (see
     /// SystemIsolationTests).
     /// </summary>
-    public sealed class DialogueLogSystem : IEcsLateRun, IEcsDestroy,
+    public sealed class DialogueLogSystem : IEcsPresent, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
         IEcsInject<FadePlayerService>, IEcsInject<DialogueLogChannel>
     {
@@ -50,7 +51,7 @@ namespace Client.Adapters.MagicWords.Systems
         private EcsTagPool<DialogueLogResetEvent> _logReset;
         private VList _list;
 
-        public void LateRun()
+        public void Present()
         {
             if (_logReset.Count > 0)
                 _ClearViews();

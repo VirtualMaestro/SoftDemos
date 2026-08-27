@@ -1,103 +1,56 @@
-using System.Collections.Generic;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Components;
+using Client.Simulation.Core.Phases;
+using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.Tests.Fakes.Systems
 {
-    /// <summary>
-    /// EditMode stand-in for TweenPlaybackSystem's LateRun contract. It re-implements that contract
-    /// because the EditMode assembly deliberately does not reference Client.Adapters.Unity.
-    /// </summary>
-    public sealed class FakeMovePlaybackSystem : IEcsRun, IEcsInject<EcsWorld>
+    /// <summary>EditMode stand-in for <c>TweenPlaybackSystem</c>: starts one flight per move.</summary>
+    /// <remarks>
+    /// Present, like the system it stands in for, and for the same reason: a flight is started
+    /// against a view, after the Sim that issued it, in the same frame. It writes no one-frame
+    /// component — <c>FakeMoveCompletionSystem</c> does that from Input, because anything written
+    /// here would be deleted by this frame's Cleanup before a Sim could read it.
+    /// <para>This assembly references no adapter assembly on purpose, so the contract is
+    /// re-implemented rather than reused. The split into two systems and a player service is not
+    /// decoration: it is what makes the fake's timing the real one's.</para>
+    /// </remarks>
+    public sealed class FakeMovePlaybackSystem : IEcsPresent, IEcsInject<EcsWorld>,
+        IEcsInject<FakeMovePlayerService>
     {
-        private readonly List<PendingMove> _pending = new();
-
         private EcsWorld _world;
+        private FakeMovePlayerService _player;
 
-        public int CompleteAfterTicks { get; set; } = 1;
-        public bool DropAllMoves { get; set; }
-        public int InFlightCount => _pending.Count;
-
-        public void Run()
-        {
-            _AdvancePendingMoves();
-            _StartNewMoves();
-        }
-
-        private void _AdvancePendingMoves()
-        {
-            for (var index = _pending.Count - 1; index >= 0; index--)
-            {
-                var pending = _pending[index];
-
-                if (pending.Entity.TryGetID(out var entityId) == false)
-                {
-                    _pending.RemoveAt(index);
-                    continue;
-                }
-
-                pending.ElapsedTicks++;
-
-                if (pending.ElapsedTicks < CompleteAfterTicks)
-                {
-                    _pending[index] = pending;
-                    continue;
-                }
-
-                _world.GetPool<MoveCompletedCommand>().TryAdd(entityId);
-                _pending.RemoveAt(index);
-            }
-        }
-
-        private void _StartNewMoves()
+        public void Present()
         {
             foreach (var entityId in _world.Where(out MoveAspect aspect))
             {
-                if (_IsPending(entityId))
+                if (_player.IsPending(entityId))
                     continue;
 
-                if (DropAllMoves)
+                if (_player.DropAllMoves)
                 {
+                    // The flight cannot run. Report it as finished through the queue, the way the
+                    // real system reports an unresolvable view handle.
                     aspect.Moving.TryDel(entityId);
-                    aspect.Completed.TryAdd(entityId);
+                    _player.ReportCompleted(_world.GetEntityLong(entityId));
                     continue;
                 }
 
-                _pending.Add(new PendingMove(_world.GetEntityLong(entityId)));
+                _player.StartMove(_world.GetEntityLong(entityId));
             }
-        }
-
-        private bool _IsPending(int entityId)
-        {
-            // ponytail: linear scan is test-only and capped at 144; add an id set if fixture scale grows.
-            foreach (var pending in _pending)
-                if (pending.Entity.TryGetID(out var pendingId) && pendingId == entityId)
-                    return true;
-
-            return false;
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-
-        private struct PendingMove
-        {
-            public readonly entlong Entity;
-            public int ElapsedTicks;
-
-            public PendingMove(entlong entity)
-            {
-                Entity = entity;
-                ElapsedTicks = 0;
-            }
-        }
+        public void Inject(FakeMovePlayerService obj) => _player = obj;
 
         private sealed class MoveAspect : EcsAspect
         {
             public readonly EcsPool<MovingComp> Moving = Inc;
 
             // Excluded, not optional: a flight the fake has already reported is finished must not
-            // be picked up again in the same tick, before the simulation has landed it.
+            // be picked up again before the simulation has landed it.
             public readonly EcsTagPool<MoveCompletedCommand> Completed = Exc;
         }
     }

@@ -18,6 +18,7 @@ using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.Core.Navigation;
+using Client.Simulation.Core.Phases;
 using Client.Simulation.PhoenixFlame;
 using DCFApixels.DragonECS;
 using UnityEngine;
@@ -118,30 +119,27 @@ namespace Client.Bootstrap
                 .AddModule(new MagicWordsModule(new MagicWordsConfig()))
                 .AddModule(new PhoenixFlameModule(new PhoenixFlameConfig()))
 
-                // Presentation, in run order. These are IEcsLateRun, the simulation is IEcsRun,
-                // and a runner only ever collects its own interface — so the two lists above and
-                // below never interleave at run time.
-                //
-                // Each feature's input half comes before its drawing halves: the half that decides
-                // writes the world, the halves that draw read it, and both want the same frame's
-                // answer. Once the phases exist this order is the driver's, not this list's.
+                // The adapter half. Each system says which phase it runs in on its own class line,
+                // so this list decides only the order WITHIN a phase — a runner collects one
+                // interface and never sees the others, and the phase order is Update/LateUpdate
+                // below. Grouped by feature because that is what a reader looks for here.
                 .Add(new AceOfShadowsInputSystem(aceConfig))
                 .Add(new CardBindingSystem())
                 .Add(new DeckHudSystem())
+                .Add(new TweenPlaybackSystem())
+                .Add(new AceOfShadowsCleanupSystem())
+
                 .Add(new MagicWordsInputSystem())
                 .Add(new MagicWordsViewSystem())
                 .Add(new DialogueLogSystem())
+                .Add(new MagicWordsCleanupSystem())
+
                 .Add(new PhoenixFlameInputSystem())
                 .Add(new PhoenixFlameViewSystem())
-                .Add(new TweenPlaybackSystem())
+
                 .Add(new ShellStageSystem(shellSkin, demos))
                 .Add(new ShellInputSystem(menuScreen, demoHud))
                 .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
-
-                // Cleanup deletes the adapter-owned one-frame components, so it closes the pass.
-                // These become IEcsCleanup systems unchanged once the phase interfaces exist.
-                .Add(new AceOfShadowsCleanupSystem())
-                .Add(new MagicWordsCleanupSystem())
                 .BuildAndInit();
         }
 
@@ -227,19 +225,34 @@ namespace Client.Bootstrap
             return addresses;
         }
 
+        /// <summary>The client driver: the frame's phase order, and the only place it is written.</summary>
+        /// <remarks>
+        /// Input turns the outside world into commands, Sim advances the game, Present draws, and
+        /// Cleanup deletes every one-frame component. Cleanup closes the frame rather than opening
+        /// it, so a component added in Input or Sim is visible to Present in the same frame and
+        /// nothing one frame long ever crosses the frame boundary.
+        /// <para>The split across <c>Update</c> and <c>LateUpdate</c> is the engine's business, not
+        /// the contract's: drawing after the engine's own animation and physics callbacks is what
+        /// <c>LateUpdate</c> is for. A server or a test driver runs <c>Input(); Sim(); Cleanup();</c>
+        /// in a loop with no Present, and a realtime one calls <c>Sim()</c> k times against a fixed
+        /// timestep. No system can tell which of them is running it.</para>
+        /// </remarks>
         private void Update()
         {
-            _pipeline?.Run();
-        }
+            if (_pipeline == null)
+                return;
 
-        private void FixedUpdate()
-        {
-            _pipeline?.FixedRun();
+            _pipeline.Input();
+            _pipeline.Sim();
         }
 
         private void LateUpdate()
         {
-            _pipeline?.LateRun();
+            if (_pipeline == null)
+                return;
+
+            _pipeline.Present();
+            _pipeline.Cleanup();
         }
 
         /// <summary>Tears down in this order: pipeline, then ports, then world.</summary>

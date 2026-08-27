@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Components;
 using Client.Simulation.Core.Ports;
@@ -9,12 +10,12 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// When a card's move finishes, lands it in the target stack (index, order, stack counters)
     /// and marks the whole deal complete after the last card.
     /// </summary>
-    internal sealed class MoveCompletionSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class MoveCompletionSystem : IEcsSim, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private EcsWorld _world;
         private ILogService _log;
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<DeckStateComp>();
 
@@ -47,7 +48,8 @@ namespace Client.Simulation.AceOfShadows.Systems
                 }
 
                 state.MovesCompleted++;
-                aspect.Completed.TryDel(entityId);
+                // MovingComp is a *Comp and its owner ends its life here; MoveCompletedCommand is
+                // one frame long and DeckCleanupSystem is the only thing that deletes it.
                 aspect.Moving.TryDel(entityId);
 
                 if (!state.IsComplete && state.MovesCompleted == state.TotalCards)

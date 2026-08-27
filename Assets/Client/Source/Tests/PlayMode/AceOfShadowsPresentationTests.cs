@@ -104,7 +104,21 @@ namespace Client.Adapters.Tests
             Assert.That(entryPoint.World.Get<DeckStateComp>().IsDealt, Is.True);
             Assert.That(sceneView.SourceCounter.text, Is.EqualTo("144"));
 
-            entryPoint.World.GetPool<SetDeckSpeedCommand>().Add(entryPoint.World.NewEntity()).Multiplier = 8f;
+            // Pressed the way a player does. The speed button cycles ×1 → ×4 → ×8, the view records
+            // the press and the Input phase turns it into a SetDeckSpeedCommand. Writing that
+            // command from here would be a write outside every phase, and this frame's Cleanup
+            // would delete it before any Sim read it — the defect DEU0130 reports in product code.
+            for (var press = 0; press < 2; press++)
+            {
+                sceneView.SpeedRequested = true;
+                yield return _WaitUntil(() => sceneView.SpeedRequested == false,
+                    "The input phase did not drain the speed press.", 2f);
+            }
+
+            yield return _WaitUntil(
+                () => Mathf.Approximately(entryPoint.World.Get<DeckStateComp>().SpeedMultiplier, 8f),
+                "The speed presses did not reach ×8.", 5f);
+
             yield return _WaitUntil(
                 () => entryPoint.World.Get<DeckStateComp>().IsComplete &&
                       _Screen().CompletionLabel.gameObject.activeSelf,
@@ -156,13 +170,13 @@ namespace Client.Adapters.Tests
 
         private static IEnumerator _Open(EcsWorld world)
         {
-            world.GetPool<OpenDemoCommand>().Add(world.NewEntity()).DemoIndex = 0;
+            ShellInput.PressDemo(0);
             yield return _WaitForState(world, ScreenId.Demo, LoadTimeoutSeconds);
         }
 
         private static IEnumerator _Close(EcsWorld world)
         {
-            world.GetPool<CloseDemoCommand>().Add(world.NewEntity());
+            ShellInput.PressClose();
             yield return _WaitForState(world, ScreenId.Menu, LoadTimeoutSeconds);
         }
 

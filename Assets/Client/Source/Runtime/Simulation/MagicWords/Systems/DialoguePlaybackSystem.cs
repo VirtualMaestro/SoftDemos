@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
@@ -10,7 +11,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// speaker's avatar as their first line appears.
     /// </summary>
     internal sealed class DialoguePlaybackSystem :
-        IEcsRun,
+        IEcsSim,
         IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>,
         IEcsInject<ILogService>
@@ -32,11 +33,11 @@ namespace Client.Simulation.MagicWords.Systems
             _config = config;
         }
 
-        public void Run()
+        public void Sim()
         {
-            // Drained before the readiness gate so taps made while the payload is still in
-            // flight are discarded instead of queueing up and skipping the whole dialogue.
-            var skip = _DrainSkipCommands();
+            // A tap made while the payload is still in flight is discarded rather than queued: the
+            // command is one frame long, so the readiness gate below simply lets it expire.
+            var skip = _skipCommands.Count > 0;
             ref var state = ref _world.Get<DialogueStateComp>();
 
             if (state.State != DialogueLoadState.Ready)
@@ -81,19 +82,6 @@ namespace Client.Simulation.MagicWords.Systems
 
             if (_pendingLines.Count == 0)
                 _Complete(ref playback, false);
-        }
-
-        private bool _DrainSkipCommands()
-        {
-            var skip = false;
-
-            foreach (var entityId in _world.Where(out SkipAspect _))
-            {
-                _skipCommands.Del(entityId);
-                skip = true;
-            }
-
-            return skip;
         }
 
         private void _RevealNext(ref DialoguePlaybackComp playback)
@@ -150,11 +138,6 @@ namespace Client.Simulation.MagicWords.Systems
 
         public void Inject(ITimeService obj) => _time = obj;
         public void Inject(ILogService obj) => _log = obj;
-
-        private sealed class SkipAspect : EcsAspect
-        {
-            public readonly EcsPool<SkipDialogueCommand> Commands = Inc;
-        }
 
         private sealed class PendingLineAspect : EcsAspect
         {

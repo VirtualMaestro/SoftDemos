@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
@@ -17,7 +18,7 @@ namespace Client.Adapters.Shell.Systems
     /// record are drained by <see cref="ShellInputSystem"/>. The <c>_last*</c> fields are a repaint
     /// cache — what is on screen right now — not state passed between systems.
     /// </remarks>
-    public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
+    public sealed class ScreenPresentationSystem : IEcsPresent, IEcsDestroy, IEcsInject<EcsWorld>,
         IEcsInject<FadePlayerService>
     {
         private const float FadeSeconds = 0.18f;
@@ -68,7 +69,7 @@ namespace Client.Adapters.Shell.Systems
             _tweens.KillFades();
         }
 
-        public void LateRun()
+        public void Present()
         {
             ref readonly var state = ref _world.Get<ScreenStateComp>();
             var demoReady = _demoReady.Count > 0;

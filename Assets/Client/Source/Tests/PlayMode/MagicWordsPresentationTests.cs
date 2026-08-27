@@ -94,6 +94,9 @@ namespace Client.Adapters.Tests
                     () => entryPoint.Avatars.Mode == AvatarMode.Remote &&
                           _FindSpeakerLoad(entryPoint.World, "Sheldon").RequestId != previousSheldonRequest,
                     "The avatar mode button did not reload speakers through Remote mode.", 2f);
+                // The label is drawn in Present, which runs in LateUpdate; this coroutine resumes
+                // in Update, so the frame that flipped the mode has not repainted yet.
+                yield return null;
                 Assert.That(sceneView.AvatarModeLabel.text, Is.EqualTo("Avatars: Remote"));
                 yield return _WaitUntil(
                     () => _AllAvatarLoadsSettled(entryPoint.World),
@@ -114,7 +117,7 @@ namespace Client.Adapters.Tests
             }
 
             var logContent = sceneView.LogContent;
-            entryPoint.World.GetPool<CloseDemoCommand>().Add(entryPoint.World.NewEntity());
+            ShellInput.PressClose();
             yield return _WaitForState(entryPoint.World, ScreenId.Unloading, LoadTimeoutSeconds);
             yield return null;
             Assert.That(logContent == null || logContent.childCount == 0, Is.True,
@@ -231,13 +234,13 @@ namespace Client.Adapters.Tests
 
         private static IEnumerator _Open(EcsWorld world)
         {
-            world.GetPool<OpenDemoCommand>().Add(world.NewEntity()).DemoIndex = 1;
+            ShellInput.PressDemo(1);
             yield return _WaitForState(world, ScreenId.Demo, LoadTimeoutSeconds);
         }
 
         private static IEnumerator _Close(EcsWorld world)
         {
-            world.GetPool<CloseDemoCommand>().Add(world.NewEntity());
+            ShellInput.PressClose();
             yield return _WaitForState(world, ScreenId.Menu, LoadTimeoutSeconds);
         }
 

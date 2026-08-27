@@ -51,16 +51,16 @@ namespace Client.Simulation.Tests.Navigation
             _scenes.TerminalStatus = AsyncOpStatus.Done;
 
             _Open(1);
-            _pipeline.Run();
-            _pipeline.Run();
+            _pipeline.Tick();
+            _pipeline.Tick();
 
             ref var opened = ref _world.Get<ScreenStateComp>();
             Assert.That(opened.Current, Is.EqualTo(ScreenId.Demo), $"{opened}");
             Assert.That(opened.ActiveDemoIndex, Is.EqualTo(1), $"{opened}");
 
             _Close();
-            _pipeline.Run();
-            _pipeline.Run();
+            _pipeline.Tick();
+            _pipeline.Tick();
 
             ref var closed = ref _world.Get<ScreenStateComp>();
             Assert.That(closed.Current, Is.EqualTo(ScreenId.Menu), $"{closed}");
@@ -77,7 +77,7 @@ namespace Client.Simulation.Tests.Navigation
             _scenes.TerminalStatus = AsyncOpStatus.Failed;
 
             _Open(0);
-            _pipeline.Run();
+            _pipeline.Tick();
 
             ref var failed = ref _world.Get<ScreenStateComp>();
             Assert.That(failed.Current, Is.EqualTo(ScreenId.Menu), $"{failed}");
@@ -88,13 +88,13 @@ namespace Client.Simulation.Tests.Navigation
             _scenes.CompleteAfterPolls = 2;
             _scenes.TerminalStatus = AsyncOpStatus.Done;
             _Open(2);
-            _pipeline.Run();
+            _pipeline.Tick();
 
             ref var retrying = ref _world.Get<ScreenStateComp>();
             Assert.That(retrying.Current, Is.EqualTo(ScreenId.Loading), $"{retrying}");
             Assert.That(retrying.LastOperationFailed, Is.False, $"{retrying}");
 
-            _pipeline.Run();
+            _pipeline.Tick();
             Assert.That(_scenes.OpenRequestCount, Is.Zero, $"{_scenes}");
         }
 
@@ -104,11 +104,11 @@ namespace Client.Simulation.Tests.Navigation
             _scenes.CompleteAfterPolls = 1;
             _scenes.TerminalStatus = AsyncOpStatus.Done;
             _Open(0);
-            _pipeline.Run();
+            _pipeline.Tick();
 
             _scenes.TerminalStatus = AsyncOpStatus.Failed;
             _Close();
-            _pipeline.Run();
+            _pipeline.Tick();
 
             ref var state = ref _world.Get<ScreenStateComp>();
             Assert.That(state.Current, Is.EqualTo(ScreenId.Menu), $"{state}");
@@ -124,17 +124,17 @@ namespace Client.Simulation.Tests.Navigation
             _scenes.CompleteAfterPolls = 3;
             _scenes.TerminalStatus = AsyncOpStatus.Done;
             _Open(0);
-            _pipeline.Run();
+            _pipeline.Tick();
 
             var secondCommand = _Open(1);
-            _pipeline.Run();
+            _pipeline.Tick();
 
             ref var state = ref _world.Get<ScreenStateComp>();
             Assert.That(state.Current, Is.EqualTo(ScreenId.Loading), $"{state}");
             Assert.That(_world.GetPool<OpenDemoCommand>().Has(secondCommand), Is.False, $"{state}");
             Assert.That(_scenes.LoadCalls, Has.Count.EqualTo(1), $"{_scenes}");
 
-            _pipeline.Run();
+            _pipeline.Tick();
             Assert.That(_scenes.OpenRequestCount, Is.Zero, $"{_scenes}");
         }
 
@@ -143,7 +143,7 @@ namespace Client.Simulation.Tests.Navigation
         {
             var command = _Open(Addresses.Length);
 
-            _pipeline.Run();
+            _pipeline.Tick();
 
             ref var state = ref _world.Get<ScreenStateComp>();
             Assert.That(state.Current, Is.EqualTo(ScreenId.Menu), $"{state}");

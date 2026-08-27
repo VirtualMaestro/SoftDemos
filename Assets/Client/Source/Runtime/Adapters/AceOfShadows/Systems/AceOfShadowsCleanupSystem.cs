@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using DCFApixels.DragonECS;
 
@@ -10,11 +11,11 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// own entity, so the entity goes with it. This becomes an <c>IEcsCleanup</c> system unchanged
     /// once the phase interfaces exist.
     /// </remarks>
-    public sealed class AceOfShadowsCleanupSystem : IEcsLateRun, IEcsInject<EcsWorld>
+    public sealed class AceOfShadowsCleanupSystem : IEcsCleanup, IEcsInject<EcsWorld>
     {
         private EcsWorld _world;
 
-        public void LateRun()
+        public void Cleanup()
         {
             foreach (var entityId in _world.Where(out ViewsResetAspect _))
                 _world.DelEntity(entityId);

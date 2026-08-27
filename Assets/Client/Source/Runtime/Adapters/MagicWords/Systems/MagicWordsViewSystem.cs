@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Services;
@@ -17,7 +18,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// content landed and the screen is covered. That tag is the only thing the two halves share —
     /// the load state machine stays private to the half that owns it.</para>
     /// </remarks>
-    public sealed class MagicWordsViewSystem : IEcsLateRun, IEcsInject<EcsWorld>,
+    public sealed class MagicWordsViewSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<AvatarImageRouterService>, IEcsInject<ScreenRegistryService>
     {
         private const string LocalModeLabel = "Avatars: Local";
@@ -33,7 +34,7 @@ namespace Client.Adapters.MagicWords.Systems
         private DialogueLoadState _shownDialogueState = (DialogueLoadState)(-1);
         private AvatarMode _shownAvatarMode = (AvatarMode)(-1);
 
-        public void LateRun()
+        public void Present()
         {
             if (_demoReady.Count == 0 || _screens.TryGet(out MagicWordsScreen current) == false)
             {

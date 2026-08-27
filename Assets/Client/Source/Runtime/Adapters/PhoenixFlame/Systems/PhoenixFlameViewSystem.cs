@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Core.Ports;
@@ -16,7 +17,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// says whether the demo is running, and the button stays off until it is — a tap during the
     /// load must not queue an advance.</para>
     /// </remarks>
-    public sealed class PhoenixFlameViewSystem : IEcsLateRun, IEcsInject<EcsWorld>,
+    public sealed class PhoenixFlameViewSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<ILogService>, IEcsInject<ScreenRegistryService>
     {
         private const string OrangeLabel = "Orange";
@@ -60,7 +61,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             return hashes;
         }
 
-        public void LateRun()
+        public void Present()
         {
             if (_screens.TryGet(out PhoenixFlameScreen current) == false)
             {

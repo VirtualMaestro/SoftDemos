@@ -18,6 +18,7 @@ namespace Client.Simulation.AceOfShadows
             builder.Add(new MoveCompletionSystem());
             builder.Add(new DeckSpeedSystem(_config));
             builder.Add(new CardCadenceSystem());
+            builder.Add(new DeckCleanupSystem());
         }
     }
 }

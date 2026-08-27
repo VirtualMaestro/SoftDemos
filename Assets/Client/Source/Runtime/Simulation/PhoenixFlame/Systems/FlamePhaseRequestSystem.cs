@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
@@ -8,22 +9,20 @@ namespace Client.Simulation.PhoenixFlame.Systems
     /// Consumes advance-phase button commands: starts a transition to the next color unless one
     /// is already running.
     /// </summary>
-    internal sealed class FlamePhaseRequestSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class FlamePhaseRequestSystem : IEcsSim, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private EcsWorld _world;
         private ILogService _log;
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<FlameStateComp>();
 
-            // Every command entity is consumed even when the press is ignored: a held button emits
-            // one per tick, and leaving them alive would build a backlog that fires the moment the
-            // in-flight transition ends.
-            foreach (var entityId in _world.Where(out CommandAspect _))
+            // A press ignored here is dropped, not queued: the command lives one frame and
+            // FlameCleanupSystem ends it, so a held button cannot build a backlog that fires the
+            // moment the in-flight transition ends.
+            foreach (var commandEntity in _world.Where(out CommandAspect _))
             {
-                _world.DelEntity(entityId);
-
                 if (state.IsActive == false)
                 {
                     _log.Warn("AdvanceFlamePhaseCommand ignored because the flame is not active.");

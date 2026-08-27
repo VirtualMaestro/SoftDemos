@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
@@ -8,7 +9,7 @@ namespace Client.Simulation.AceOfShadows.Systems
     /// Consumes Deal/Reset commands: creates (or deletes) the card and stack entities and fills
     /// the deck state from config.
     /// </summary>
-    internal sealed class DeckSetupSystem : IEcsRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>
+    internal sealed class DeckSetupSystem : IEcsSim, IEcsInject<EcsWorld>, IEcsInject<ILogService>
     {
         private readonly AceOfShadowsConfig _config;
 
@@ -20,30 +21,27 @@ namespace Client.Simulation.AceOfShadows.Systems
             _config = config;
         }
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<DeckStateComp>();
 
             // Reset is consumed before Deal so that a close-then-open in the same tick leaves the
             // deck dealt. The reverse order would deal and then wipe it, and the demo would open
             // empty.
-            foreach (var entityId in _world.Where(out ResetCommandAspect _))
+            foreach (var resetEntity in _world.Where(out ResetCommandAspect _))
             {
                 if (state.IsDealt)
                     _Reset();
                 else
                     _log.Warn("ResetDeckCommand ignored because the deck is not dealt.");
-
-                _world.DelEntity(entityId);
             }
 
-            foreach (var entityId in _world.Where(out DealCommandAspect _))
+            foreach (var dealEntity in _world.Where(out DealCommandAspect _))
             {
                 if (state.IsDealt)
                     _Reset();
 
                 _Deal(ref state);
-                _world.DelEntity(entityId);
             }
         }
 

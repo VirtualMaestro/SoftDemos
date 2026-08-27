@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Components;
+using Client.Simulation.MagicWords.Payload;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords.Systems
@@ -9,7 +11,7 @@ namespace Client.Simulation.MagicWords.Systems
     /// Turns the raw payload into entities: one per speaker (with avatar URL or "missing") and
     /// one per dialogue line (with text split into text/emoji segments).
     /// </summary>
-    internal sealed class DialogueIngestSystem : IEcsRun, IEcsInit,
+    internal sealed class DialogueIngestSystem : IEcsSim, IEcsInit,
 
         IEcsInject<EcsWorld>,
         IEcsInject<ILogService>
@@ -38,15 +40,14 @@ namespace Client.Simulation.MagicWords.Systems
             _textPool = _world.GetPool<DialogueTextComp>();
         }
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<DialogueStateComp>();
 
             if (state.State != DialogueLoadState.Loading)
                 return;
 
-            ref var payloadEvent = ref _world.Get<DialoguePayloadEvent>();
-            var payload = payloadEvent.Payload;
+            var payload = _FindPayload();
 
             if (payload == null)
                 return;
@@ -111,10 +112,28 @@ namespace Client.Simulation.MagicWords.Systems
             state.State = DialogueLoadState.Ready;
             state.LineCount = lineCount;
             state.SpeakerCount = speakers.Count;
-            payloadEvent = default;
+        }
+
+        /// <summary>The payload of this tick's hand-off event, or null when the fetch has not landed.</summary>
+        /// <remarks>
+        /// Reads and does not delete: the event is one frame long and <c>DialogueCleanupSystem</c>
+        /// owns its end. Only the first is taken, because <c>DialogueFetchSystem</c> raises one per
+        /// resolved request, and a second would mean two fetches were open at once.
+        /// </remarks>
+        private DialoguePayload _FindPayload()
+        {
+            foreach (var entityId in _world.Where(out PayloadAspect aspect))
+                return aspect.Payloads.Read(entityId).Payload;
+
+            return null;
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILogService obj) => _log = obj;
+
+        private sealed class PayloadAspect : EcsAspect
+        {
+            public readonly EcsPool<DialoguePayloadEvent> Payloads = Inc;
+        }
     }
 }

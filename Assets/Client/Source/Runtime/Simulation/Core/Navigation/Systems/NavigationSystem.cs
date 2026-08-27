@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
@@ -8,7 +9,7 @@ namespace Client.Simulation.Core.Navigation.Systems
     /// Handles open/close demo commands: starts scene load/unload, polls the async operation, and
     /// moves the screen state through Menu → Loading → Demo → Unloading → Menu.
     /// </summary>
-    public sealed class NavigationSystem : IEcsRun, IEcsInject<EcsWorld>,
+    public sealed class NavigationSystem : IEcsSim, IEcsInject<EcsWorld>,
         IEcsInject<ISceneService>, IEcsInject<ILogService>
     {
         private readonly DemoCatalog _catalog;
@@ -22,7 +23,7 @@ namespace Client.Simulation.Core.Navigation.Systems
             _catalog = catalog;
         }
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<ScreenStateComp>();
 
@@ -36,7 +37,6 @@ namespace Client.Simulation.Core.Navigation.Systems
             foreach (var entityId in _world.Where(out OpenCommandAspect aspect))
             {
                 ref readonly var command = ref aspect.Commands.Read(entityId);
-                _world.DelEntity(entityId);
 
                 if (state.Current != ScreenId.Menu)
                 {
@@ -61,10 +61,11 @@ namespace Client.Simulation.Core.Navigation.Systems
 
         private void _ConsumeCloseCommands(ref ScreenStateComp state)
         {
-            foreach (var entityId in _world.Where(out CloseCommandAspect _))
+            // The entity id is not read: a close command carries nothing, and the one that deletes
+            // it is NavigationCleanupSystem. Iterating still matters — a second command in the same
+            // frame is reported, the way a second one always was.
+            foreach (var closeEntity in _world.Where(out CloseCommandAspect _))
             {
-                _world.DelEntity(entityId);
-
                 if (state.Current != ScreenId.Demo)
                 {
                     _log.Warn($"CloseDemoCommand ignored in {state.Current}.");

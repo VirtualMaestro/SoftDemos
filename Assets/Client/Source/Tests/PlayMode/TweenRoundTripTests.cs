@@ -5,8 +5,11 @@ using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
+using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Components;
+using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
@@ -15,11 +18,19 @@ using UnityEngine.TestTools;
 
 namespace Client.Adapters.Tests
 {
-    /// <summary>Proves the command, tween and completion cycle on a throwaway object.</summary>
+    /// <summary>Proves the flight, tween and completion cycle on a throwaway object.</summary>
     /// <remarks>
     /// The test asserts the contract the simulation sees: <c>MovingComp</c> in,
     /// <see cref="MoveCompletedCommand"/> out, position reached, and the flight itself untouched.
     /// That contract holds even if DOTween is replaced later.
+    /// <para>Both adapter halves are in the pipeline, because the cycle now spans both:
+    /// <see cref="TweenPlaybackSystem"/> starts the tween in Present and
+    /// <see cref="AceOfShadowsInputSystem"/> turns the player's completion queue into the command
+    /// in Input. Driving only one of them would test half a round trip and pass.</para>
+    /// <para>The tick here is <c>Input(); Present();</c> and no Cleanup: there is no Sim system to
+    /// consume the command, and Cleanup would delete the very thing the assertion waits for. That
+    /// is the sanctioned shape — a fixture asserting on a tick's one-frame components stops before
+    /// Cleanup.</para>
     /// </remarks>
     public sealed class TweenRoundTripTests
     {
@@ -34,6 +45,9 @@ namespace Client.Adapters.Tests
         private CardViewChannel _channel;
         private StackSlotLayoutService _layout;
         private GameObject _view;
+        // Only here so the input half builds; it loads nothing, and both must be released.
+        private AddressablesAssetService _assets;
+        private ScreenRegistryService _screens;
 
         [SetUp]
         public void SetUp()
@@ -48,6 +62,8 @@ namespace Client.Adapters.Tests
             _world = new EcsWorld();
             _channel = new CardViewChannel();
             var player = new CardMovePlayerService(_registry);
+            _assets = new AddressablesAssetService(new UnityLogService("Test.Tween.Assets"));
+            _screens = new ScreenRegistryService();
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
                 .Inject<ILogService>(new UnityLogService("Test.Tween"))
@@ -55,6 +71,10 @@ namespace Client.Adapters.Tests
                 .Inject(_channel)
                 .Inject(_layout)
                 .Inject(player)
+                .Inject(_assets)
+                .Inject(new SharedUiSprites())
+                .Inject(_screens)
+                .Add(new AceOfShadowsInputSystem(new AceOfShadowsConfig()))
                 .Add(new TweenPlaybackSystem())
                 .BuildAndInit();
         }
@@ -67,6 +87,12 @@ namespace Client.Adapters.Tests
 
             _world?.Destroy();
             _world = null;
+
+            _assets?.Dispose();
+            _assets = null;
+
+            _screens?.Dispose();
+            _screens = null;
 
             if (_view != null)
                 Object.DestroyImmediate(_view);
@@ -103,7 +129,7 @@ namespace Client.Adapters.Tests
                     $"Position: {_view.transform.position}, target: {_layout.SlotPosition(TargetSlot, 0)}.");
 
                 yield return null;
-                _pipeline.LateRun();
+                _Tick();
             }
 
             Assert.That(_world.GetPool<MovingComp>().Has(entityId), Is.True,
@@ -128,7 +154,7 @@ namespace Client.Adapters.Tests
             for (var frame = 0; frame < 3; frame++)
             {
                 yield return null;
-                _pipeline.LateRun();
+                _Tick();
             }
 
             var movedTo = _view.transform.position;
@@ -164,8 +190,15 @@ namespace Client.Adapters.Tests
             moving.TargetStack = TargetSlot;
             moving.DurationSeconds = duration;
 
-            _pipeline.LateRun(); // picks the command up and starts the tween
+            _Tick(); // Present starts the tween; Input has nothing to drain yet
             return entityId;
+        }
+
+        /// <summary>One tick of the two phases this fixture has systems for. No Cleanup — see the type remarks.</summary>
+        private void _Tick()
+        {
+            _pipeline.Input();
+            _pipeline.Present();
         }
 
         /// <summary>Tolerant Vector3 equality — floating point plus easing never lands exactly.</summary>

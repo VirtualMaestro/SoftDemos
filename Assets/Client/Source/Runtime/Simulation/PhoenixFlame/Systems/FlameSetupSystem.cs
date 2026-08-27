@@ -1,10 +1,11 @@
+using Client.Simulation.Core.Phases;
 using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.PhoenixFlame.Systems
 {
     /// <summary>Consumes Start/Reset commands: initializes the flame state from config or wipes it.</summary>
-    internal sealed class FlameSetupSystem : IEcsRun, IEcsInject<EcsWorld>
+    internal sealed class FlameSetupSystem : IEcsSim, IEcsInject<EcsWorld>
     {
         private readonly PhoenixFlameConfig _config;
 
@@ -15,30 +16,27 @@ namespace Client.Simulation.PhoenixFlame.Systems
             _config = config;
         }
 
-        public void Run()
+        public void Sim()
         {
             ref var state = ref _world.Get<FlameStateComp>();
 
             // Reset is consumed before Start so that a close-then-open in the same tick leaves the
             // flame active. The reverse order would start it and then wipe it, and the demo would
             // open with a dead flame that no press can revive.
-            foreach (var entityId in _world.Where(out ResetCommandAspect _))
+            foreach (var resetEntity in _world.Where(out ResetCommandAspect _))
             {
                 // Resetting an inactive flame is a no-op, not a mistake: closing a demo that was
-                // never opened is a normal path, so it is consumed silently.
+                // never opened is a normal path, so it is read silently.
                 if (state.IsActive)
                     _Reset();
-
-                _world.DelEntity(entityId);
             }
 
-            foreach (var entityId in _world.Where(out StartCommandAspect _))
+            foreach (var startEntity in _world.Where(out StartCommandAspect _))
             {
                 if (state.IsActive)
                     _Reset();
 
                 _Start(ref state);
-                _world.DelEntity(entityId);
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
@@ -26,7 +27,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// system owns and must destroy, and every world write — an Input phase in everything but the
     /// interface name, which arrives in the flip.
     /// </remarks>
-    public sealed class MagicWordsInputSystem : IEcsLateRun, IEcsDestroy,
+    public sealed class MagicWordsInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
         IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>,
@@ -62,9 +63,13 @@ namespace Client.Adapters.MagicWords.Systems
         private int _screenWidth = -1;
         private int _screenHeight = -1;
 
-        public void LateRun()
+        public void Input()
         {
-            if (_mwScreen != null && _state != StageState.Closing &&
+            // Not "_mwScreen != null": what must be torn down is this system's own state, and
+            // that is what a non-Idle state says. The screen is a Unity object the scene unload can
+            // destroy before this phase runs again — see AceOfShadowsInputSystem for the leak that
+            // gating on it caused.
+            if (_state != StageState.Idle && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  !_screens.TryGet<MagicWordsScreen>(out _)))
                 _TransitionTo(StageState.Closing);

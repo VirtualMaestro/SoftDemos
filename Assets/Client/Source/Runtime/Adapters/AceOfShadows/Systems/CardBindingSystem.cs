@@ -1,3 +1,4 @@
+using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
@@ -12,7 +13,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// Attaches pooled card views to card entities, keeps resting cards seated at their slot
     /// position, and raises the sorting order of cards in flight.
     /// </summary>
-    public sealed class CardBindingSystem : IEcsLateRun, IEcsInject<EcsWorld>, IEcsInject<ILogService>,
+    public sealed class CardBindingSystem : IEcsPresent, IEcsInject<EcsWorld>, IEcsInject<ILogService>,
         IEcsInject<ViewRegistryService>, IEcsInject<StackSlotLayoutService>, IEcsInject<CardViewChannel>,
         IEcsInject<ScreenRegistryService>
     {
@@ -29,7 +30,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         private int _bindCursor;
         private bool _warnedOutOfViews;
 
-        public void LateRun()
+        public void Present()
         {
             if (_screens.TryGet<AceOfShadowsScreen>(out _) == false)
                 return;
