@@ -102,22 +102,22 @@ namespace Client.Simulation.AceOfShadows.Systems
 
         private sealed class DealCommandAspect : EcsAspect
         {
-            public readonly EcsPool<DealDeckCommand> Commands = Inc;
+            public readonly EcsPool<DealDeckCommand> _ = Inc;
         }
 
         private sealed class ResetCommandAspect : EcsAspect
         {
-            public readonly EcsPool<ResetDeckCommand> Commands = Inc;
+            public readonly EcsPool<ResetDeckCommand> _ = Inc;
         }
 
         private sealed class CardAspect : EcsAspect
         {
-            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<CardComp> _ = Inc;
         }
 
         private sealed class StackAspect : EcsAspect
         {
-            public readonly EcsPool<StackComp> Stacks = Inc;
+            public readonly EcsPool<StackComp> _ = Inc;
         }
     }
 }
