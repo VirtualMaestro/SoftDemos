@@ -13,7 +13,7 @@ namespace Client.Adapters.Shell.Systems
     /// flags, with a fade-in when a panel appears.
     /// </summary>
     public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
-        IEcsInject<FadePlayerService>, IEcsInject<StageReadyChannel>
+        IEcsInject<FadePlayerService>
     {
         private const float FadeSeconds = 0.18f;
 
@@ -28,7 +28,8 @@ namespace Client.Adapters.Shell.Systems
 
         private EcsWorld _world;
         private FadePlayerService _tweens;
-        private StageReadyChannel _stageReady;
+        private EcsTagPool<DemoReadyTag> _demoReady;
+        private EcsTagPool<ShellReadyTag> _shellReady;
         private ScreenId _lastScreen;
         private int _lastDemoIndex;
         private bool _lastDemoReady;
@@ -79,8 +80,8 @@ namespace Client.Adapters.Shell.Systems
         public void LateRun()
         {
             ref readonly var state = ref _world.Get<ScreenStateComp>();
-            var demoReady = _stageReady.IsDemoReady;
-            var shellReady = _stageReady.IsShellReady;
+            var demoReady = _demoReady.Count > 0;
+            var shellReady = _shellReady.Count > 0;
 
             if (_hasState &&
                 state.Current == _lastScreen &&
@@ -130,8 +131,13 @@ namespace Client.Adapters.Shell.Systems
             _tweens.FadeIn(group, FadeSeconds);
         }
 
-        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _demoReady = obj.GetPool<DemoReadyTag>();
+            _shellReady = obj.GetPool<ShellReadyTag>();
+        }
+
         public void Inject(FadePlayerService obj) => _tweens = obj;
-        public void Inject(StageReadyChannel obj) => _stageReady = obj;
     }
 }

@@ -60,7 +60,7 @@ namespace Client.Simulation.AceOfShadows.Systems
 
         private sealed class CompletionAspect : EcsAspect
         {
-            public readonly EcsTagPool<MoveCompletedTag> Completed = Inc;
+            public readonly EcsTagPool<MoveCompletedCommand> Completed = Inc;
             public readonly EcsPool<CardComp> Cards = Inc;
             public readonly EcsPool<MovingComp> Moving = Opt;
         }

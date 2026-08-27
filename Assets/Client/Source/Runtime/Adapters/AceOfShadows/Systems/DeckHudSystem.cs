@@ -1,3 +1,4 @@
+using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.Shared.Services;
@@ -19,11 +20,11 @@ namespace Client.Adapters.AceOfShadows.Systems
         private EcsWorld _world;
         private StackSlotLayoutService _layout;
         private ScreenRegistryService _screens;
+        private EcsTagPool<LayoutChangedEvent> _layoutChanged;
         private AceOfShadowsScreen _scene;
         private int _sourceCount = int.MinValue;
         private int _targetCount = int.MinValue;
         private int _totalCards = int.MinValue;
-        private int _layoutVersion = -1;
         private float _speedMultiplier = float.NaN;
         private bool _isComplete;
 
@@ -83,10 +84,9 @@ namespace Client.Adapters.AceOfShadows.Systems
                     _scene.CompletionLabel.SetText("All {0} cards moved.", state.TotalCards);
             }
 
-            if (_layoutVersion == _layout.Version && _totalCards == state.TotalCards)
+            if (_layoutChanged.Count == 0 && _totalCards == state.TotalCards)
                 return;
 
-            _layoutVersion = _layout.Version;
             _totalCards = state.TotalCards;
             _scene.SourceCounter.transform.position =
                 _layout.SlotPosition(state.SourceStack, state.TotalCards) + CounterOffset;
@@ -100,13 +100,17 @@ namespace Client.Adapters.AceOfShadows.Systems
             _sourceCount = int.MinValue;
             _targetCount = int.MinValue;
             _totalCards = int.MinValue;
-            _layoutVersion = -1;
             _speedMultiplier = float.NaN;
             _isComplete = false;
             _scene.CompletionLabel.gameObject.SetActive(false);
         }
 
-        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _layoutChanged = obj.GetPool<LayoutChangedEvent>();
+        }
+
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 

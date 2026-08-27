@@ -1,13 +1,12 @@
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows.Systems
 {
     /// <summary>
-    /// Once per interval picks the top card of the source stack and issues a move command for it,
-    /// keeping the leftover time so the rhythm stays even.
+    /// Once per interval picks the top card of the source stack and puts it in flight, keeping the
+    /// leftover time so the rhythm stays even.
     /// </summary>
     internal sealed class CardCadenceSystem : IEcsRun, IEcsInject<EcsWorld>,
         IEcsInject<ITimeService>, IEcsInject<ILogService>
@@ -71,14 +70,10 @@ namespace Client.Simulation.AceOfShadows.Systems
             }
 
             var targetOrder = targetStackCount + state.MovesIssued - state.MovesCompleted;
-            ref var command = ref cards.Commands.Add(selectedEntity);
-            command.TargetSlot = state.TargetStack;
-            command.TargetDepth = targetOrder;
-            command.Duration = state.MoveDurationSeconds;
-
             ref var moving = ref cards.Moving.Add(selectedEntity);
             moving.TargetStack = state.TargetStack;
             moving.TargetOrder = targetOrder;
+            moving.DurationSeconds = state.MoveDurationSeconds;
 
             state.MovesIssued++;
         }
@@ -91,7 +86,6 @@ namespace Client.Simulation.AceOfShadows.Systems
         {
             public readonly EcsPool<CardComp> Cards = Inc;
             public readonly EcsPool<MovingComp> Moving = Exc;
-            public readonly EcsPool<MoveCommand> Commands = Opt;
         }
 
         private sealed class StackAspect : EcsAspect

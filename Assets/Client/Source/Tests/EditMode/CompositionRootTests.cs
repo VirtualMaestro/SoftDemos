@@ -80,7 +80,6 @@ namespace Client.Simulation.Tests
 
             // Shared adapter state. Data the systems pass to each other, not behaviour.
             "Client.Adapters.Shared.Stage.SharedUiSprites",
-            "Client.Adapters.Shared.Stage.StageReadyChannel",
             "Client.Adapters.AceOfShadows.CardViewChannel",
             "Client.Adapters.Shared.Services.ScreenRegistryService",
             "Client.Adapters.MagicWords.DialogueLogChannel",

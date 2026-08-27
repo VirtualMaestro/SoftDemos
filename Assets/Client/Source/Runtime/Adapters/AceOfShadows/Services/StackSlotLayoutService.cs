@@ -44,8 +44,6 @@ namespace Client.Adapters.AceOfShadows.Services
 
         private readonly Vector3[] _slots = new Vector3[2];
 
-        public int Version { get; private set; }
-
         public void Recalculate(int screenWidth, int screenHeight, float orthographicSize)
         {
             var aspect = screenHeight > 0 ? screenWidth / (float)screenHeight : 1f;
@@ -61,7 +59,6 @@ namespace Client.Adapters.AceOfShadows.Services
 
             _slots[0] = new Vector3(-spacing * 0.5f, baseline, 0f);
             _slots[1] = new Vector3(spacing * 0.5f, baseline, 0f);
-            Version++;
         }
 
         public Vector3 SlotPosition(int slotIndex, int depth)

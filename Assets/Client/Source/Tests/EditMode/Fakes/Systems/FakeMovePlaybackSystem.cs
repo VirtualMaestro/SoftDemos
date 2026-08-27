@@ -45,8 +45,7 @@ namespace Client.Simulation.Tests.Fakes.Systems
                     continue;
                 }
 
-                _world.GetPool<MoveCommand>().TryDel(entityId);
-                _world.GetPool<MoveCompletedTag>().TryAdd(entityId);
+                _world.GetPool<MoveCompletedCommand>().TryAdd(entityId);
                 _pending.RemoveAt(index);
             }
         }
@@ -60,7 +59,6 @@ namespace Client.Simulation.Tests.Fakes.Systems
 
                 if (DropAllMoves)
                 {
-                    aspect.Commands.TryDel(entityId);
                     aspect.Moving.TryDel(entityId);
                     aspect.Completed.TryAdd(entityId);
                     continue;
@@ -96,9 +94,11 @@ namespace Client.Simulation.Tests.Fakes.Systems
 
         private sealed class MoveAspect : EcsAspect
         {
-            public readonly EcsPool<MoveCommand> Commands = Inc;
-            public readonly EcsPool<MovingComp> Moving = Opt;
-            public readonly EcsTagPool<MoveCompletedTag> Completed = Opt;
+            public readonly EcsPool<MovingComp> Moving = Inc;
+
+            // Excluded, not optional: a flight the fake has already reported is finished must not
+            // be picked up again in the same tick, before the simulation has landed it.
+            public readonly EcsTagPool<MoveCompletedCommand> Completed = Exc;
         }
     }
 }

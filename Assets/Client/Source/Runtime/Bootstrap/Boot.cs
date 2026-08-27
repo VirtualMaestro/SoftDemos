@@ -45,7 +45,6 @@ namespace Client.Bootstrap
         private ViewRegistryService _viewRegistryService;
         private FadePlayerService _fadePlayerService;
         private CardMovePlayerService _cardMovePlayerService;
-        private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
 
         public EcsWorld World => _world;
@@ -54,7 +53,6 @@ namespace Client.Bootstrap
         public AvatarImageRouterService Avatars => _avatarImagesService;
         public FadePlayerService Fades => _fadePlayerService;
         public CardMovePlayerService CardMoves => _cardMovePlayerService;
-        public StageReadyChannel StageReady => _stageReady;
 
         private void OnValidate()
         {
@@ -87,7 +85,6 @@ namespace Client.Bootstrap
             // Shared state and behaviour. Systems reach through these instead of holding each other.
             _fadePlayerService = new FadePlayerService();
             _cardMovePlayerService = new CardMovePlayerService(_viewRegistryService);
-            _stageReady = new StageReadyChannel();
             _screens = new ScreenRegistryService(
                 typeof(AceOfShadowsScreen), typeof(MagicWordsScreen), typeof(PhoenixFlameScreen));
 
@@ -109,7 +106,6 @@ namespace Client.Bootstrap
                 .Inject(_cardMovePlayerService)
                 .Inject(new StackSlotLayoutService())
                 .Inject(new SharedUiSprites())
-                .Inject(_stageReady)
                 .Inject(_screens)
                 .Inject(new CardViewChannel())
                 .Inject(new DialogueLogChannel())
@@ -134,6 +130,11 @@ namespace Client.Bootstrap
                 .Add(new TweenPlaybackSystem())
                 .Add(new ShellStageSystem(shellSkin, demos))
                 .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
+
+                // Cleanup deletes the adapter-owned one-frame components, so it closes the pass.
+                // These become IEcsCleanup systems unchanged once the phase interfaces exist.
+                .Add(new AceOfShadowsCleanupSystem())
+                .Add(new MagicWordsCleanupSystem())
                 .BuildAndInit();
         }
 
@@ -263,7 +264,6 @@ namespace Client.Bootstrap
             _viewRegistryService = null;
             _fadePlayerService = null;
             _cardMovePlayerService = null;
-            _stageReady = null;
 
             _screens?.Dispose();
             _screens = null;

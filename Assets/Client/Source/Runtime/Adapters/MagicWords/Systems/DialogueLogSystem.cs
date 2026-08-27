@@ -16,11 +16,10 @@ namespace Client.Adapters.MagicWords.Systems
 {
     /// <summary>
     /// Feeds the dialogue <see cref="VList"/> with one data record per visible line. The list owns
-    /// the pooled, virtualized views; this system owns the records only. Content and teardown
-    /// arrive through <see cref="DialogueLogChannel"/> rather than direct calls from the stage
-    /// system — systems must never hold other systems (see SystemIsolationTests). The stage system
-    /// bumps the channel's <c>ResetVersion</c> during teardown; because it runs earlier in the same
-    /// LateRun pass, the list is cleared in the same frame the teardown started.
+    /// the pooled, virtualized views; this system owns the records only. Content arrives through
+    /// <see cref="DialogueLogChannel"/> and teardown through <c>DialogueLogResetEvent</c>, rather
+    /// than direct calls from the stage system — systems must never hold other systems (see
+    /// SystemIsolationTests).
     /// </summary>
     public sealed class DialogueLogSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
@@ -47,17 +46,14 @@ namespace Client.Adapters.MagicWords.Systems
         private EcsPool<SpeakerComp> _speakers;
         private EcsPool<AvatarComp> _avatarData;
         private EcsPool<AvatarLoadComp> _avatarLoads;
-        // The channel nulls Scene before bumping ResetVersion, so teardown needs its own reference.
+        // The channel nulls Scene when it resets, so teardown needs its own reference.
+        private EcsTagPool<DialogueLogResetEvent> _logReset;
         private VList _list;
-        private int _resetVersion;
 
         public void LateRun()
         {
-            if (_resetVersion != _channel.ResetVersion)
-            {
-                _resetVersion = _channel.ResetVersion;
+            if (_logReset.Count > 0)
                 _ClearViews();
-            }
 
             if (_channel.Scene == null)
                 return;
@@ -227,6 +223,7 @@ namespace Client.Adapters.MagicWords.Systems
             _speakers = obj.GetPool<SpeakerComp>();
             _avatarData = obj.GetPool<AvatarComp>();
             _avatarLoads = obj.GetPool<AvatarLoadComp>();
+            _logReset = obj.GetPool<DialogueLogResetEvent>();
         }
 
         public void Inject(ILogService obj) => _log = obj;

@@ -45,8 +45,8 @@ namespace Client.Simulation.MagicWords.Systems
             if (state.State != DialogueLoadState.Loading)
                 return;
 
-            ref var payloadComp = ref _world.Get<DialoguePayloadComp>();
-            var payload = payloadComp.Payload;
+            ref var payloadEvent = ref _world.Get<DialoguePayloadEvent>();
+            var payload = payloadEvent.Payload;
 
             if (payload == null)
                 return;
@@ -111,7 +111,7 @@ namespace Client.Simulation.MagicWords.Systems
             state.State = DialogueLoadState.Ready;
             state.LineCount = lineCount;
             state.SpeakerCount = speakers.Count;
-            payloadComp = default;
+            payloadEvent = default;
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

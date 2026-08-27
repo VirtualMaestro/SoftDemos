@@ -56,8 +56,8 @@ namespace Client.Simulation.MagicWords.Systems
                     return;
                 }
 
-                ref var payloadComp = ref _world.Get<DialoguePayloadComp>();
-                payloadComp.Payload = payload;
+                ref var payloadEvent = ref _world.Get<DialoguePayloadEvent>();
+                payloadEvent.Payload = payload;
                 return;
             }
 

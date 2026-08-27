@@ -17,9 +17,8 @@ namespace Client.Adapters.Shell.Systems
     /// not retried. Every sprite from <see cref="SpriteAtlas.GetSprite"/> is a copy this system
     /// owns and must destroy in <see cref="Destroy"/>.
     /// </remarks>
-    public sealed class ShellStageSystem : IEcsLateRun, IEcsDestroy, IEcsInject<ILogService>,
-        IEcsInject<AddressablesAssetService>, IEcsInject<SharedUiSprites>,
-        IEcsInject<StageReadyChannel>
+    public sealed class ShellStageSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
+        IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>, IEcsInject<SharedUiSprites>
     {
         /// <summary>How many Addressables requests the shell keeps open for the whole session.</summary>
         /// <remarks>
@@ -40,10 +39,10 @@ namespace Client.Adapters.Shell.Systems
         private readonly DemoEntry[] _demos;
         private readonly List<Sprite> _ownedSprites = new();
 
+        private EcsWorld _world;
         private ILogService _log;
         private AddressablesAssetService _assets;
         private SharedUiSprites _uiSprites;
-        private StageReadyChannel _stageReady;
         private StageState _state;
         private int _backgroundRequestId;
         private int _menuAtlasRequestId;
@@ -97,7 +96,7 @@ namespace Client.Adapters.Shell.Systems
                 _ReleaseRequests();
                 // Release to presentation anyway. A plain menu is playable, a hidden one is not.
                 // This is the only path that ends with white boxes on screen.
-                _stageReady.MarkShellReady();
+                _world.GetPool<ShellReadyTag>().Add(_world.NewEntity());
                 _TransitionTo(StageState.Ready);
                 return;
             }
@@ -109,7 +108,7 @@ namespace Client.Adapters.Shell.Systems
             _TryApplySkin();
 
             // The menu has its backdrop, panel, buttons and icons. Presentation can show it now.
-            _stageReady.MarkShellReady();
+            _world.GetPool<ShellReadyTag>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
         }
 
@@ -280,10 +279,9 @@ namespace Client.Adapters.Shell.Systems
                 image.enabled = false;
         }
 
+        public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
-        public void Inject(StageReadyChannel obj) => _stageReady = obj;
-
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Services;
@@ -23,7 +24,7 @@ namespace Client.Adapters.MagicWords.Systems
     public sealed class MagicWordsStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
-        IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>, IEcsInject<StageReadyChannel>,
+        IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>,
         IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/magic-words/atlas";
@@ -47,7 +48,6 @@ namespace Client.Adapters.MagicWords.Systems
         private AvatarImageRouterService _avatars;
         private DialogueLogChannel _dialogueChannel;
         private FadePlayerService _tweens;
-        private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
         private StageState _state;
         private MagicWordsScreen _mwScreen;
@@ -133,7 +133,7 @@ namespace Client.Adapters.MagicWords.Systems
 
             _mwScreen.Background.sprite = _backgroundSprite;
             // The screen is covered now, so the shell can hand over.
-            _stageReady.MarkDemoReady();
+            _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
             _avatars.SetLocalSprites(_sprites);
             _dialogueChannel.SetContent(
                 StageContent.GetAsset<TMP_SpriteAsset>(_assets, _emojiRequestId),
@@ -249,11 +249,14 @@ namespace Client.Adapters.MagicWords.Systems
             if (resetDialogue)
                 _world.GetPool<ResetDialogueCommand>().Add(_world.NewEntity());
 
-            _stageReady.ClearDemo();
+            foreach (var readyEntity in _world.Where(out SingleTagAspect<DemoReadyTag> _))
+                _world.DelEntity(readyEntity);
+
             _tweens.KillFades();
             // The dialogue log destroys its own views when it sees the change. That happens later
             // in this same LateRun pass, or in its IEcsDestroy on teardown.
             _dialogueChannel.Reset();
+            _world.GetPool<DialogueLogResetEvent>().Add(_world.NewEntity());
             _avatars.ClearLocalSprites();
             _DestroySpriteCopies();
             StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
@@ -305,7 +308,6 @@ namespace Client.Adapters.MagicWords.Systems
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
         public void Inject(DialogueLogChannel obj) => _dialogueChannel = obj;
         public void Inject(FadePlayerService obj) => _tweens = obj;
-        public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 
     }

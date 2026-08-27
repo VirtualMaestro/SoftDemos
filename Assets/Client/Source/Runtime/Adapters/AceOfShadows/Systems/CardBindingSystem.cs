@@ -3,7 +3,6 @@ using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
 
@@ -25,9 +24,9 @@ namespace Client.Adapters.AceOfShadows.Systems
         private StackSlotLayoutService _layout;
         private CardViewChannel _channel;
         private ScreenRegistryService _screens;
+        private EcsTagPool<ViewsResetEvent> _viewsReset;
+        private EcsTagPool<LayoutChangedEvent> _layoutChanged;
         private int _bindCursor;
-        private int _bindingResetVersion;
-        private int _seatingVersion;
         private bool _warnedOutOfViews;
 
         public void LateRun()
@@ -35,15 +34,13 @@ namespace Client.Adapters.AceOfShadows.Systems
             if (_screens.TryGet<AceOfShadowsScreen>(out _) == false)
                 return;
 
-            if (_bindingResetVersion != _channel.BindingResetVersion)
-            {
-                _bindingResetVersion = _channel.BindingResetVersion;
+            // A rebuilt view pool unseats everything on its own, so a layout event on the same
+            // frame has nothing left to invalidate and the branch stays exclusive.
+            if (_viewsReset.Count > 0)
                 _ResetBindings();
-            }
-            else if (_seatingVersion != _channel.SeatingVersion)
+            else if (_layoutChanged.Count > 0)
                 _InvalidateSeating();
 
-            _seatingVersion = _channel.SeatingVersion;
             _BindUnboundCards();
             _RaiseMovingCards();
             _SeatRestingCards();
@@ -121,7 +118,13 @@ namespace Client.Adapters.AceOfShadows.Systems
                 aspect.Seated.TryDel(entityId);
         }
 
-        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _viewsReset = obj.GetPool<ViewsResetEvent>();
+            _layoutChanged = obj.GetPool<LayoutChangedEvent>();
+        }
+
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(ViewRegistryService obj) => _views = obj;
         public void Inject(StackSlotLayoutService obj) => _layout = obj;

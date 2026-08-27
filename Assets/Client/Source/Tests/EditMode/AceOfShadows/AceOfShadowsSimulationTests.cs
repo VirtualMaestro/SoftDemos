@@ -69,7 +69,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             for (var move = 0; move < 3; move++)
             {
                 _Tick(1f);
-                selectedOrders.Add(_GetCommandCard().OrderInStack);
+                selectedOrders.Add(_GetMovingCard().OrderInStack);
             }
 
             _Tick(0f);
@@ -95,7 +95,7 @@ namespace Client.Simulation.Tests.AceOfShadows
         }
 
         [Test]
-        public void MoveCompletedTag_IsDeletedAfterLanding()
+        public void MoveCompletedCommand_IsDeletedAfterLanding()
         {
             _Deal();
             _Tick(1f);
@@ -105,9 +105,10 @@ namespace Client.Simulation.Tests.AceOfShadows
             _Tick(0f);
 
             Assert.That(card.TryGetID(out var cardId), Is.True);
-            Assert.That(World.GetPool<MoveCompletedTag>().Has(cardId), Is.False);
-            World.GetPool<MoveCommand>().Add(cardId).Duration = 0.5f;
-            World.GetPool<MovingComp>().Add(cardId).TargetStack = 1;
+            Assert.That(World.GetPool<MoveCompletedCommand>().Has(cardId), Is.False);
+            ref var moving = ref World.GetPool<MovingComp>().Add(cardId);
+            moving.TargetStack = 1;
+            moving.DurationSeconds = 0.5f;
             Pipeline.Run();
             Assert.That(Playback.InFlightCount, Is.EqualTo(1));
         }
@@ -263,23 +264,6 @@ namespace Client.Simulation.Tests.AceOfShadows
         }
 
         [Test]
-        public void MoveCommand_CarriesTheSameDepthAsMovingComp()
-        {
-            _Deal();
-            _Tick(1f);
-
-            foreach (var entityId in World.Where(out CommandCardAspect aspect))
-            {
-                var command = aspect.Commands.Read(entityId);
-                var moving = World.GetPool<MovingComp>().Read(entityId);
-                Assert.That(command.TargetDepth, Is.EqualTo(moving.TargetOrder));
-                return;
-            }
-
-            Assert.Fail("No card carried a MoveCommand.");
-        }
-
-        [Test]
         public void Landing_UsesTheReservedOrder_NotTheLiveCount()
         {
             _Deal();
@@ -380,7 +364,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             ref var state = ref World.Get<DeckStateComp>();
             Assert.That(state.IsDealt, Is.False, $"{state}");
             Assert.That(state.MovesIssued, Is.Zero, $"{state}");
-            Assert.That(_CountMoveCommands(), Is.Zero, $"{state}");
+            Assert.That(_CountMovingCards(), Is.Zero, $"{state}");
             Assert.That(Log.Entries, Is.Empty, $"{Log}");
         }
 
@@ -437,16 +421,6 @@ namespace Client.Simulation.Tests.AceOfShadows
             return count;
         }
 
-        private int _CountMoveCommands()
-        {
-            var count = 0;
-
-            foreach (var _ in World.Where(out CommandCardAspect _))
-                count++;
-
-            return count;
-        }
-
         private StackComp _GetStack(int stackIndex)
         {
             foreach (var entityId in World.Where(out StackAspect aspect))
@@ -461,12 +435,12 @@ namespace Client.Simulation.Tests.AceOfShadows
             return default;
         }
 
-        private CardComp _GetCommandCard()
+        private CardComp _GetMovingCard()
         {
-            foreach (var entityId in World.Where(out CommandCardAspect aspect))
+            foreach (var entityId in World.Where(out MovingCardAspect aspect))
                 return aspect.Cards.Read(entityId);
 
-            Assert.Fail("No card has a MoveCommand.");
+            Assert.Fail("No card is in flight.");
             return default;
         }
 
@@ -514,12 +488,6 @@ namespace Client.Simulation.Tests.AceOfShadows
         {
             public readonly EcsPool<CardComp> Cards = Inc;
             public readonly EcsPool<MovingComp> Moving = Inc;
-        }
-
-        private sealed class CommandCardAspect : EcsAspect
-        {
-            public readonly EcsPool<CardComp> Cards = Inc;
-            public readonly EcsPool<MoveCommand> Commands = Inc;
         }
     }
 }

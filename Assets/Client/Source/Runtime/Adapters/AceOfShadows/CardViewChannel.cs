@@ -7,8 +7,9 @@ namespace Client.Adapters.AceOfShadows
 {
     /// <summary>Shared card views for Ace of Shadows. The stage system writes, the binding system reads.</summary>
     /// <remarks>
-    /// The stage system owns every view and sprite. This object holds the references and two
-    /// change counters. It is not a pool: nothing is acquired or released here.
+    /// The stage system owns every view and sprite. This object holds the handle-to-view map and
+    /// nothing else — every change the binding system has to notice travels through the world as
+    /// an event. It is not a pool: nothing is acquired or released here.
     /// </remarks>
     public sealed class CardViewChannel
     {
@@ -20,8 +21,6 @@ namespace Client.Adapters.AceOfShadows
 
         public IReadOnlyList<CardView> Views => _views;
         public IReadOnlyList<int> Handles => _handles;
-        public int BindingResetVersion { get; private set; }
-        public int SeatingVersion { get; private set; }
 
         public void SetSprites(Sprite cardBack, Sprite[] faces)
         {
@@ -37,9 +36,6 @@ namespace Client.Adapters.AceOfShadows
 
         public void ConfigureCard(int cardIndex, CardView cardView) =>
             cardView.Configure(_cardBack, _faces[cardIndex % _faces.Length]);
-
-        public void BumpBindingReset() => BindingResetVersion++;
-        public void BumpSeating() => SeatingVersion++;
 
         public void Clear()
         {

@@ -1,4 +1,5 @@
 using System.Collections;
+using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
 using Client.Bootstrap;
 using Client.Simulation.Core.Navigation;
@@ -148,7 +149,9 @@ namespace Client.Adapters.Tests
             // atlases land they would draw as white boxes. That is seconds on a real host.
             var shellDeadline = Time.realtimeSinceStartup + TimeoutSeconds;
 
-            while (entryPoint.StageReady.IsShellReady == false)
+            var shellReady = entryPoint.World.GetPool<ShellReadyTag>();
+
+            while (shellReady.Count == 0)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(shellDeadline),
                     "The shell never finished loading its skin.");
@@ -183,7 +186,9 @@ namespace Client.Adapters.Tests
             // background requests on that frame. The indicator must cover that gap too.
             deadline = Time.realtimeSinceStartup + TimeoutSeconds;
 
-            while (entryPoint.StageReady.IsDemoReady == false)
+            var demoReady = entryPoint.World.GetPool<DemoReadyTag>();
+
+            while (demoReady.Count == 0)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     "The demo never painted its background.");

@@ -20,7 +20,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// </remarks>
     public sealed class PhoenixFlameStageSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
-        IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
+        IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/phoenix-flame/atlas";
         private const string BackgroundAddress = "art/phoenix-flame/background";
@@ -55,7 +55,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private EcsWorld _world;
         private ILogService _log;
         private AddressablesAssetService _assets;
-        private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
         private StageState _state;
         private PhoenixFlameScreen _flameScreen;
@@ -155,7 +154,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _flameScreen.Background.sprite = _backgroundSprite;
             // The screen is covered now, so the shell can hand over. Starting waits only for the
             // simulation to take StartFlameCommand, which changes nothing on screen.
-            _stageReady.MarkDemoReady();
+            _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
             _flameScreen.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
             _RecalculateLayout();
             _world.GetPool<StartFlameCommand>().Add(_world.NewEntity());
@@ -313,7 +312,8 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 _backgroundRequestId == 0)
                 return;
 
-            _stageReady.ClearDemo();
+            foreach (var readyEntity in _world.Where(out SingleTagAspect<DemoReadyTag> _))
+                _world.DelEntity(readyEntity);
 
             if (resetFlame)
                 _world.GetPool<ResetFlameCommand>().Add(_world.NewEntity());
@@ -375,7 +375,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
-        public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
     }
 }

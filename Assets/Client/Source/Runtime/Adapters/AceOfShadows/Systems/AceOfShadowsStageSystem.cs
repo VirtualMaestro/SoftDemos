@@ -1,4 +1,5 @@
 using System;
+using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.Shared.Services;
@@ -23,7 +24,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
-        IEcsInject<StageReadyChannel>, IEcsInject<ScreenRegistryService>
+        IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/ace-of-shadows/atlas";
         private const string BackgroundAddress = "art/ace-of-shadows/background";
@@ -48,7 +49,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         private CardMovePlayerService _cardMovePlayer;
         private SharedUiSprites _uiSprites;
         private CardViewChannel _channel;
-        private StageReadyChannel _stageReady;
         private ScreenRegistryService _screens;
         private StageState _state;
         private AceOfShadowsScreen _aosScreen;
@@ -143,7 +143,7 @@ namespace Client.Adapters.AceOfShadows.Systems
                 _aosScreen.Background.sprite = _backgroundSprite;
                 // The screen is covered now, so the shell can hand over. The cards still arrive
                 // over the next few frames, on top of the background.
-                _stageReady.MarkDemoReady();
+                _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
                 _SkinSpeedButton();
                 _RecalculateLayout();
             }
@@ -162,8 +162,8 @@ namespace Client.Adapters.AceOfShadows.Systems
             if (_channel.Views.Count != _config.CardCount)
                 return;
 
-            _channel.BumpBindingReset();
-            _channel.BumpSeating();
+            // Rewinding the bindings unseats every card on its own, so no separate layout event.
+            _world.GetPool<ViewsResetEvent>().Add(_world.NewEntity());
             _world.GetPool<DealDeckCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
         }
@@ -187,10 +187,7 @@ namespace Client.Adapters.AceOfShadows.Systems
         private void _RunReady()
         {
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
-            {
                 _RecalculateLayout();
-                _channel.BumpSeating();
-            }
 
             if (_speedRequested == false)
                 return;
@@ -267,6 +264,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             _camera = StageContent.FitBackground(_camera, _aosScreen.Background.transform,
                 _backgroundSprite, DemoName, _log, out var orthographicSize);
             _layout.Recalculate(_screenWidth, _screenHeight, orthographicSize);
+            _world.GetPool<LayoutChangedEvent>().Add(_world.NewEntity());
         }
 
         private void _Teardown(bool resetDeck)
@@ -275,7 +273,9 @@ namespace Client.Adapters.AceOfShadows.Systems
                 _backgroundRequestId == 0 && _channel.Views.Count == 0)
                 return;
 
-            _stageReady.ClearDemo();
+            foreach (var readyEntity in _world.Where(out SingleTagAspect<DemoReadyTag> _))
+                _world.DelEntity(readyEntity);
+
             _cardMovePlayer.KillTweensFor(_channel.Handles);
 
             if (resetDeck)
@@ -346,7 +346,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         public void Inject(CardMovePlayerService obj) => _cardMovePlayer = obj;
         public void Inject(SharedUiSprites obj) => _uiSprites = obj;
         public void Inject(CardViewChannel obj) => _channel = obj;
-        public void Inject(StageReadyChannel obj) => _stageReady = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 
     }

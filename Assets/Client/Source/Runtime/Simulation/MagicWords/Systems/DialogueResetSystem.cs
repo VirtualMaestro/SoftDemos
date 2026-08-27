@@ -45,7 +45,7 @@ namespace Client.Simulation.MagicWords.Systems
             playback = default;
             ref var state = ref _world.Get<DialogueStateComp>();
             state = default;
-            ref var payload = ref _world.Get<DialoguePayloadComp>();
+            ref var payload = ref _world.Get<DialoguePayloadEvent>();
             payload = default;
         }
 

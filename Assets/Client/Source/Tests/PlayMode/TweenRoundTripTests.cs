@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using Client.Adapters.AceOfShadows;
+using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.Shared.Services;
+using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Components;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;
@@ -15,9 +17,9 @@ namespace Client.Adapters.Tests
 {
     /// <summary>Proves the command, tween and completion cycle on a throwaway object.</summary>
     /// <remarks>
-    /// The test asserts the contract the simulation sees: <see cref="MoveCommand"/> in,
-    /// <see cref="MoveCompletedTag"/> out, position reached. That contract holds even if
-    /// DOTween is replaced later.
+    /// The test asserts the contract the simulation sees: <c>MovingComp</c> in,
+    /// <see cref="MoveCompletedCommand"/> out, position reached, and the flight itself untouched.
+    /// That contract holds even if DOTween is replaced later.
     /// </remarks>
     public sealed class TweenRoundTripTests
     {
@@ -72,27 +74,41 @@ namespace Client.Adapters.Tests
             _view = null;
         }
 
+        /// <summary>
+        /// The two halves own different halves of the move. The view handle is presentation's — the
+        /// adapter is its only writer and only <c>ViewRegistryService</c> can resolve it — and the
+        /// completion crosses back the one way the boundary sanctions, as a command.
+        /// </summary>
+        [Test]
+        public void TheMoveContract_KeepsTheHandleInTheAdapterAndTheCompletionInTheSimulation()
+        {
+            Assert.That(typeof(ViewHandleComp).Assembly.GetName().Name,
+                Is.EqualTo("Client.Adapters.AceOfShadows"));
+            Assert.That(typeof(MoveCompletedCommand).Assembly.GetName().Name,
+                Is.EqualTo("Client.Simulation.Core"));
+        }
+
         [UnityTest]
-        public IEnumerator MoveCommand_BecomesMoveCompleted_AndTheViewReachesTheSlot()
+        public IEnumerator AFlight_BecomesMoveCompleted_AndTheViewReachesTheSlot()
         {
             var entityId = _CreateMovingEntity(ShortDuration);
-            var completed = _world.GetPool<MoveCompletedTag>();
-            var commands = _world.GetPool<MoveCommand>();
+            var completed = _world.GetPool<MoveCompletedCommand>();
 
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
 
             while (completed.Has(entityId) == false)
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
-                    $"MoveCompletedTag never appeared within {TimeoutSeconds}s. " +
+                    $"MoveCompletedCommand never appeared within {TimeoutSeconds}s. " +
                     $"Position: {_view.transform.position}, target: {_layout.SlotPosition(TargetSlot, 0)}.");
 
                 yield return null;
                 _pipeline.LateRun();
             }
 
-            Assert.That(commands.Has(entityId), Is.False,
-                "The adapter must remove MoveCommand when it reports MoveCompletedTag.");
+            Assert.That(_world.GetPool<MovingComp>().Has(entityId), Is.True,
+                "The flight is the simulation's: the adapter reports the completion and leaves " +
+                "MovingComp for the simulation to land and drop.");
             Assert.That(_view.transform.position,
                 Is.EqualTo(_layout.SlotPosition(TargetSlot, 0)).Using(new Vector3Comparer(0.001f)),
                 $"The view should have reached slot {TargetSlot}.");
@@ -144,9 +160,9 @@ namespace Client.Adapters.Tests
             var entityId = _world.NewEntity();
             _world.GetPool<ViewHandleComp>().Add(entityId).Id = handleId;
 
-            ref var command = ref _world.GetPool<MoveCommand>().Add(entityId);
-            command.TargetSlot = TargetSlot;
-            command.Duration = duration;
+            ref var moving = ref _world.GetPool<MovingComp>().Add(entityId);
+            moving.TargetStack = TargetSlot;
+            moving.DurationSeconds = duration;
 
             _pipeline.LateRun(); // picks the command up and starts the tween
             return entityId;
