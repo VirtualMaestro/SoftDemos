@@ -5,7 +5,6 @@ using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
-using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
@@ -19,9 +18,15 @@ namespace Client.Adapters.MagicWords.Systems
 {
     /// <summary>
     /// Runs the dialogue demo's screen lifecycle: loads atlas/background/emoji, hands content to
-    /// the dialogue log channel, forwards skip and avatar-mode buttons, shows load status.
+    /// the dialogue log channel, drains the skip and avatar-mode buttons into commands.
     /// </summary>
-    public sealed class MagicWordsStageSystem : IEcsLateRun, IEcsDestroy,
+    /// <remarks>
+    /// The two labels this used to paint moved to <see cref="MagicWordsViewSystem"/>, which is the
+    /// half that reads the world and draws. What is left is the port polling, the content this
+    /// system owns and must destroy, and every world write — an Input phase in everything but the
+    /// interface name, which arrives in the flip.
+    /// </remarks>
+    public sealed class MagicWordsInputSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
         IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>,
@@ -33,10 +38,6 @@ namespace Client.Adapters.MagicWords.Systems
         private const string BubbleSpriteName = "mw-bubble";
         private const string FrameSpriteName = "mw-avatar-frame";
         private const string PlaceholderSpriteName = "mw-avatar-placeholder";
-        private const string LocalModeLabel = "Avatars: Local";
-        private const string RemoteModeLabel = "Avatars: Remote";
-        private const string LoadingStatus = "Loading dialogue…";
-        private const string FailedStatus = "Dialogue failed to load. Go back and try again.";
         private const string DemoName = "Magic Words";
         private const int DemoIndex = 1;
 
@@ -60,9 +61,6 @@ namespace Client.Adapters.MagicWords.Systems
         private int _emojiRequestId;
         private int _screenWidth = -1;
         private int _screenHeight = -1;
-        private DialogueLoadState _shownDialogueState = (DialogueLoadState)(-1);
-        private bool _skipRequested;
-        private bool _modeRequested;
 
         public void LateRun()
         {
@@ -99,8 +97,6 @@ namespace Client.Adapters.MagicWords.Systems
                 return;
 
             _mwScreen = current;
-            _mwScreen.OnSkipPressed += _OnRequestSkip;
-            _mwScreen.OnAvatarModePressed += _OnRequestModeChange;
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
             _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
             _emojiRequestId = _assets.BeginLoad(EmojiAddress);
@@ -141,7 +137,6 @@ namespace Client.Adapters.MagicWords.Systems
                 _sprites[FrameSpriteName],
                 _sprites[PlaceholderSpriteName],
                 _mwScreen);
-            _UpdateAvatarModeLabel();
             _RecalculateLayout();
             _world.GetPool<LoadDialogueCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
@@ -152,21 +147,18 @@ namespace Client.Adapters.MagicWords.Systems
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
                 _RecalculateLayout();
 
-            _UpdateStatusLabel();
-
-            if (_skipRequested)
+            if (_mwScreen.SkipRequested)
             {
-                _skipRequested = false;
+                _mwScreen.SkipRequested = false;
                 _world.GetPool<SkipDialogueCommand>().Add(_world.NewEntity());
             }
 
-            if (!_modeRequested)
+            if (_mwScreen.ModeRequested == false)
                 return;
 
-            _modeRequested = false;
+            _mwScreen.ModeRequested = false;
             var next = _avatars.Mode == AvatarMode.Local ? AvatarMode.Remote : AvatarMode.Local;
             _avatars.SetMode(next);
-            _UpdateAvatarModeLabel();
             _world.GetPool<ReloadAvatarsCommand>().Add(_world.NewEntity());
         }
 
@@ -212,26 +204,6 @@ namespace Client.Adapters.MagicWords.Systems
             return false;
         }
 
-        private void _UpdateStatusLabel()
-        {
-            ref readonly var dialogue = ref _world.Get<DialogueStateComp>();
-
-            if (_shownDialogueState == dialogue.State)
-                return;
-
-            _shownDialogueState = dialogue.State;
-            var failed = dialogue.State == DialogueLoadState.Failed;
-            _mwScreen.StatusLabel.gameObject.SetActive(dialogue.State != DialogueLoadState.Ready);
-            _mwScreen.StatusLabel.text = failed ? FailedStatus : LoadingStatus;
-        }
-
-        private void _UpdateAvatarModeLabel()
-        {
-            _mwScreen.AvatarModeLabel.text = _avatars.Mode == AvatarMode.Local
-                ? LocalModeLabel
-                : RemoteModeLabel;
-        }
-
         private void _RecalculateLayout()
         {
             _screenWidth = Screen.width;
@@ -263,8 +235,8 @@ namespace Client.Adapters.MagicWords.Systems
 
             if (_mwScreen != null)
             {
-                _mwScreen.OnSkipPressed -= _OnRequestSkip;
-                _mwScreen.OnAvatarModePressed -= _OnRequestModeChange;
+                _mwScreen.SkipRequested = false;
+                _mwScreen.ModeRequested = false;
                 _mwScreen.Background.sprite = null;
             }
 
@@ -272,11 +244,8 @@ namespace Client.Adapters.MagicWords.Systems
 
             _mwScreen = null;
             _camera = null;
-            _shownDialogueState = (DialogueLoadState)(-1);
             _screenWidth = -1;
             _screenHeight = -1;
-            _skipRequested = false;
-            _modeRequested = false;
             _TransitionTo(StageState.Idle);
         }
 
@@ -296,9 +265,6 @@ namespace Client.Adapters.MagicWords.Systems
             _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
             _emojiRequestId = StageContent.Release(_assets, _emojiRequestId);
         }
-
-        private void _OnRequestSkip() => _skipRequested = true;
-        private void _OnRequestModeChange() => _modeRequested = true;
 
         private void _TransitionTo(StageState next) => _state = next;
 

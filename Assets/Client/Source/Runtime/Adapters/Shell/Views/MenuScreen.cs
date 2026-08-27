@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -10,9 +9,18 @@ namespace Client.Adapters.Shell.Views
     {
         [SerializeField] private Button[] demoButtons;
 
-        /// <summary>Raised with the demo index when its button is clicked. A system turns this
-        /// into an <c>OpenDemoCommand</c>; the view knows nothing about the world.</summary>
-        public event Action<int> OnDemoPressed;
+        /// <summary>The demo index whose button was clicked, or <c>-1</c> for none.</summary>
+        /// <remarks>
+        /// <c>ShellInputSystem</c> drains this into an <c>OpenDemoCommand</c> and puts it back to
+        /// <c>-1</c>; the view knows nothing about the world. A pending press is not world state —
+        /// it has no lifetime and no owner — and holding it here is what makes the frame the
+        /// command lands in readable: a click that wrote the world from uGUI's callback landed in
+        /// this frame or the next one, depending on when uGUI raised it.
+        /// </remarks>
+        public int RequestedDemoIndex { get; set; } = NoDemoRequested;
+
+        /// <summary>The value <see cref="RequestedDemoIndex"/> holds while no button is pending.</summary>
+        public const int NoDemoRequested = -1;
 
         /// <summary>How many entries this screen can show. <c>EntryPoint</c> checks it against the catalog.</summary>
         public int ButtonCount => demoButtons?.Length ?? 0;
@@ -23,7 +31,7 @@ namespace Client.Adapters.Shell.Views
             {
                 var demoIndex = i;
                 var button = demoButtons[i];
-                button.onClick.AddListener(() => OnDemoPressed?.Invoke(demoIndex));
+                button.onClick.AddListener(() => RequestedDemoIndex = demoIndex);
                 button.interactable = true;
 
                 var label = button.GetComponentInChildren<TMP_Text>();

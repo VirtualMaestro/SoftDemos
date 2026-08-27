@@ -3,7 +3,7 @@ namespace Client.Adapters.Shared.Stage
     /// <summary>The lifecycle every stage system steps through in <c>LateRun</c>.</summary>
     /// <remarks>
     /// Each system uses the subset it needs: <see cref="Starting"/> is entered only by
-    /// <c>PhoenixFlameStageSystem</c>, which must wait one frame for the simulation to consume
+    /// <c>PhoenixFlameInputSystem</c>, which must wait one frame for the simulation to consume
     /// <c>StartFlameCommand</c> before it can snap the Animator to the configured phase.
     /// <c>ShellStageSystem</c> never enters <see cref="Closing"/>; the shell lives for the whole
     /// session.

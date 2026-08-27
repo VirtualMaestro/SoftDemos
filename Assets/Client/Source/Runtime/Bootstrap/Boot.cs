@@ -121,14 +121,21 @@ namespace Client.Bootstrap
                 // Presentation, in run order. These are IEcsLateRun, the simulation is IEcsRun,
                 // and a runner only ever collects its own interface — so the two lists above and
                 // below never interleave at run time.
-                .Add(new AceOfShadowsStageSystem(aceConfig))
+                //
+                // Each feature's input half comes before its drawing halves: the half that decides
+                // writes the world, the halves that draw read it, and both want the same frame's
+                // answer. Once the phases exist this order is the driver's, not this list's.
+                .Add(new AceOfShadowsInputSystem(aceConfig))
                 .Add(new CardBindingSystem())
                 .Add(new DeckHudSystem())
-                .Add(new MagicWordsStageSystem())
+                .Add(new MagicWordsInputSystem())
+                .Add(new MagicWordsViewSystem())
                 .Add(new DialogueLogSystem())
-                .Add(new PhoenixFlameStageSystem())
+                .Add(new PhoenixFlameInputSystem())
+                .Add(new PhoenixFlameViewSystem())
                 .Add(new TweenPlaybackSystem())
                 .Add(new ShellStageSystem(shellSkin, demos))
+                .Add(new ShellInputSystem(menuScreen, demoHud))
                 .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
 
                 // Cleanup deletes the adapter-owned one-frame components, so it closes the pass.

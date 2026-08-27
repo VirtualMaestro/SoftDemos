@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,8 +5,9 @@ using UnityEngine.UI;
 namespace Client.Adapters.PhoenixFlame.Views
 {
     /// <summary>
-    /// The Phoenix Flame demo scene publishing itself to the stage system. It holds no game state
-    /// and makes no decisions: the button raises an event, the stage decides what it means.
+    /// The Phoenix Flame demo scene publishing itself to the systems that drive it. It holds no
+    /// game state and makes no decisions: the button records the press, the Input system decides
+    /// what it means.
     /// </summary>
     public sealed class PhoenixFlameScreen : MonoBehaviour
     {
@@ -23,7 +23,13 @@ namespace Client.Adapters.PhoenixFlame.Views
         public Button AdvanceButton => advanceButton;
         public TMP_Text PhaseLabel => phaseLabel;
 
-        public event Action OnAdvancePressed;
+        /// <summary>Set by the advance button, cleared by the system that drains it into a command.</summary>
+        /// <remarks>
+        /// A pending press is not world state: it has no lifetime, no owner and no reader but the
+        /// one Input system. The view holds it until that system's phase runs, which is what makes
+        /// the frame the command lands in readable.
+        /// </remarks>
+        public bool AdvanceRequested { get; set; }
 
         private void OnValidate()
         {
@@ -48,7 +54,7 @@ namespace Client.Adapters.PhoenixFlame.Views
 
         private void _OnAdvancePressed()
         {
-            OnAdvancePressed?.Invoke();
+            AdvanceRequested = true;
         }
     }
 }

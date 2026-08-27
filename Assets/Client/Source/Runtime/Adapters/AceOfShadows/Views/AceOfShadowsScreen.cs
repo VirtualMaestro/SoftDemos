@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,7 +30,14 @@ namespace Client.Adapters.AceOfShadows.Views
         /// </summary>
         public Image SpeedButtonImage => speedButton != null ? speedButton.image : null;
 
-        public event Action OnSpeedButtonPressed;
+        /// <summary>Set by the speed button, cleared by the system that drains it into a command.</summary>
+        /// <remarks>
+        /// A pending press is not world state: it has no lifetime, no owner and no reader but the
+        /// one Input system. The view holds it until that system's phase runs, which is what makes
+        /// the frame the command lands in readable — a C# event fired straight into a command
+        /// wrote the world from uGUI's callback, at whichever point in the frame uGUI chose.
+        /// </remarks>
+        public bool SpeedRequested { get; set; }
 
         private void OnValidate()
         {
@@ -58,7 +64,7 @@ namespace Client.Adapters.AceOfShadows.Views
 
         private void _OnSpeedButtonPressed()
         {
-            OnSpeedButtonPressed?.Invoke();
+            SpeedRequested = true;
         }
     }
 }

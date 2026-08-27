@@ -12,6 +12,11 @@ namespace Client.Adapters.Shell.Systems
     /// Shows/hides the menu, demo HUD and loading spinner based on screen state and readiness
     /// flags, with a fade-in when a panel appears.
     /// </summary>
+    /// <remarks>
+    /// Drawing only: it reads the world and writes the screen, and the presses its two views
+    /// record are drained by <see cref="ShellInputSystem"/>. The <c>_last*</c> fields are a repaint
+    /// cache — what is on screen right now — not state passed between systems.
+    /// </remarks>
     public sealed class ScreenPresentationSystem : IEcsLateRun, IEcsDestroy, IEcsInject<EcsWorld>,
         IEcsInject<FadePlayerService>
     {
@@ -54,28 +59,14 @@ namespace Client.Adapters.Shell.Systems
             _menuGroup = menu.GetComponent<CanvasGroup>();
             _demoHudGroup = demoHud.GetComponent<CanvasGroup>();
             _loadingGroup = loadingIndicator.GetComponent<CanvasGroup>();
-
-            // Clicks cannot arrive before the world exists: EntryPoint enables the buttons via
-            // Bind only after BuildAndInit, which injects _world into this system first.
-            _menu.OnDemoPressed += _OnDemoPressed;
-            _demoHud.OnClosePressed += _OnClosePressed;
         }
 
         void IEcsDestroy.Destroy()
         {
-            _menu.OnDemoPressed -= _OnDemoPressed;
-            _demoHud.OnClosePressed -= _OnClosePressed;
-
             // The fade half of the safety net the old TweenPlayerService.KillAll carried: a fade
             // that outlives its world calls back into a destroyed pipeline.
             _tweens.KillFades();
         }
-
-        private void _OnDemoPressed(int demoIndex) =>
-            _world.GetPool<OpenDemoCommand>().Add(_world.NewEntity()).DemoIndex = demoIndex;
-
-        private void _OnClosePressed() =>
-            _world.GetPool<CloseDemoCommand>().Add(_world.NewEntity());
 
         public void LateRun()
         {

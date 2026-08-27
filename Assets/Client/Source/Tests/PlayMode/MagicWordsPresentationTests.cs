@@ -74,7 +74,7 @@ namespace Client.Adapters.Tests
             Assert.That(_FindEmojiBody(sheldon), Is.Not.Null);
             Assert.That(_FindEmojiBody(sheldon).spriteAsset, Is.Not.Null);
 
-            sceneView.RaiseSkipPressed();
+            sceneView.SkipRequested = true;
             yield return _WaitUntil(
                 () => _ViewCount(sceneView) == entryPoint.World.Get<DialogueStateComp>().LineCount,
                 "Skip did not bind every remaining line in one tick.", 1f);

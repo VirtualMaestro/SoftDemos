@@ -1,4 +1,3 @@
-using System;
 using Client.Adapters.Vendor.OptVList;
 using TMPro;
 using UnityEngine;
@@ -24,8 +23,17 @@ namespace Client.Adapters.MagicWords.Views
         public TMP_Text AvatarModeLabel => avatarModeLabel;
         public TMP_Text StatusLabel => statusLabel;
 
-        public event Action OnSkipPressed;
-        public event Action OnAvatarModePressed;
+        /// <summary>Set by a tap on the log, cleared by the system that drains it into a command.</summary>
+        /// <remarks>
+        /// A pending press is not world state: it has no lifetime, no owner and no reader but the
+        /// one Input system. <see cref="DialogueTapArea"/> writes it from a pointer callback; the
+        /// world is written later, inside a phase, which is what makes the frame the command lands
+        /// in readable.
+        /// </remarks>
+        public bool SkipRequested { get; set; }
+
+        /// <summary>Set by the avatar-mode button, cleared by the system that drains it.</summary>
+        public bool ModeRequested { get; set; }
 
         private void OnValidate()
         {
@@ -49,14 +57,9 @@ namespace Client.Adapters.MagicWords.Views
                 avatarModeButton.onClick.RemoveListener(_OnAvatarModePressed);
         }
 
-        public void RaiseSkipPressed()
-        {
-            OnSkipPressed?.Invoke();
-        }
-
         private void _OnAvatarModePressed()
         {
-            OnAvatarModePressed?.Invoke();
+            ModeRequested = true;
         }
     }
 }

@@ -18,9 +18,16 @@ namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>
     /// Runs the card demo's screen lifecycle: loads atlas+background, spawns the card view pool,
-    /// forwards the speed button, tears everything down on close.
+    /// drains the speed button into a command, tears everything down on close.
     /// </summary>
-    public sealed class AceOfShadowsStageSystem : IEcsLateRun, IEcsDestroy,
+    /// <remarks>
+    /// The demo's drawing lives in <see cref="CardBindingSystem"/>, <see cref="DeckHudSystem"/>
+    /// and <see cref="TweenPlaybackSystem"/>: they are the half that reads the world and paints it,
+    /// so this system keeps nothing but the decisions. What is left here is the port polling, the
+    /// content it owns and must destroy, and every world write — an Input phase in everything but
+    /// the interface name, which arrives in the flip.
+    /// </remarks>
+    public sealed class AceOfShadowsInputSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
@@ -62,9 +69,8 @@ namespace Client.Adapters.AceOfShadows.Systems
         private int _screenHeight = -1;
         private int _speedIndex;
         private bool _contentReady;
-        private bool _speedRequested;
 
-        public AceOfShadowsStageSystem(AceOfShadowsConfig config)
+        public AceOfShadowsInputSystem(AceOfShadowsConfig config)
         {
             _config = config;
         }
@@ -107,8 +113,6 @@ namespace Client.Adapters.AceOfShadows.Systems
                 return;
 
             _aosScreen = current;
-            _aosScreen.OnSpeedButtonPressed += _OnRequestSpeedChange;
-
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
             _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
 
@@ -189,10 +193,10 @@ namespace Client.Adapters.AceOfShadows.Systems
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
                 _RecalculateLayout();
 
-            if (_speedRequested == false)
+            if (_aosScreen.SpeedRequested == false)
                 return;
 
-            _speedRequested = false;
+            _aosScreen.SpeedRequested = false;
             _speedIndex = (_speedIndex + 1) % SpeedCycle.Length;
             var multiplier = SpeedCycle[_speedIndex];
             var commandEntity = _world.NewEntity();
@@ -294,7 +298,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
             if (_aosScreen != null)
             {
-                _aosScreen.OnSpeedButtonPressed -= _OnRequestSpeedChange;
+                _aosScreen.SpeedRequested = false;
                 _aosScreen.Background.sprite = null;
                 var speedButtonImage = _aosScreen.SpeedButtonImage;
 
@@ -307,7 +311,6 @@ namespace Client.Adapters.AceOfShadows.Systems
             _aosScreen = null;
             _camera = null;
             _contentReady = false;
-            _speedRequested = false;
             _speedIndex = 0;
             _screenWidth = -1;
             _screenHeight = -1;
@@ -329,11 +332,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         {
             _atlasRequestId = StageContent.Release(_assets, _atlasRequestId);
             _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
-        }
-
-        private void _OnRequestSpeedChange()
-        {
-            _speedRequested = true;
         }
 
         private void _TransitionTo(StageState next) => _state = next;

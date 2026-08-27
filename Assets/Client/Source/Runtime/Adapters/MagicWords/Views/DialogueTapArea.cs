@@ -21,7 +21,7 @@ namespace Client.Adapters.MagicWords.Views
             if (eventData.dragging)
                 return;
 
-            screen.RaiseSkipPressed();
+            screen.SkipRequested = true;
         }
     }
 }

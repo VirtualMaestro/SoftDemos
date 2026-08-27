@@ -1,7 +1,6 @@
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
-using Client.Simulation.PhoenixFlame;
 using Client.Simulation.PhoenixFlame.Components;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
@@ -12,13 +11,20 @@ using UnityEngine.U2D;
 
 namespace Client.Adapters.PhoenixFlame.Systems
 {
-    /// <summary>Drives the flame Animator. Loads the content and mirrors <see cref="FlameStateComp"/> onto the view.</summary>
+    /// <summary>
+    /// Runs the flame demo's screen lifecycle: loads atlas+background, hands the particle sprites
+    /// to the view, drains the advance button into a command, tears everything down on close.
+    /// </summary>
     /// <remarks>
-    /// The <c>Starting</c> state exists because the start costs one frame. This system runs in
-    /// <c>LateRun</c> and <c>FlameSetupSystem</c> in <c>Run</c>. Read the state only after
-    /// <c>IsActive</c> is true.
+    /// The Animator, the phase label and the button state moved to
+    /// <see cref="PhoenixFlameViewSystem"/>, which is the half that reads the world and draws.
+    /// What is left is the port polling, the content this system owns and must destroy, and every
+    /// world write — an Input phase in everything but the interface name, which arrives in the flip.
+    /// <para>The <c>Starting</c> state exists because the start costs one frame: this system runs
+    /// in <c>LateRun</c> and <c>FlameSetupSystem</c> in <c>Run</c>, so <c>StartFlameCommand</c> is
+    /// taken a frame after it is written. The phases remove that hop and the state goes with it.</para>
     /// </remarks>
-    public sealed class PhoenixFlameStageSystem : IEcsLateRun, IEcsDestroy,
+    public sealed class PhoenixFlameInputSystem : IEcsLateRun, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
     {
@@ -29,28 +35,16 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         /// <summary>The four flame frames sliced from <c>flames_sheet.png</c>. Each particle gets one at random.</summary>
         private static readonly string[] FlameFrameSpriteNames = { "flame_0", "flame_1", "flame_2", "flame_3" };
-        private const string OrangeLabel = "Orange";
-        private const string GreenLabel = "Green";
-        private const string BlueLabel = "Blue";
-        private const string FailedLabel = "Load failed";
-        private const string OrangeTrigger = "ToOrange";
-        private const string GreenTrigger = "ToGreen";
-        private const string BlueTrigger = "ToBlue";
 
-        /// <summary>The blend length on every <c>AnyState</c> transition in <c>PhoenixFlame.controller</c>, in seconds.</summary>
+        /// <summary>Shown when the content fails to load, in place of a phase name.</summary>
         /// <remarks>
-        /// This must agree with <see cref="FlameStateComp.TransitionDurationSeconds"/>, which the
-        /// simulation counts down. <see cref="_ContinueStarting"/> logs a mismatch.
+        /// The one thing this half draws, and only on the path where there is nothing else to say:
+        /// a failed load never reaches <c>StartFlameCommand</c>, so the flame stays inactive and
+        /// <see cref="PhoenixFlameViewSystem"/>, which owns the label otherwise, writes nothing.
         /// </remarks>
-        private const float AuthoredTransitionSeconds = 1f;
+        private const string FailedLabel = "Load failed";
         private const string DemoName = "Phoenix Flame";
         private const int DemoIndex = 2;
-
-        // Hash once. CrossFadeInFixedTime takes a state hash, and hashing per frame allocates.
-        // Static: the labels and the triggers are constants, so every instance would hash the same.
-        private static readonly int[] PhaseHashes = _HashPerPhase(OrangeLabel, GreenLabel, BlueLabel);
-        private static readonly int[] PhaseTriggers =
-            _HashPerPhase(OrangeTrigger, GreenTrigger, BlueTrigger);
 
         private EcsWorld _world;
         private ILogService _log;
@@ -68,21 +62,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private int _backgroundRequestId;
         private int _screenWidth = -1;
         private int _screenHeight = -1;
-        private FlamePhase _shownPhase;
-        private FlamePhase _shownLabelPhase = (FlamePhase)(-1);
-        // Nullable so the first write always reaches the button. The scene starts it interactable.
-        private bool? _shownInteractable;
-        private bool _advanceRequested;
-
-        /// <summary>Indexes three hashed names by <see cref="FlamePhase"/>.</summary>
-        private static int[] _HashPerPhase(string orange, string green, string blue)
-        {
-            var hashes = new int[FlamePhaseCycle.Count];
-            hashes[(int)FlamePhase.Orange] = Animator.StringToHash(orange);
-            hashes[(int)FlamePhase.Green] = Animator.StringToHash(green);
-            hashes[(int)FlamePhase.Blue] = Animator.StringToHash(blue);
-            return hashes;
-        }
 
         public void LateRun()
         {
@@ -122,9 +101,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 return;
 
             _flameScreen = current;
-            _flameScreen.OnAdvancePressed += _OnRequestAdvance;
-            // Disable the button for the whole load. A tap must not queue an advance.
-            _ApplyInteractable(false);
             _atlasRequestId = _assets.BeginLoad(AtlasAddress);
             _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
             _TransitionTo(StageState.Loading);
@@ -163,27 +139,12 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         private void _ContinueStarting()
         {
-            ref readonly var flame = ref _world.Get<FlameStateComp>();
-
             // The simulation consumes StartFlameCommand on its next Run, so this waits one frame.
-            if (flame.IsActive == false)
+            if (_world.Get<FlameStateComp>().IsActive == false)
                 return;
 
             // Discard a press made during the load. The screen was not running yet.
-            _advanceRequested = false;
-            // Play the configured phase. The controller default state does not matter.
-            _shownPhase = flame.CurrentPhase;
-            // Use Play, not a trigger. The start phase must snap, and a trigger would blend.
-            _ResetPhaseTriggers();
-            _flameScreen.FlameAnimator.Play(PhaseHashes[(int)flame.CurrentPhase], 0, 0f);
-
-            if (Mathf.Approximately(flame.TransitionDurationSeconds, AuthoredTransitionSeconds) == false)
-                _log.Error($"The flame transition is {AuthoredTransitionSeconds}s in " +
-                    $"PhoenixFlame.controller but {flame.TransitionDurationSeconds}s in the " +
-                    "simulation; the phase label and the colour will disagree.");
-
-            _ApplyInteractable(true);
-            _ApplyLabel(flame.CurrentPhase);
+            _flameScreen.AdvanceRequested = false;
             _TransitionTo(StageState.Ready);
         }
 
@@ -192,66 +153,11 @@ namespace Client.Adapters.PhoenixFlame.Systems
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
                 _RecalculateLayout();
 
-            ref readonly var flame = ref _world.Get<FlameStateComp>();
-            _DriveAnimator(in flame);
-            _ApplyInteractable(flame.IsTransitioning == false);
-            _ApplyLabel(flame.CurrentPhase);
-
-            if (_advanceRequested == false)
+            if (_flameScreen.AdvanceRequested == false)
                 return;
 
-            _advanceRequested = false;
+            _flameScreen.AdvanceRequested = false;
             _world.GetPool<AdvanceFlamePhaseCommand>().Add(_world.NewEntity());
-        }
-
-        private void _DriveAnimator(in FlameStateComp flame)
-        {
-            if (flame.IsTransitioning == false || _shownPhase == flame.NextPhase)
-                return;
-
-            _shownPhase = flame.NextPhase;
-            // Triggers latch. Clear the other two before you set the one you want.
-            _ResetPhaseTriggers();
-            _flameScreen.FlameAnimator.SetTrigger(PhaseTriggers[(int)flame.NextPhase]);
-        }
-
-        private void _ResetPhaseTriggers()
-        {
-            // `?.` skips Unity's null overload. Teardown runs while the scene closes.
-            if (_flameScreen == null || _flameScreen.FlameAnimator == null)
-                return;
-
-            foreach (var trigger in PhaseTriggers)
-                _flameScreen.FlameAnimator.ResetTrigger(trigger);
-        }
-
-        private void _ApplyInteractable(bool interactable)
-        {
-            if (_shownInteractable == interactable)
-                return;
-
-            _shownInteractable = interactable;
-            _flameScreen.AdvanceButton.interactable = interactable;
-        }
-
-        private void _ApplyLabel(FlamePhase phase)
-        {
-            if (_shownLabelPhase == phase)
-                return;
-
-            _shownLabelPhase = phase;
-            _flameScreen.PhaseLabel.text = _GetPhaseLabel(phase);
-        }
-
-        private static string _GetPhaseLabel(FlamePhase phase)
-        {
-            if (phase == FlamePhase.Green)
-                return GreenLabel;
-
-            if (phase == FlamePhase.Blue)
-                return BlueLabel;
-
-            return OrangeLabel;
         }
 
         /// <summary>Shows the failure label and returns to <c>Idle</c>, which retries while the scene is open.</summary>
@@ -319,13 +225,10 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 _world.GetPool<ResetFlameCommand>().Add(_world.NewEntity());
 
             // Keep this order. The view must release its sprite references before you destroy them.
-            // Clear the triggers too. The Animator survives a reopen and a latched trigger fires again.
-            _ResetPhaseTriggers();
-
             if (_flameScreen != null)
             {
                 _flameScreen.FlameColor.ClearSprites();
-                _flameScreen.OnAdvancePressed -= _OnRequestAdvance;
+                _flameScreen.AdvanceRequested = false;
                 _flameScreen.Background.sprite = null;
             }
 
@@ -335,12 +238,8 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
             _flameScreen = null;
             _camera = null;
-            _shownPhase = FlamePhase.Orange;
-            _shownLabelPhase = (FlamePhase)(-1);
-            _shownInteractable = null;
             _screenWidth = -1;
             _screenHeight = -1;
-            _advanceRequested = false;
             _TransitionTo(StageState.Idle);
         }
 
@@ -367,8 +266,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _atlasRequestId = StageContent.Release(_assets, _atlasRequestId);
             _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
         }
-
-        private void _OnRequestAdvance() => _advanceRequested = true;
 
         private void _TransitionTo(StageState next) => _state = next;
 

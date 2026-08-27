@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -13,9 +12,14 @@ namespace Client.Adapters.Shell.Views
 
         private IReadOnlyList<DemoEntry> _demos;
 
-        /// <summary>Raised when the back button is clicked. A system turns this into a
-        /// <c>CloseDemoCommand</c>; the view knows nothing about the world.</summary>
-        public event Action OnClosePressed;
+        /// <summary>Set when the back button is clicked, cleared by the system that drains it.</summary>
+        /// <remarks>
+        /// <c>ShellInputSystem</c> turns this into a <c>CloseDemoCommand</c> inside its phase; the
+        /// view knows nothing about the world. A pending press is not world state — it has no
+        /// lifetime and no owner — and holding it here is what makes the frame the command lands
+        /// in readable.
+        /// </remarks>
+        public bool CloseRequested { get; set; }
 
         public void SetDemos(IReadOnlyList<DemoEntry> demos)
         {
@@ -43,6 +47,6 @@ namespace Client.Adapters.Shell.Views
                 backButton.onClick.RemoveListener(_OnBackPressed);
         }
 
-        private void _OnBackPressed() => OnClosePressed?.Invoke();
+        private void _OnBackPressed() => CloseRequested = true;
     }
 }
