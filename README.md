@@ -23,8 +23,9 @@ desktop.
   The pipeline asset is deliberately stripped for WebGL: no HDR, no MSAA, no shadows, no post
   processing. `Assets/Client/Settings/Rendering/URP/`.
 - **Architecture framework** — [DragonECS](https://github.com/DCFApixels/DragonECS) +
-  [DragonECS-Unity](https://github.com/DCFApixels/DragonECS-Unity) (the Unity game-cycle
-  processes: `IEcsRun`, `IEcsFixedRun`, `IEcsLateRun`)
+  [DragonECS-Unity](https://github.com/DCFApixels/DragonECS-Unity). The game-cycle processes are
+  this project's own — `IEcsInput`, `IEcsSim`, `IEcsPresent`, `IEcsCleanup` — built the way the
+  framework builds `IEcsLateRun`.
 - **Content** — Addressables 3.1, local-first, everything loaded by address
 - **Scenes** — [`com.mygamedevtools.scene-loader`](https://github.com/mygamedevtools/scene-loader)
 - **Tweening** — DOTween (`Assets/Plugins/Demigiant/`), confined to a single adapter
@@ -34,21 +35,37 @@ desktop.
 
 ## Architecture
 
-Ports and adapters, split across three assemblies. All source lives under
+Ports and adapters, split across 11 runtime assemblies (plus 2 for tests) — one per feature on
+each side of the boundary, so a demo can be deleted whole. All source lives under
 `Assets/Client/Source/`.
 
 ```
-Client.Simulation                pure game logic — DragonECS components and systems, plain structs.
-  (noEngineReferences)   Declares what it needs from the outside world as port interfaces
-        |                (time, randomness, logging, scenes, assets, dialogue, images).
-        |                Never references UnityEngine.
+Client.Simulation.Core           pure game logic — DragonECS components and systems, plain structs,
+  + .AceOfShadows                and the four phase interfaces. Declares what it needs from the
+  + .MagicWords                  outside world as port interfaces (time, logging, scenes, assets,
+  + .PhoenixFlame                dialogue, images). Never references UnityEngine.
+  (noEngineReferences)
+        |
         v
-Client.Adapters.Unity      MonoBehaviours, views, and the implementations that fill those ports:
-        |                Addressables, UnityWebRequest, DOTween, the scene loader, uGUI.
+Client.Adapters.Shared           MonoBehaviours, views, and the implementations that fill those
+  + .Vendor + .Shell             ports: Addressables, UnityWebRequest, DOTween, the scene loader,
+  + .AceOfShadows                uGUI. One input half and one view half per demo.
+  + .MagicWords
+  + .PhoenixFlame
+        |
         v
-Client.Bootstrap                 the composition root — builds the EcsWorld and EcsPipeline, constructs
-                         and injects the ports, ticks from the player loop, tears down in order.
+Client.Bootstrap                 the composition root — builds the EcsWorld and EcsPipeline,
+                                 constructs and injects the ports, drives the four phases from the
+                                 player loop, tears down in order.
 ```
+
+A **phase** is a process interface, and a system implements exactly one of `IEcsInput`, `IEcsSim`,
+`IEcsPresent` and `IEcsCleanup`. The class line therefore answers *when does this run* without
+opening the composition root, and the driver — `EntryPoint`, one file — owns the order:
+`Input(); Sim();` from `Update`, `Present(); Cleanup();` from `LateUpdate`. Cleanup closes the
+frame, so a one-frame `*Command` or `*Event` is visible to every phase after its producer and dies
+before the next frame begins. A server or test driver runs `Input(); Sim(); Cleanup();` in a loop
+with no Present at all, and no system can tell the difference.
 
 Two rules hold the whole thing together, and both are enforced by tests rather than convention:
 
@@ -59,6 +76,9 @@ Two rules hold the whole thing together, and both are enforced by tests rather t
   through components or a plain non-system collaborator owned by the composition root.
   `SystemIsolationTests` enforces it.
 
+- A system implements exactly one phase, and only a Cleanup system deletes a `*Command` or an
+  `*Event`. `Assets/Plugins/DragonAnalyzer/` reports both as errors.
+
 Async ports are handle-and-poll (`int BeginX(...)`, `Poll(id)`, `Release(id)`) rather than `Task`
 or callbacks, which keeps the simulation deterministic and testable with fakes.
 
@@ -66,8 +86,8 @@ or callbacks, which keeps the simulation deterministic and testable with fakes.
 
 ```
 Assets/Client/
-  Source/Runtime/Simulation/   game logic, per feature, plus Core/Ports
-  Source/Runtime/Adapters/     services, views, bindings, layout
+  Source/Runtime/Simulation/   game logic, per feature, plus Core/Ports and Core/Phases
+  Source/Runtime/Adapters/     services, views, input and view halves, layout
   Source/Runtime/Bootstrap/    EntryPoint.cs
   Source/Tests/EditMode/       simulation suites — no Unity runtime needed
   Source/Tests/PlayMode/       adapter and integration suites

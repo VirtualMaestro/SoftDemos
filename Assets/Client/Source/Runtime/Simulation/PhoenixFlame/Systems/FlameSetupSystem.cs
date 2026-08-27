@@ -20,9 +20,9 @@ namespace Client.Simulation.PhoenixFlame.Systems
         {
             ref var state = ref _world.Get<FlameStateComp>();
 
-            // Reset is consumed before Start so that a close-then-open in the same tick leaves the
-            // flame active. The reverse order would start it and then wipe it, and the demo would
-            // open with a dead flame that no press can revive.
+            // The reset loop is written above the start loop, and the cost of swapping them is
+            // what is worth recording: closing and reopening a demo produces both commands at once,
+            // and starting a flame that is then wiped leaves it dead to every press.
             foreach (var resetEntity in _world.Where(out ResetCommandAspect _))
             {
                 // Resetting an inactive flame is a no-op, not a mistake: closing a demo that was

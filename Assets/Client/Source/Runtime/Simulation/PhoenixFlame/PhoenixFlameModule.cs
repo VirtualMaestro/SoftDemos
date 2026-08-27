@@ -12,11 +12,13 @@ namespace Client.Simulation.PhoenixFlame
             _config = config;
         }
 
-        /// <summary>Adds the three systems. Keep this order.</summary>
+        /// <summary>Adds the flame systems.</summary>
         /// <remarks>
-        /// Setup runs first, so a start command and an advance command in the same tick both work.
-        /// The transition runs last, so a press accepted this tick starts to count down on the
-        /// next tick and not on this one.
+        /// The sequence of <c>Add</c> calls below is the schedule inside the Sim phase, and
+        /// <c>DEU0136</c> is what checks it. This remark used to restate that sequence in prose the
+        /// calls themselves contradicted, which is the whole argument for not writing it twice.
+        /// What is worth recording is the cost of changing it: a start command and an advance
+        /// command that arrive together stop both working.
         /// </remarks>
         public void Import(EcsPipeline.Builder builder)
         {

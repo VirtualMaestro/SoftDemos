@@ -230,8 +230,9 @@ namespace Client.Adapters.MagicWords.Systems
                 _world.DelEntity(readyEntity);
 
             _tweens.KillFades();
-            // The dialogue log destroys its own views when it sees the change. That happens later
-            // in this same LateRun pass, or in its IEcsDestroy on teardown.
+            // The log owns its views and destroys them itself; this only says they are stale.
+            // A direct call would be one system holding another, which SystemIsolationTests
+            // forbids and the event exists to replace.
             _dialogueChannel.Reset();
             _world.GetPool<DialogueLogResetEvent>().Add(_world.NewEntity());
             _avatars.ClearLocalSprites();

@@ -25,9 +25,9 @@ namespace Client.Simulation.AceOfShadows.Systems
         {
             ref var state = ref _world.Get<DeckStateComp>();
 
-            // Reset is consumed before Deal so that a close-then-open in the same tick leaves the
-            // deck dealt. The reverse order would deal and then wipe it, and the demo would open
-            // empty.
+            // The reset loop is written above the deal loop, and the cost of swapping them is
+            // what is worth recording: closing and reopening a demo produces both commands at once,
+            // and dealing into a deck that is then wiped opens the demo empty.
             foreach (var resetEntity in _world.Where(out ResetCommandAspect _))
             {
                 if (state.IsDealt)
