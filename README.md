@@ -79,8 +79,10 @@ Two rules hold the whole thing together, and both are enforced by tests rather t
 - A system implements exactly one phase, and only a Cleanup system deletes a `*Command` or an
   `*Event`. `Assets/Plugins/DragonAnalyzer/` reports both as errors.
 
-Async ports are handle-and-poll (`int BeginX(...)`, `Poll(id)`, `Release(id)`) rather than `Task`
-or callbacks, which keeps the simulation deterministic and testable with fakes.
+Async ports are request-and-poll — every one inherits `IAsyncService` (`Request(TRequest)`,
+`Poll(id)`, `Release(id)`) rather than `Task` or callbacks, which keeps the simulation
+deterministic and testable with fakes. The work is named by a request struct beside the port, and
+one id names both the request and its result.
 
 ## Layout
 

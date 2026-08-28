@@ -88,10 +88,11 @@ reads, channels, services, inspector-facing views). Test-only consumers go throu
 
 - Views (MonoBehaviour) never touch ECS: no `EcsWorld`, pools, or command writes. A view records
   a press in a property and a system drains it inside its phase. Exception: `Boot`.
-- Async ports are handle-and-poll (`int Begin…`, `Poll(id)`, `Release(id)`); no `Task`,
-  callbacks, or exceptions across the simulation boundary. The handle id is opaque so that a
-  `Sprite` never crosses the port; `Release(requestId)` ends the request **and** the handle
-  together — see ARCHITECTURE-GUIDE.md §5.
+- Async ports inherit `IAsyncService` (`Request(TRequest)`, `Poll(id)`, `Release(id)`, and
+  `Resolve(id)` only where the result may cross); no `Task`, callbacks, or exceptions across the
+  simulation boundary. One id names the request AND its result — a port that loads an engine
+  object hands back nothing and its adapter resolves the object from the request id on its own
+  side. See ARCHITECTURE-GUIDE.md §5.
 - Logs go through `ILogService`; `Debug.Log*` only for inspector-reference validation in views.
   No log-only code: a value or flag whose only reader is a log call gets deleted with the log.
 - Tests are the specification: if a test goes red after a simplification, revert the
