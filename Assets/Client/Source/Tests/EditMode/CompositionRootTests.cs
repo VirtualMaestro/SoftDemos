@@ -168,7 +168,7 @@ namespace Client.Simulation.Tests
             Assert.That(violations, Is.Empty,
                 "Injection is for what the composition root shares between systems. A config, a " +
                 "catalog or a scene view belongs in the constructor. If the type really is a shared " +
-                $"service, inject it in EntryPoint and add it to {nameof(InjectableTypeNames)}.\n" +
+                $"service, inject it in Boot and add it to {nameof(InjectableTypeNames)}.\n" +
                 "Violations:\n  " + string.Join("\n  ", violations));
         }
 

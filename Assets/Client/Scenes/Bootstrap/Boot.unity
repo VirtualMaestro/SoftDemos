@@ -2265,7 +2265,7 @@ GameObject:
   - component: {fileID: 1787976754}
   - component: {fileID: 1787976753}
   m_Layer: 0
-  m_Name: EntryPoint
+  m_Name: Boot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2282,7 +2282,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d34e7eb4c6ac11438e876e04571e432, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Client.Bootstrap::Client.Bootstrap.EntryPoint
+  m_EditorClassIdentifier: Client.Bootstrap::Client.Bootstrap.Boot
   menuScreen: {fileID: 683594484}
   demoHud: {fileID: 136082466}
   loadingIndicator: {fileID: 1334372830}

@@ -12,7 +12,7 @@ namespace Client.Simulation.Core.Phases
     /// need in order to notice that something changed: it finds the event instead of diffing state
     /// against a private copy.</para>
     /// <para>A headless driver simply never calls it. The phase order itself is the driver's —
-    /// <c>EntryPoint</c> for the client, <c>PipelineTestDriver</c> for a headless tick.</para>
+    /// <c>Boot</c> for the client, <c>PipelineTestDriver</c> for a headless tick.</para>
     /// </remarks>
     public interface IEcsPresent : IEcsProcess
     {

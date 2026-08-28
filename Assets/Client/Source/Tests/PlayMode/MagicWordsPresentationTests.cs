@@ -35,18 +35,18 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
-            Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
+            var boot = Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
+            Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
             // Boot's shell skin holds three requests for the whole session; that is the floor.
-            Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(entryPoint.Avatars.OpenRequestCount, Is.Zero);
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
 
-            yield return _Open(entryPoint.World);
+            yield return _Open(boot.World);
             yield return _WaitUntil(
                 () => _Screen() != null &&
-                      entryPoint.World.Get<DialogueStateComp>().State == DialogueLoadState.Loading &&
+                      boot.World.Get<DialogueStateComp>().State == DialogueLoadState.Loading &&
                       _Screen().StatusLabel.gameObject.activeSelf &&
                       _Screen().StatusLabel.text == "Loading dialogue…",
                 "Magic Words did not publish its view and show the loading status.",
@@ -54,7 +54,7 @@ namespace Client.Adapters.Tests
 
             var sceneView = _Screen();
             yield return _WaitUntil(
-                () => entryPoint.World.Get<DialogueStateComp>().State == DialogueLoadState.Ready,
+                () => boot.World.Get<DialogueStateComp>().State == DialogueLoadState.Ready,
                 "The live dialogue payload did not reach Ready.", LoadTimeoutSeconds);
             var readyAt = Time.realtimeSinceStartup;
             yield return _WaitForViewCount(sceneView, 1, 1f);
@@ -76,9 +76,9 @@ namespace Client.Adapters.Tests
 
             sceneView.SkipRequested = true;
             yield return _WaitUntil(
-                () => _ViewCount(sceneView) == entryPoint.World.Get<DialogueStateComp>().LineCount,
+                () => _ViewCount(sceneView) == boot.World.Get<DialogueStateComp>().LineCount,
                 "Skip did not bind every remaining line in one tick.", 1f);
-            Assert.That(entryPoint.World.Get<DialoguePlaybackComp>().IsComplete, Is.True);
+            Assert.That(boot.World.Get<DialoguePlaybackComp>().IsComplete, Is.True);
             // After the skip the log is scrolled to the newest lines, so this speaker's line may
             // be virtualized out of view — assert on the list's data record instead of a view.
             var neighbour = _FindItem(sceneView, "Neighbour");
@@ -88,20 +88,20 @@ namespace Client.Adapters.Tests
 
             if (Application.internetReachability != NetworkReachability.NotReachable)
             {
-                var previousSheldonRequest = _FindSpeakerLoad(entryPoint.World, "Sheldon").RequestId;
+                var previousSheldonRequest = _FindSpeakerLoad(boot.World, "Sheldon").RequestId;
                 sceneView.AvatarModeButton.onClick.Invoke();
                 yield return _WaitUntil(
-                    () => entryPoint.Avatars.Mode == AvatarMode.Remote &&
-                          _FindSpeakerLoad(entryPoint.World, "Sheldon").RequestId != previousSheldonRequest,
+                    () => boot.Avatars.Mode == AvatarMode.Remote &&
+                          _FindSpeakerLoad(boot.World, "Sheldon").RequestId != previousSheldonRequest,
                     "The avatar mode button did not reload speakers through Remote mode.", 2f);
                 // The label is drawn in Present, which runs in LateUpdate; this coroutine resumes
                 // in Update, so the frame that flipped the mode has not repainted yet.
                 yield return null;
                 Assert.That(sceneView.AvatarModeLabel.text, Is.EqualTo("Avatars: Remote"));
                 yield return _WaitUntil(
-                    () => _AllAvatarLoadsSettled(entryPoint.World),
+                    () => _AllAvatarLoadsSettled(boot.World),
                     "Remote avatar requests did not settle.", AvatarTimeoutSeconds);
-                Assert.That(_FindSpeakerLoad(entryPoint.World, "Sheldon").State,
+                Assert.That(_FindSpeakerLoad(boot.World, "Sheldon").State,
                     Is.EqualTo(AvatarLoadState.Ready));
                 // A test coroutine resumes in the Update phase, and DialogueLogSystem copies the
                 // loaded sprite onto the view in LateRun — so the frame that reports Ready is not
@@ -118,43 +118,43 @@ namespace Client.Adapters.Tests
 
             var logContent = sceneView.LogContent;
             ShellInput.PressClose();
-            yield return _WaitForState(entryPoint.World, ScreenId.Unloading, LoadTimeoutSeconds);
+            yield return _WaitForState(boot.World, ScreenId.Unloading, LoadTimeoutSeconds);
             yield return null;
             Assert.That(logContent == null || logContent.childCount == 0, Is.True,
                 "Closing must clear the log before or with scene destruction.");
-            yield return _WaitForState(entryPoint.World, ScreenId.Menu, LoadTimeoutSeconds);
+            yield return _WaitForState(boot.World, ScreenId.Menu, LoadTimeoutSeconds);
             yield return null;
             yield return Resources.UnloadUnusedAssets();
             yield return null;
 
             Assert.That(Object.FindObjectsByType<DialogueLineView>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
-            Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(entryPoint.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(entryPoint.Avatars.OpenRequestCount, Is.Zero);
-            Assert.That(entryPoint.Avatars.Local.OpenRequestCount, Is.Zero);
-            Assert.That(entryPoint.Avatars.Local.HeldSpriteCount, Is.Zero);
-            Assert.That(entryPoint.Avatars.Remote.OpenRequestCount, Is.Zero);
-            Assert.That(entryPoint.Avatars.Remote.HeldTextureCount, Is.Zero);
-            Assert.That(entryPoint.Avatars.Remote.HeldSpriteCount, Is.Zero);
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
+            Assert.That(boot.Avatars.Local.OpenRequestCount, Is.Zero);
+            Assert.That(boot.Avatars.Local.HeldSpriteCount, Is.Zero);
+            Assert.That(boot.Avatars.Remote.OpenRequestCount, Is.Zero);
+            Assert.That(boot.Avatars.Remote.HeldTextureCount, Is.Zero);
+            Assert.That(boot.Avatars.Remote.HeldSpriteCount, Is.Zero);
             // Returning to the menu starts the shell's own screen fade, so this cannot be sampled
             // the instant the demo closes — the claim is that every fade finishes and unregisters,
             // not that none was ever running.
-            yield return _WaitUntil(() => entryPoint.Fades.ActiveFadeCount == 0,
+            yield return _WaitUntil(() => boot.Fades.ActiveFadeCount == 0,
                 "A fade tween outlived the screens it was fading.", 2f);
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(bootWorldBaseline));
 
-            yield return _Open(entryPoint.World);
+            yield return _Open(boot.World);
             yield return _WaitUntil(
                 () => _Screen() != null &&
-                      entryPoint.World.Get<DialogueStateComp>().State == DialogueLoadState.Ready,
+                      boot.World.Get<DialogueStateComp>().State == DialogueLoadState.Ready,
                 "Reopened Magic Words did not load a fresh dialogue.", LoadTimeoutSeconds);
             sceneView = _Screen();
             yield return _WaitForViewCount(sceneView, 1, 1f);
             Assert.That(_ViewCount(sceneView), Is.EqualTo(1));
             Assert.That(_FindLine(sceneView, "Sheldon"), Is.Not.Null);
 
-            yield return _Close(entryPoint.World);
+            yield return _Close(boot.World);
             yield return SceneManager.UnloadSceneAsync(BootScene);
             yield return null;
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(globalWorldBaseline));

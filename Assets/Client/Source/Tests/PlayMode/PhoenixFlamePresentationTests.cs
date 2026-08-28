@@ -44,13 +44,13 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = UnityEngine.Object.FindFirstObjectByType<EntryPoint>();
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
-            Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
+            var boot = UnityEngine.Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
+            Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
             // Boot's shell skin holds three requests for the whole session; that is the floor.
-            Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
-            var world = entryPoint.World;
+            var world = boot.World;
 
             // The "an advance before the flame starts is dropped, not queued" guard used to be
             // proved here by writing AdvanceFlamePhaseCommand by hand. It cannot be: a command
@@ -180,8 +180,8 @@ namespace Client.Adapters.Tests
 
             Assert.That(UnityEngine.Object.FindObjectsByType<PhoenixFlameScreen>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
-            Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(entryPoint.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
             var closedState = world.Get<FlameStateComp>();
             Assert.That(closedState.IsActive, Is.False);
             Assert.That(closedState.IsTransitioning, Is.False);

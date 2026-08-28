@@ -36,13 +36,13 @@ namespace Client.Adapters.Tests
                 for (var frame = 0; frame < TickFrames; frame++)
                     yield return null;
 
-                var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
-                Assert.That(entryPoint, Is.Not.Null,
-                    $"Pass {pass}: '{SceneName}' loaded but holds no EntryPoint.");
+                var boot = Object.FindFirstObjectByType<Boot>();
+                Assert.That(boot, Is.Not.Null,
+                    $"Pass {pass}: '{SceneName}' loaded but holds no Boot component.");
 
                 Debug.Log($"[BootSceneSmokeTests] pass {pass}: ticked {TickFrames} frames, worlds={EcsWorld.AllWorldsCount}");
                 Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(baseline + 1),
-                    $"Pass {pass}: EntryPoint should own exactly one world on top of the baseline " +
+                    $"Pass {pass}: Boot should own exactly one world on top of the baseline " +
                     $"({baseline}), found {EcsWorld.AllWorldsCount}.");
 
                 yield return SceneManager.UnloadSceneAsync(SceneName);
@@ -52,7 +52,7 @@ namespace Client.Adapters.Tests
                 Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(baseline),
                     $"Pass {pass}: unloading '{SceneName}' leaked a world — world count did not " +
                     $"return to the baseline ({baseline}), found {EcsWorld.AllWorldsCount}. " +
-                    "Check EntryPoint.OnDestroy.");
+                    "Check Boot.OnDestroy.");
             }
         }
     }

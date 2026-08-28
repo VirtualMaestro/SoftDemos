@@ -18,7 +18,7 @@ The four live in `Simulation/Core/Phases/` with their runners:
 | `IEcsPresent` | adapters | read the world, write the screen; produce no `*Command` or `*Event` |
 | `IEcsCleanup` | either | delete every one-frame component of the feature it belongs to, and nothing else |
 
-The order is the driver's, and there is one driver per game type: `EntryPoint.Update` runs
+The order is the driver's, and there is one driver per game type: `Boot.Update` runs
 `Input(); Sim();` and `LateUpdate` runs `Present(); Cleanup();`, while the test fixtures use
 `PipelineTestDriver.Tick()`. **Cleanup closes the frame**, so a one-frame component is visible to
 every phase after its producer, Present included, and nothing one frame long crosses a frame
@@ -48,7 +48,7 @@ compile error, not an analyzer warning.
 - Adapters: `Client.Adapters.Shared`, `Client.Adapters.Vendor`, `Client.Adapters.Shell`,
   and one `Client.Adapters.<Feature>` per demo — port implementations, the input and view halves
   of each demo, views.
-- `Client.Bootstrap` — `EntryPoint`, the composition root and the client's phase driver.
+- `Client.Bootstrap` — `Boot`, the composition root and the client's phase driver.
 
 Reference direction rules:
 
@@ -69,7 +69,7 @@ reads, channels, services, inspector-facing views). Test-only consumers go throu
 
 ## Composition root
 
-`EntryPoint` wires everything; nothing else constructs services or systems.
+`Boot` wires everything; nothing else constructs services or systems.
 
 - Every shared collaborator (port implementation, adapter service, channel) is **injected**
   into the pipeline; a system's constructor carries only what is unique to that instance
@@ -87,7 +87,7 @@ reads, channels, services, inspector-facing views). Test-only consumers go throu
 ## Conventions
 
 - Views (MonoBehaviour) never touch ECS: no `EcsWorld`, pools, or command writes. A view records
-  a press in a property and a system drains it inside its phase. Exception: `EntryPoint`.
+  a press in a property and a system drains it inside its phase. Exception: `Boot`.
 - Async ports are handle-and-poll (`int Begin…`, `Poll(id)`, `Release(id)`); no `Task`,
   callbacks, or exceptions across the simulation boundary. The handle id is opaque so that a
   `Sprite` never crosses the port; `Release(requestId)` ends the request **and** the handle

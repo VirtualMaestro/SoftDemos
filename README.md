@@ -61,7 +61,7 @@ Client.Bootstrap                 the composition root — builds the EcsWorld an
 
 A **phase** is a process interface, and a system implements exactly one of `IEcsInput`, `IEcsSim`,
 `IEcsPresent` and `IEcsCleanup`. The class line therefore answers *when does this run* without
-opening the composition root, and the driver — `EntryPoint`, one file — owns the order:
+opening the composition root, and the driver — `Boot`, one file — owns the order:
 `Input(); Sim();` from `Update`, `Present(); Cleanup();` from `LateUpdate`. Cleanup closes the
 frame, so a one-frame `*Command` or `*Event` is visible to every phase after its producer and dies
 before the next frame begins. A server or test driver runs `Input(); Sim(); Cleanup();` in a loop
@@ -88,7 +88,7 @@ or callbacks, which keeps the simulation deterministic and testable with fakes.
 Assets/Client/
   Source/Runtime/Simulation/   game logic, per feature, plus Core/Ports and Core/Phases
   Source/Runtime/Adapters/     services, views, input and view halves, layout
-  Source/Runtime/Bootstrap/    EntryPoint.cs
+  Source/Runtime/Bootstrap/    Boot.cs
   Source/Tests/EditMode/       simulation suites — no Unity runtime needed
   Source/Tests/PlayMode/       adapter and integration suites
   Scenes/Bootstrap/Boot.unity  the persistent shell and the only enabled build scene

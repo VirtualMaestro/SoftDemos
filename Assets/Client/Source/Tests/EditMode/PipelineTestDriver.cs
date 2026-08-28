@@ -5,7 +5,7 @@ namespace Client.Simulation.Tests
 {
     /// <summary>The headless driver: one tick is the whole frame, in the contract's order.</summary>
     /// <remarks>
-    /// The same order <c>EntryPoint</c> runs — the systems under test cannot tell the two apart,
+    /// The same order <c>Boot</c> runs — the systems under test cannot tell the two apart,
     /// which is the point of the driver being one file. It is a single call rather than the
     /// server-shaped <c>Input(); Sim(); Cleanup();</c> because one fixture's fake adapter half
     /// declares Present; where no system answers, the call costs nothing.

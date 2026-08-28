@@ -22,7 +22,7 @@ namespace Client.Adapters.Shell.Views
         /// <summary>The value <see cref="RequestedDemoIndex"/> holds while no button is pending.</summary>
         public const int NoDemoRequested = -1;
 
-        /// <summary>How many entries this screen can show. <c>EntryPoint</c> checks it against the catalog.</summary>
+        /// <summary>How many entries this screen can show. <c>Boot</c> checks it against the catalog.</summary>
         public int ButtonCount => demoButtons?.Length ?? 0;
 
         public void SetDemos(IReadOnlyList<DemoEntry> demos)

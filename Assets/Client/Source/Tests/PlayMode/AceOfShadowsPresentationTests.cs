@@ -71,16 +71,16 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = UnityEngine.Object.FindFirstObjectByType<EntryPoint>();
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
-            Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
-            Assert.That(entryPoint.Views.Count, Is.Zero, "Boot must start without card views.");
+            var boot = UnityEngine.Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
+            Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
+            Assert.That(boot.Views.Count, Is.Zero, "Boot must start without card views.");
             // Not zero: Boot's own shell skin holds three requests for the whole session. The
             // claim is still "no card art yet" — anything above that floor is a preload.
-            Assert.That(entryPoint.Assets.OpenRequestCount,
+            Assert.That(boot.Assets.OpenRequestCount,
                 Is.EqualTo(ShellStageSystem.AddressCount), "Boot must not preload card art.");
 
-            yield return _Open(entryPoint.World);
+            yield return _Open(boot.World);
             yield return _WaitUntil(
                 () => _Screen() != null &&
                       _Screen().CardRoot.childCount == 144 &&
@@ -101,7 +101,7 @@ namespace Client.Adapters.Tests
                 Assert.That(cardView.GetComponent<SpriteRenderer>().sharedMaterial, Is.SameAs(sharedMaterial));
             }
 
-            Assert.That(entryPoint.World.Get<DeckStateComp>().IsDealt, Is.True);
+            Assert.That(boot.World.Get<DeckStateComp>().IsDealt, Is.True);
             Assert.That(sceneView.SourceCounter.text, Is.EqualTo("144"));
 
             // Pressed the way a player does. The speed button cycles ×1 → ×4 → ×8, the view records
@@ -116,11 +116,11 @@ namespace Client.Adapters.Tests
             }
 
             yield return _WaitUntil(
-                () => Mathf.Approximately(entryPoint.World.Get<DeckStateComp>().SpeedMultiplier, 8f),
+                () => Mathf.Approximately(boot.World.Get<DeckStateComp>().SpeedMultiplier, 8f),
                 "The speed presses did not reach ×8.", 5f);
 
             yield return _WaitUntil(
-                () => entryPoint.World.Get<DeckStateComp>().IsComplete &&
+                () => boot.World.Get<DeckStateComp>().IsComplete &&
                       _Screen().CompletionLabel.gameObject.activeSelf,
                 "The ×8 deck did not complete.",
                 CompletionTimeoutSeconds);
@@ -137,29 +137,29 @@ namespace Client.Adapters.Tests
             Assert.That(ownedSprites.Count, Is.EqualTo(15),
                 "The scene should own one background sprite and all 14 atlas copies.");
 
-            yield return _Close(entryPoint.World);
+            yield return _Close(boot.World);
             yield return null;
             yield return Resources.UnloadUnusedAssets();
             yield return null;
-            Assert.That(entryPoint.Views.Count, Is.Zero);
-            Assert.That(entryPoint.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(entryPoint.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Views.Count, Is.Zero);
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
 
             foreach (var sprite in ownedSprites)
                 Assert.That(sprite == null, Is.True, "Closing the demo must destroy every owned sprite copy.");
 
-            yield return _Open(entryPoint.World);
+            yield return _Open(boot.World);
             yield return _WaitUntil(
                 () => _Screen() != null &&
                       _Screen().CardRoot.childCount == 144 &&
-                      entryPoint.World.Get<DeckStateComp>().IsDealt &&
+                      boot.World.Get<DeckStateComp>().IsDealt &&
                       _Screen().SourceCounter.text == "144",
                 "Reopening did not create and bind a clean deck.",
                 LoadTimeoutSeconds);
             Assert.That(_Screen().SourceCounter.text, Is.EqualTo("144"));
-            Assert.That(entryPoint.Views.Count, Is.EqualTo(144));
+            Assert.That(boot.Views.Count, Is.EqualTo(144));
 
-            yield return _Close(entryPoint.World);
+            yield return _Close(boot.World);
             yield return SceneManager.UnloadSceneAsync(BootScene);
             yield return null;
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(baselineWorlds));

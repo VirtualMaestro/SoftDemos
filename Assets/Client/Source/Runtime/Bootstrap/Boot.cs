@@ -25,7 +25,7 @@ using UnityEngine;
 
 namespace Client.Bootstrap
 {
-    public class EntryPoint : MonoBehaviour
+    public class Boot : MonoBehaviour
     {
         // Serialized fields use no leading underscore. The inspector shows the field name.
         [SerializeField] private MenuScreen menuScreen;
@@ -57,10 +57,10 @@ namespace Client.Bootstrap
 
         private void OnValidate()
         {
-            Debug.Assert(menuScreen != null, $"'{nameof(menuScreen)}' is not assigned on {nameof(EntryPoint)}.", this);
-            Debug.Assert(demoHud != null, $"'{nameof(demoHud)}' is not assigned on {nameof(EntryPoint)}.", this);
-            Debug.Assert(loadingIndicator != null, $"'{nameof(loadingIndicator)}' is not assigned on {nameof(EntryPoint)}.", this);
-            Debug.Assert(shellSkin != null, $"'{nameof(shellSkin)}' is not assigned on {nameof(EntryPoint)}.", this);
+            Debug.Assert(menuScreen != null, $"'{nameof(menuScreen)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(demoHud != null, $"'{nameof(demoHud)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(loadingIndicator != null, $"'{nameof(loadingIndicator)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(shellSkin != null, $"'{nameof(shellSkin)}' is not assigned on {nameof(Boot)}.", this);
         }
 
         private void Start()
@@ -149,25 +149,25 @@ namespace Client.Bootstrap
 
             if (menuScreen == null)
             {
-                _log.Error($"{nameof(menuScreen)} is not assigned on EntryPoint.");
+                _log.Error($"{nameof(menuScreen)} is not assigned on Boot.");
                 isComplete = false;
             }
 
             if (demoHud == null)
             {
-                _log.Error($"{nameof(demoHud)} is not assigned on EntryPoint.");
+                _log.Error($"{nameof(demoHud)} is not assigned on Boot.");
                 isComplete = false;
             }
 
             if (loadingIndicator == null)
             {
-                _log.Error($"{nameof(loadingIndicator)} is not assigned on EntryPoint.");
+                _log.Error($"{nameof(loadingIndicator)} is not assigned on Boot.");
                 isComplete = false;
             }
 
             if (shellSkin == null)
             {
-                _log.Error($"{nameof(shellSkin)} is not assigned on EntryPoint.");
+                _log.Error($"{nameof(shellSkin)} is not assigned on Boot.");
                 isComplete = false;
             }
             else if (shellSkin.HasEveryReference(_log) == false)
@@ -175,7 +175,7 @@ namespace Client.Bootstrap
 
             if (demos == null || demos.Length == 0)
             {
-                _log.Error($"{nameof(demos)} is empty on EntryPoint; the menu would open nothing.");
+                _log.Error($"{nameof(demos)} is empty on Boot; the menu would open nothing.");
                 return false;
             }
 

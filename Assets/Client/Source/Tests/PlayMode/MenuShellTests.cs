@@ -27,11 +27,11 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
-            Assert.That(entryPoint.World, Is.Not.Null, "EntryPoint.Start must create its world.");
+            var boot = Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
+            Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
 
-            var world = entryPoint.World;
+            var world = boot.World;
             ShellInput.PressDemo(0);
 
             yield return _WaitForState(world, ScreenId.Demo);
@@ -96,8 +96,8 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+            var boot = Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
 
             var menu = Object.FindFirstObjectByType<MenuScreen>(FindObjectsInactive.Include);
             var demoHud = Object.FindFirstObjectByType<DemoHudView>(FindObjectsInactive.Include);
@@ -110,7 +110,7 @@ namespace Client.Adapters.Tests
             Assert.That(backButton, Is.Not.Null, $"DemoHudView must hold a '{BackButton}' child.");
 
             // Destroy the pipeline first, so no LateRun touches a half-destroyed screen.
-            Object.DestroyImmediate(entryPoint.gameObject);
+            Object.DestroyImmediate(boot.gameObject);
 
             Object.DestroyImmediate(menuButton.gameObject);
             Object.DestroyImmediate(backButton.gameObject);
@@ -132,9 +132,9 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
+            var boot = Object.FindFirstObjectByType<Boot>();
             var skin = Object.FindFirstObjectByType<ShellSkinView>(FindObjectsInactive.Include);
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
             Assert.That(skin, Is.Not.Null, $"'{BootScene}' must contain a ShellSkinView.");
 
             var indicator = skin.Spinner.transform.parent.gameObject;
@@ -151,7 +151,7 @@ namespace Client.Adapters.Tests
             // atlases land they would draw as white boxes. That is seconds on a real host.
             var shellDeadline = Time.realtimeSinceStartup + TimeoutSeconds;
 
-            var shellReady = entryPoint.World.GetPool<ShellReadyTag>();
+            var shellReady = boot.World.GetPool<ShellReadyTag>();
 
             while (shellReady.Count == 0)
             {
@@ -166,7 +166,7 @@ namespace Client.Adapters.Tests
             Assert.That(menu.gameObject.activeInHierarchy, Is.True,
                 "The menu must appear once the shell skin is applied.");
 
-            var world = entryPoint.World;
+            var world = boot.World;
             ShellInput.PressDemo(0);
 
             var sawIndicator = false;
@@ -187,7 +187,7 @@ namespace Client.Adapters.Tests
             // background requests on that frame. The indicator must cover that gap too.
             deadline = Time.realtimeSinceStartup + TimeoutSeconds;
 
-            var demoReady = entryPoint.World.GetPool<DemoReadyTag>();
+            var demoReady = boot.World.GetPool<DemoReadyTag>();
 
             while (demoReady.Count == 0)
             {
@@ -228,12 +228,12 @@ namespace Client.Adapters.Tests
             yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
             yield return null;
 
-            var entryPoint = Object.FindFirstObjectByType<EntryPoint>();
+            var boot = Object.FindFirstObjectByType<Boot>();
             var skin = Object.FindFirstObjectByType<ShellSkinView>(FindObjectsInactive.Include);
-            Assert.That(entryPoint, Is.Not.Null, $"'{BootScene}' must contain EntryPoint.");
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
             Assert.That(skin, Is.Not.Null, $"'{BootScene}' must contain a ShellSkinView.");
 
-            var assets = entryPoint.Assets;
+            var assets = boot.Assets;
             yield return _WaitUntilSkinned(skin);
 
             Assert.That(skin.Background.sprite, Is.Not.Null, "The menu backdrop was never applied.");

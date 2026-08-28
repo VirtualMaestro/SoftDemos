@@ -25,7 +25,7 @@ namespace Client.Adapters.Shell.Views
         public Image BackIcon => backIcon;
         public Image Spinner => spinner;
 
-        /// <summary>How many demo icons this skin can paint. <c>EntryPoint</c> checks it against the demo list.</summary>
+        /// <summary>How many demo icons this skin can paint. <c>Boot</c> checks it against the demo list.</summary>
         public int DemoIconCount => demoIcons == null ? 0 : demoIcons.Length;
 
         private void OnValidate()

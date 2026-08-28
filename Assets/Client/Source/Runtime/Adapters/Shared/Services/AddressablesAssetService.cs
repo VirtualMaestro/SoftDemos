@@ -113,7 +113,7 @@ namespace Client.Adapters.Shared.Services
         }
 
         /// <summary>
-        /// Releases everything still held. Called from <c>EntryPoint.OnDestroy</c> *after* the
+        /// Releases everything still held. Called from <c>Boot.OnDestroy</c> *after* the
         /// pipeline is destroyed, so no system can still be polling a request being torn down.
         /// </summary>
         public void Dispose()
