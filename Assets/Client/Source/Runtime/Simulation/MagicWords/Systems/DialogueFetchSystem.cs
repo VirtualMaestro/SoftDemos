@@ -19,6 +19,7 @@ namespace Client.Simulation.MagicWords.Systems
         private EcsWorld _world;
         private IDialogueService _dialogueSource;
         private ILogService _log;
+        private EcsPool<DialoguePayloadEvent> _payloads;
 
         public void Sim()
         {
@@ -55,7 +56,7 @@ namespace Client.Simulation.MagicWords.Systems
                     return;
                 }
 
-                _world.GetPool<DialoguePayloadEvent>().Add(_world.NewEntity()).Payload = payload;
+                _payloads.Add(_world.NewEntity()).Payload = payload;
                 return;
             }
 
@@ -68,7 +69,12 @@ namespace Client.Simulation.MagicWords.Systems
             _log.Error($"Dialogue fetch request {requestId} failed.");
         }
 
-        public void Inject(EcsWorld obj) => _world = obj;
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _payloads = obj.GetPool<DialoguePayloadEvent>();
+        }
+
         public void Inject(IDialogueService obj) => _dialogueSource = obj;
         public void Inject(ILogService obj) => _log = obj;
 
