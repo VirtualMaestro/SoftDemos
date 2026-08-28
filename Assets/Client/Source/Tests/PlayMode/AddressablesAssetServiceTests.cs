@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 namespace Client.Adapters.Tests
 {
     /// <summary>
-    /// Proves the Addressables adapter honours the port contract: a handle-and-poll surface with
+    /// Proves the Addressables adapter honours the port contract: a request-and-poll surface with
     /// no engine object crossing the boundary, and a failure reported as data.
     /// </summary>
     public sealed class AddressablesAssetServiceTests
@@ -36,25 +36,23 @@ namespace Client.Adapters.Tests
         }
 
         [UnityTest]
-        public IEnumerator KnownAddress_ReachesDone_AndResolvesAHandle()
+        public IEnumerator KnownAddress_ReachesDone_AndResolvesTheAssetOnTheAdapterSide()
         {
-            var requestId = _source.BeginLoad(KnownAddress);
+            var requestId = _source.Request(new AssetLoadRequest(KnownAddress));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done),
                 $"Loading '{KnownAddress}' should reach Done. Open requests: {_source.OpenRequestCount}.");
 
-            var handleId = _source.ResolveHandle(requestId);
-            Assert.That(handleId, Is.Not.Zero, "A completed request must resolve a non-zero handle.");
-            Assert.That(_source.TryGetAsset(handleId, out var asset), Is.True,
-                $"Handle #{handleId} must resolve to an asset on the adapter side.");
+            Assert.That(_source.TryGetAsset(requestId, out var asset), Is.True,
+                $"Request #{requestId} must resolve to an asset on the adapter side.");
             Assert.That(asset, Is.Not.Null, "The resolved asset must not be null.");
 
             _source.Release(requestId);
             Assert.That(_source.OpenRequestCount, Is.Zero, "Release must empty the request table.");
             Assert.That(_source.HeldAssetCount, Is.Zero, "Release must empty the asset table.");
-            Assert.That(_source.ResolveHandle(requestId), Is.Zero,
-                "A released request must not resolve a handle.");
+            Assert.That(_source.TryGetAsset(requestId, out _), Is.False,
+                "A released request must not resolve an asset.");
         }
 
         /// <summary>
@@ -69,13 +67,13 @@ namespace Client.Adapters.Tests
             LogAssert.Expect(LogType.Error, new Regex(MissingAddress));
             LogAssert.Expect(LogType.Error, new Regex($@"\[Client\]\[Test\.Assets\].*{MissingAddress}"));
 
-            var requestId = _source.BeginLoad(MissingAddress);
+            var requestId = _source.Request(new AssetLoadRequest(MissingAddress));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed),
                 "An unknown address must surface as Failed, never as an exception.");
-            Assert.That(_source.ResolveHandle(requestId), Is.Zero,
-                "A failed request must resolve to 0, not to a stale handle.");
+            Assert.That(_source.TryGetAsset(requestId, out _), Is.False,
+                "A failed request must resolve to nothing, not to a stale asset.");
 
             _source.Release(requestId);
             Assert.That(_source.OpenRequestCount, Is.Zero, "Release must drop the failed request.");
@@ -86,8 +84,8 @@ namespace Client.Adapters.Tests
         {
             Assert.That(_source.Poll(9999), Is.EqualTo(AsyncOpStatus.Pending),
                 "An id the source never handed out must read as Pending.");
-            Assert.That(_source.ResolveHandle(9999), Is.Zero,
-                "An unknown id must not resolve a handle.");
+            Assert.That(_source.TryGetAsset(9999, out _), Is.False,
+                "An unknown id must not resolve an asset.");
             Assert.DoesNotThrow(() => _source.Release(9999),
                 "Releasing an unknown id must be a no-op, not a throw.");
 

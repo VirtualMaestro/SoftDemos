@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using UnityEngine;
@@ -10,13 +11,11 @@ namespace Client.Adapters.MagicWords.Services
     {
         private const string PlaceholderKey = "mw-avatar-placeholder";
 
-        private readonly Dictionary<int, Request> _requests = new();
-        private readonly Dictionary<int, Sprite> _handles = new();
+        private readonly RequestTable<Entry> _requests = new();
+        private readonly Dictionary<int, Sprite> _resolved = new();
         private readonly ILogService _log;
 
         private IReadOnlyDictionary<string, Sprite> _sprites;
-        private int _nextRequestId;
-        private int _nextHandleId;
         private bool _isDisposed;
 
         public AtlasImageLoaderService(ILogService log)
@@ -25,46 +24,43 @@ namespace Client.Adapters.MagicWords.Services
         }
 
         public int OpenRequestCount => _requests.Count;
-        public int HeldSpriteCount => _handles.Count;
+        public int HeldSpriteCount => _resolved.Count;
 
         public void SetSprites(IReadOnlyDictionary<string, Sprite> sprites)
         {
             _sprites = sprites ?? throw new ArgumentNullException(nameof(sprites));
-            _handles.Clear();
+            _resolved.Clear();
         }
 
         public void ClearSprites()
         {
             _sprites = null;
-            _handles.Clear();
+            _resolved.Clear();
         }
 
-        public int BeginLoad(string speakerName, string url)
+        public int Request(ImageLoadRequest request)
         {
-            var requestId = ++_nextRequestId;
-            var request = new Request(
-                speakerName ?? string.Empty,
-                $"avatar-{(speakerName ?? string.Empty).ToLowerInvariant()}");
+            var speakerName = request.SpeakerName ?? string.Empty;
+            var entry = new Entry(speakerName, $"avatar-{speakerName.ToLowerInvariant()}");
 
             if (_isDisposed)
-                request.Status = AsyncOpStatus.Failed;
+                entry.Status = AsyncOpStatus.Failed;
 
-            _requests.Add(requestId, request);
-            return requestId;
+            return _requests.Add(entry);
         }
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (_requests.TryGet(requestId, out var entry) == false)
                 return AsyncOpStatus.Pending;
 
-            if (request.Status != AsyncOpStatus.Pending)
-                return request.Status;
+            if (entry.Status != AsyncOpStatus.Pending)
+                return entry.Status;
 
             if (_sprites == null)
                 return AsyncOpStatus.Pending;
 
-            var spriteKey = request.SpriteKey;
+            var spriteKey = entry.SpriteKey;
 
             if (_sprites.TryGetValue(spriteKey, out var sprite) == false)
             {
@@ -72,34 +68,29 @@ namespace Client.Adapters.MagicWords.Services
 
                 if (_sprites.TryGetValue(spriteKey, out sprite) == false)
                 {
-                    request.Status = AsyncOpStatus.Failed;
+                    entry.Status = AsyncOpStatus.Failed;
                     _log.Error(
-                        $"Avatar atlas has no '{PlaceholderKey}' sprite for '{request.SpeakerName}'.");
-                    return request.Status;
+                        $"Avatar atlas has no '{PlaceholderKey}' sprite for '{entry.SpeakerName}'.");
+                    return entry.Status;
                 }
             }
 
-            request.HandleId = ++_nextHandleId;
-            request.Status = AsyncOpStatus.Done;
-            _handles.Add(request.HandleId, sprite);
-            return request.Status;
+            entry.Status = AsyncOpStatus.Done;
+            _resolved.Add(requestId, sprite);
+            return entry.Status;
         }
 
-        public int ResolveHandle(int requestId)
-        {
-            return _requests.TryGetValue(requestId, out var request) &&
-                request.Status == AsyncOpStatus.Done
-                    ? request.HandleId
-                    : 0;
-        }
-
-        public bool TryGetSprite(int handleId, out Sprite sprite) =>
-            _handles.TryGetValue(handleId, out sprite);
+        /// <summary>
+        /// Turns a request id back into the atlas sprite it resolved. Adapter-side only — this
+        /// signature is exactly what the port is not allowed to expose.
+        /// </summary>
+        public bool TryGetSprite(int requestId, out Sprite sprite) =>
+            _resolved.TryGetValue(requestId, out sprite);
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out var request) && request.HandleId != 0)
-                _handles.Remove(request.HandleId);
+            if (_requests.Remove(requestId, out _))
+                _resolved.Remove(requestId);
         }
 
         public void Dispose()
@@ -112,15 +103,14 @@ namespace Client.Adapters.MagicWords.Services
             ClearSprites();
         }
 
-        private sealed class Request
+        private sealed class Entry
         {
             public readonly string SpeakerName;
             public readonly string SpriteKey;
 
             public AsyncOpStatus Status;
-            public int HandleId;
 
-            public Request(string speakerName, string spriteKey)
+            public Entry(string speakerName, string spriteKey)
             {
                 SpeakerName = speakerName;
                 SpriteKey = spriteKey;

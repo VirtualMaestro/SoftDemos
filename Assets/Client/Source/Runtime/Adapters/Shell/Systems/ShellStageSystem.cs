@@ -78,9 +78,9 @@ namespace Client.Adapters.Shell.Systems
 
         private void _BeginLoading()
         {
-            _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
-            _menuAtlasRequestId = _assets.BeginLoad(MenuAtlasAddress);
-            _sharedAtlasRequestId = _assets.BeginLoad(SharedAtlasAddress);
+            _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
+            _menuAtlasRequestId = _assets.Request(new AssetLoadRequest(MenuAtlasAddress));
+            _sharedAtlasRequestId = _assets.Request(new AssetLoadRequest(SharedAtlasAddress));
             _TransitionTo(StageState.Loading);
         }
 
@@ -164,9 +164,8 @@ namespace Client.Adapters.Shell.Systems
         private bool _TryResolveAtlas(int requestId, string address, out SpriteAtlas atlas)
         {
             atlas = null;
-            var handleId = _assets.ResolveHandle(requestId);
 
-            if (_assets.TryGetAsset(handleId, out var asset) == false || asset is not SpriteAtlas resolved)
+            if (_assets.TryGetAsset(requestId, out var asset) == false || asset is not SpriteAtlas resolved)
             {
                 _log.Error($"Address '{address}' did not resolve to a {nameof(SpriteAtlas)}.");
                 return false;
@@ -196,9 +195,7 @@ namespace Client.Adapters.Shell.Systems
         /// <remarks>The backdrop is a standalone image, not an atlas entry. Its importer decides the type.</remarks>
         private Sprite _CreateBackgroundSprite()
         {
-            var handleId = _assets.ResolveHandle(_backgroundRequestId);
-
-            if (_assets.TryGetAsset(handleId, out var asset) == false)
+            if (_assets.TryGetAsset(_backgroundRequestId, out var asset) == false)
             {
                 _log.Error($"Address '{BackgroundAddress}' did not resolve.");
                 return null;

@@ -115,8 +115,8 @@ namespace Client.Adapters.Tests
         {
             var avatarLoad = _world.GetPool<AvatarLoadComp>().Read(sheldonId);
             Assert.That(avatarLoad.State, Is.EqualTo(AvatarLoadState.Ready));
-            Assert.That(avatarLoad.HandleId, Is.Not.Zero);
-            Assert.That(_imageSource.TryGetTexture(avatarLoad.HandleId, out var texture), Is.True);
+            Assert.That(avatarLoad.RequestId, Is.Not.Zero);
+            Assert.That(_imageSource.TryGetTexture(avatarLoad.RequestId, out var texture), Is.True);
             Assert.That(texture, Is.Not.Null);
         }
 

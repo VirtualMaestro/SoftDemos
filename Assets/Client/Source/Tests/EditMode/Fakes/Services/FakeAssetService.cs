@@ -4,16 +4,14 @@ using Client.Simulation.Core.Ports;
 namespace Client.Simulation.Tests.Fakes.Services
 {
     /// <summary>
-    /// <see cref="IAssetService"/> backed by <see cref="FakeAsyncRequests"/>. Hands out an opaque
-    /// handle id once a request settles as <see cref="AsyncOpStatus.Done"/> — the same contract
-    /// the Addressables adapter honours, so a system written against the fake needs no change.
+    /// <see cref="IAssetService"/> backed by <see cref="FakeAsyncRequests"/>. There is nothing to
+    /// resolve: the port carries no result, and a real adapter would keep the asset under the
+    /// request id on its own side of the boundary.
     /// </summary>
     public sealed class FakeAssetService : IAssetService
     {
         private readonly FakeAsyncRequests _requests = new();
-        private readonly Dictionary<int, int> _handles = new();
         private readonly List<string> _loadCalls = new();
-        private int _nextHandle;
 
         public int CompleteAfterPolls
         {
@@ -30,27 +28,15 @@ namespace Client.Simulation.Tests.Fakes.Services
         public IReadOnlyList<string> LoadCalls => _loadCalls;
         public int OpenRequestCount => _requests.OpenRequestCount;
 
-        public int BeginLoad(string address)
+        public int Request(AssetLoadRequest request)
         {
-            _loadCalls.Add(address);
-            var id = _requests.Begin();
-            _handles[id] = ++_nextHandle;
-            return id;
+            _loadCalls.Add(request.Address);
+            return _requests.Begin();
         }
 
         public AsyncOpStatus Poll(int requestId) => _requests.Poll(requestId);
 
-        public int ResolveHandle(int requestId)
-        {
-            var isDone = _requests.TerminalStatus == AsyncOpStatus.Done && _requests.IsSettled(requestId);
-            return isDone && _handles.TryGetValue(requestId, out var handle) ? handle : 0;
-        }
-
-        public void Release(int requestId)
-        {
-            _requests.Release(requestId);
-            _handles.Remove(requestId);
-        }
+        public void Release(int requestId) => _requests.Release(requestId);
 
         public override string ToString() =>
             $"FakeAssetService({_requests}, loads=[{string.Join(", ", _loadCalls)}])";

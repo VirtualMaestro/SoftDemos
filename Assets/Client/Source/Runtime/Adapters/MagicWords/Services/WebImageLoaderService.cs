@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using UnityEngine;
@@ -12,13 +13,11 @@ namespace Client.Adapters.MagicWords.Services
     {
         private const float DefaultTimeoutSeconds = 5f;
 
-        private readonly Dictionary<int, Request> _requests = new();
+        private readonly RequestTable<Entry> _requests = new();
         private readonly Dictionary<int, Texture2D> _textures = new();
         private readonly Dictionary<int, Sprite> _sprites = new();
         private readonly ILogService _log;
         private readonly float _timeoutSeconds;
-        private int _nextRequestId;
-        private int _nextHandleId;
         private bool _isDisposed;
 
         public WebImageLoaderService(ILogService log, float timeoutSeconds = DefaultTimeoutSeconds)
@@ -39,38 +38,37 @@ namespace Client.Adapters.MagicWords.Services
         /// <summary>Sprites created from downloaded textures and owned by this adapter.</summary>
         public int HeldSpriteCount => _sprites.Count;
 
-        public int BeginLoad(string speakerName, string url)
+        public int Request(ImageLoadRequest request)
         {
-            var requestId = ++_nextRequestId;
-            var request = new Request(speakerName, url);
-            _requests.Add(requestId, request);
+            var entry = new Entry(request.SpeakerName, request.Url);
+            var requestId = _requests.Add(entry);
 
             if (_isDisposed)
             {
-                request.Status = AsyncOpStatus.Failed;
-                _LogFailure(requestId, request, "disposed", "The source is disposed.");
+                entry.Status = AsyncOpStatus.Failed;
+                _LogFailure(requestId, entry, "disposed", "The source is disposed.");
                 return requestId;
             }
 
-            if (string.IsNullOrWhiteSpace(url))
+            if (string.IsNullOrWhiteSpace(entry.Url))
             {
-                request.Status = AsyncOpStatus.Failed;
-                _LogFailure(requestId, request, "url", "The URL is empty.");
+                entry.Status = AsyncOpStatus.Failed;
+                _LogFailure(requestId, entry, "url", "The URL is empty.");
                 return requestId;
             }
 
             try
             {
-                request.Transport = UnityWebRequestTexture.GetTexture(url, true);
-                request.Transport.SendWebRequest();
-                request.Deadline = Time.realtimeSinceStartup + _timeoutSeconds;
+                entry.Transport = UnityWebRequestTexture.GetTexture(entry.Url, true);
+                entry.Transport.SendWebRequest();
+                entry.Deadline = Time.realtimeSinceStartup + _timeoutSeconds;
             }
             catch (Exception exception)
             {
-                request.Status = AsyncOpStatus.Failed;
-                request.Transport?.Dispose();
-                request.Transport = null;
-                _LogFailure(requestId, request, "start", exception.ToString());
+                entry.Status = AsyncOpStatus.Failed;
+                entry.Transport?.Dispose();
+                entry.Transport = null;
+                _LogFailure(requestId, entry, "start", exception.ToString());
             }
 
             return requestId;
@@ -78,48 +76,43 @@ namespace Client.Adapters.MagicWords.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGetValue(requestId, out var request) == false)
+            if (_requests.TryGet(requestId, out var entry) == false)
                 return AsyncOpStatus.Pending;
 
-            if (request.Status != AsyncOpStatus.Pending)
-                return request.Status;
+            if (entry.Status != AsyncOpStatus.Pending)
+                return entry.Status;
 
-            var status = _Classify(request, out var texture, out var failureBranch, out var failureDetail);
+            var status = _Classify(entry, out var texture, out var failureBranch, out var failureDetail);
 
             if (status == AsyncOpStatus.Pending)
                 return status;
 
-            request.Status = status;
+            entry.Status = status;
 
             if (status == AsyncOpStatus.Failed)
             {
-                _LogFailure(requestId, request, failureBranch, failureDetail);
+                _LogFailure(requestId, entry, failureBranch, failureDetail);
                 return status;
             }
 
-            request.HandleId = ++_nextHandleId;
-            _textures.Add(request.HandleId, texture);
+            _textures.Add(requestId, texture);
             return status;
         }
 
-        public int ResolveHandle(int requestId)
+        /// <summary>Turns a request id back into its texture, without exposing Unity through the port.</summary>
+        public bool TryGetTexture(int requestId, out Texture2D texture) =>
+            _textures.TryGetValue(requestId, out texture);
+
+        /// <summary>
+        /// Turns a request id back into a sprite, creating it on the first ask. Adapter-side only —
+        /// this signature is exactly what the port is not allowed to expose.
+        /// </summary>
+        public bool TryGetSprite(int requestId, out Sprite sprite)
         {
-            if (!_requests.TryGetValue(requestId, out var request))
-                return 0;
-
-            return request.Status == AsyncOpStatus.Done ? request.HandleId : 0;
-        }
-
-        /// <summary>Resolves an opaque image handle without exposing Unity through the port.</summary>
-        public bool TryGetTexture(int handleId, out Texture2D texture) =>
-            _textures.TryGetValue(handleId, out texture);
-
-        public bool TryGetSprite(int handleId, out Sprite sprite)
-        {
-            if (_sprites.TryGetValue(handleId, out sprite))
+            if (_sprites.TryGetValue(requestId, out sprite))
                 return true;
 
-            if (_textures.TryGetValue(handleId, out var texture) == false)
+            if (_textures.TryGetValue(requestId, out var texture) == false)
                 return false;
 
             sprite = Sprite.Create(
@@ -128,33 +121,35 @@ namespace Client.Adapters.MagicWords.Services
                 new Vector2(0.5f, 0.5f),
                 100f);
 
-            foreach (var request in _requests.Values)
-            {
-                if (request.HandleId != handleId)
-                    continue;
+            // The request is still open whenever a texture is, so the name is always available.
+            if (_requests.TryGet(requestId, out var entry))
+                sprite.name = entry.SpeakerName;
 
-                sprite.name = request.SpeakerName;
-                break;
-            }
-
-            _sprites.Add(handleId, sprite);
+            _sprites.Add(requestId, sprite);
             return true;
         }
 
         public void Release(int requestId)
         {
-            if (!_requests.Remove(requestId, out var request))
+            if (_requests.Remove(requestId, out var entry) == false)
                 return;
 
-            _ReleaseRequest(request);
+            _DestroyImages(requestId);
+            _ReleaseTransport(entry);
         }
 
         public void Dispose()
         {
             _isDisposed = true;
 
-            foreach (var request in _requests.Values)
-                _ReleaseRequest(request);
+            foreach (var sprite in _sprites.Values)
+                Object.Destroy(sprite);
+
+            foreach (var texture in _textures.Values)
+                Object.Destroy(texture);
+
+            foreach (var entry in _requests.Values)
+                _ReleaseTransport(entry);
 
             _requests.Clear();
             _sprites.Clear();
@@ -162,7 +157,7 @@ namespace Client.Adapters.MagicWords.Services
         }
 
         private static AsyncOpStatus _Classify(
-            Request request,
+            Entry entry,
             out Texture2D texture,
             out string failureBranch,
             out string failureDetail)
@@ -171,35 +166,35 @@ namespace Client.Adapters.MagicWords.Services
             failureBranch = string.Empty;
             failureDetail = string.Empty;
 
-            if (request.Transport == null)
+            if (entry.Transport == null)
             {
                 failureBranch = "start";
                 failureDetail = "The request transport was not created.";
                 return AsyncOpStatus.Failed;
             }
 
-            if (request.Transport.result == UnityWebRequest.Result.InProgress)
+            if (entry.Transport.result == UnityWebRequest.Result.InProgress)
             {
-                if (Time.realtimeSinceStartup <= request.Deadline)
+                if (Time.realtimeSinceStartup <= entry.Deadline)
                     return AsyncOpStatus.Pending;
 
-                request.Transport.Abort();
+                entry.Transport.Abort();
                 failureBranch = "timeout";
                 failureDetail = "The adapter deadline elapsed.";
                 return AsyncOpStatus.Failed;
             }
 
-            switch (request.Transport.result)
+            switch (entry.Transport.result)
             {
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.ProtocolError:
                 case UnityWebRequest.Result.DataProcessingError:
                     failureBranch = "transport";
-                    failureDetail = request.Transport.error ?? "The transport failed without a reason.";
+                    failureDetail = entry.Transport.error ?? "The transport failed without a reason.";
                     return AsyncOpStatus.Failed;
 
                 case UnityWebRequest.Result.Success:
-                    var contentType = request.Transport.GetResponseHeader("Content-Type");
+                    var contentType = entry.Transport.GetResponseHeader("Content-Type");
 
                     if (string.IsNullOrEmpty(contentType) == false &&
                         contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) == false)
@@ -209,7 +204,7 @@ namespace Client.Adapters.MagicWords.Services
                         return AsyncOpStatus.Failed;
                     }
 
-                    texture = (request.Transport.downloadHandler as DownloadHandlerTexture)?.texture;
+                    texture = (entry.Transport.downloadHandler as DownloadHandlerTexture)?.texture;
 
                     if (texture != null)
                         return AsyncOpStatus.Done;
@@ -223,31 +218,34 @@ namespace Client.Adapters.MagicWords.Services
             }
         }
 
-        private void _ReleaseRequest(Request request)
+        private void _DestroyImages(int requestId)
         {
-            if (request.HandleId != 0 && _sprites.Remove(request.HandleId, out var sprite))
+            if (_sprites.Remove(requestId, out var sprite))
                 Object.Destroy(sprite);
 
-            if (request.HandleId != 0 && _textures.Remove(request.HandleId, out var texture))
+            if (_textures.Remove(requestId, out var texture))
                 Object.Destroy(texture);
+        }
 
-            if (request.Transport == null)
+        private static void _ReleaseTransport(Entry entry)
+        {
+            if (entry.Transport == null)
                 return;
 
-            if (request.Transport.result == UnityWebRequest.Result.InProgress)
-                request.Transport.Abort();
+            if (entry.Transport.result == UnityWebRequest.Result.InProgress)
+                entry.Transport.Abort();
 
-            request.Transport.Dispose();
-            request.Transport = null;
+            entry.Transport.Dispose();
+            entry.Transport = null;
         }
 
-        private void _LogFailure(int requestId, Request request, string branch, string detail)
+        private void _LogFailure(int requestId, Entry entry, string branch, string detail)
         {
-            _log.Error($"Request #{requestId} avatar '{request.SpeakerName}' GET '{request.Url}' " +
-                       $"failed in {branch}; HTTP {request.Transport?.responseCode ?? 0L}: {detail}");
+            _log.Error($"Request #{requestId} avatar '{entry.SpeakerName}' GET '{entry.Url}' " +
+                       $"failed in {branch}; HTTP {entry.Transport?.responseCode ?? 0L}: {detail}");
         }
 
-        private sealed class Request
+        private sealed class Entry
         {
             public readonly string SpeakerName;
             public readonly string Url;
@@ -255,9 +253,8 @@ namespace Client.Adapters.MagicWords.Services
             public UnityWebRequest Transport;
             public AsyncOpStatus Status = AsyncOpStatus.Pending;
             public float Deadline;
-            public int HandleId;
 
-            public Request(string speakerName, string url)
+            public Entry(string speakerName, string url)
             {
                 SpeakerName = speakerName ?? string.Empty;
                 Url = url;

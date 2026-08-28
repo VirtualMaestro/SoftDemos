@@ -102,9 +102,9 @@ namespace Client.Adapters.MagicWords.Systems
                 return;
 
             _mwScreen = current;
-            _atlasRequestId = _assets.BeginLoad(AtlasAddress);
-            _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
-            _emojiRequestId = _assets.BeginLoad(EmojiAddress);
+            _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
+            _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
+            _emojiRequestId = _assets.Request(new AssetLoadRequest(EmojiAddress));
             _TransitionTo(StageState.Loading);
         }
 

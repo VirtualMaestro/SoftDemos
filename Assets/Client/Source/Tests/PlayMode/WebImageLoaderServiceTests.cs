@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -56,13 +57,11 @@ namespace Client.Adapters.Tests
         {
             _IgnoreIfOffline();
 
-            var requestId = _source.BeginLoad("Sheldon", SheldonUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Sheldon", SheldonUrl));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
-            var handleId = _source.ResolveHandle(requestId);
-            Assert.That(handleId, Is.Not.Zero);
-            Assert.That(_source.TryGetTexture(handleId, out var texture), Is.True);
+            Assert.That(_source.TryGetTexture(requestId, out var texture), Is.True);
             Assert.That(texture, Is.Not.Null);
             Assert.That(texture.width, Is.EqualTo(128));
             Assert.That(texture.height, Is.EqualTo(128));
@@ -74,16 +73,13 @@ namespace Client.Adapters.Tests
         [UnityTest]
         public IEnumerator Release_DestroysHeldTexture()
         {
-            var requestId = _source.BeginLoad("Sheldon", _localImageUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Sheldon", _localImageUrl));
             yield return _PollUntilSettled(requestId);
 
-            var handleId = _source.ResolveHandle(requestId);
-            Assert.That(handleId, Is.Not.Zero);
-            Assert.That(_source.TryGetTexture(handleId, out var texture), Is.True);
+            Assert.That(_source.TryGetTexture(requestId, out var texture), Is.True);
 
             _source.Release(requestId);
-            Assert.That(_source.ResolveHandle(requestId), Is.Zero);
-            Assert.That(_source.TryGetTexture(handleId, out _), Is.False);
+            Assert.That(_source.TryGetTexture(requestId, out _), Is.False);
             _AssertTablesEmpty();
 
             yield return null;
@@ -91,16 +87,16 @@ namespace Client.Adapters.Tests
         }
 
         [UnityTest]
-        public IEnumerator InvalidImageBody_ReachesFailed_WithoutAHandle()
+        public IEnumerator InvalidImageBody_ReachesFailed_WithoutATexture()
         {
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in (transport|decode); HTTP"));
 
-            var requestId = _source.BeginLoad("Nobody", _invalidImageUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Nobody", _invalidImageUrl));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
-            Assert.That(_source.ResolveHandle(requestId), Is.Zero);
+            Assert.That(_source.TryGetTexture(requestId, out _), Is.False);
             _source.Release(requestId);
             _AssertTablesEmpty();
         }
@@ -113,11 +109,11 @@ namespace Client.Adapters.Tests
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in transport; HTTP 400"));
 
-            var requestId = _source.BeginLoad("Nobody", JsonUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Nobody", JsonUrl));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
-            Assert.That(_source.ResolveHandle(requestId), Is.Zero);
+            Assert.That(_source.TryGetTexture(requestId, out _), Is.False);
             _source.Release(requestId);
             _AssertTablesEmpty();
         }
@@ -132,7 +128,7 @@ namespace Client.Adapters.Tests
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in timeout; HTTP"));
 
             var startedAt = Time.realtimeSinceStartup;
-            var requestId = _source.BeginLoad("Sheldon", HangingUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Sheldon", HangingUrl));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -149,7 +145,7 @@ namespace Client.Adapters.Tests
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in transport; HTTP"));
 
-            var requestId = _source.BeginLoad("Sheldon", UnreachableUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Sheldon", UnreachableUrl));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -163,7 +159,7 @@ namespace Client.Adapters.Tests
         {
             _IgnoreIfOffline();
 
-            var requestId = _source.BeginLoad("Sheldon", HangingUrl);
+            var requestId = _source.Request(new ImageLoadRequest("Sheldon", HangingUrl));
             yield return null;
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending));
 
@@ -185,8 +181,8 @@ namespace Client.Adapters.Tests
         [UnityTest]
         public IEnumerator Dispose_ReleasesTwoInflightRequests_AndIsIdempotent()
         {
-            _source.BeginLoad("Sheldon", _localImageUrl);
-            _source.BeginLoad("Penny", _localImageUrl);
+            _source.Request(new ImageLoadRequest("Sheldon", _localImageUrl));
+            _source.Request(new ImageLoadRequest("Penny", _localImageUrl));
 
             Assert.DoesNotThrow(() => _source.Dispose());
             _AssertTablesEmpty();
@@ -195,7 +191,7 @@ namespace Client.Adapters.Tests
 
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in disposed; HTTP"));
-            var lateRequestId = _source.BeginLoad("Sheldon", _localImageUrl);
+            var lateRequestId = _source.Request(new ImageLoadRequest("Sheldon", _localImageUrl));
             Assert.That(_source.Poll(lateRequestId), Is.EqualTo(AsyncOpStatus.Failed));
             Assert.That(_source.OpenRequestCount, Is.EqualTo(1));
 
@@ -205,13 +201,13 @@ namespace Client.Adapters.Tests
         }
 
         [UnityTest]
-        public IEnumerator UnparseableUrl_BeginLoadDoesNotThrow_AndReachesFailed()
+        public IEnumerator UnparseableUrl_RequestDoesNotThrow_AndReachesFailed()
         {
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in (start|transport); HTTP"));
 
             var requestId = 0;
-            Assert.DoesNotThrow(() => requestId = _source.BeginLoad("Nobody", "not a url"));
+            Assert.DoesNotThrow(() => requestId = _source.Request(new ImageLoadRequest("Nobody", "not a url")));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -224,20 +220,20 @@ namespace Client.Adapters.Tests
         {
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in url; HTTP"));
-            var nullUrlRequest = _source.BeginLoad("Nobody", null);
+            var nullUrlRequest = _source.Request(new ImageLoadRequest("Nobody", null));
             Assert.That(_source.Poll(nullUrlRequest), Is.EqualTo(AsyncOpStatus.Failed));
             _source.Release(nullUrlRequest);
             _AssertTablesEmpty();
 
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Avatars\].*failed in url; HTTP"));
-            var whitespaceUrlRequest = _source.BeginLoad("Nobody", "   ");
+            var whitespaceUrlRequest = _source.Request(new ImageLoadRequest("Nobody", "   "));
             Assert.That(_source.Poll(whitespaceUrlRequest), Is.EqualTo(AsyncOpStatus.Failed));
             _source.Release(whitespaceUrlRequest);
             _AssertTablesEmpty();
 
             Assert.That(_source.Poll(9999), Is.EqualTo(AsyncOpStatus.Pending));
-            Assert.That(_source.ResolveHandle(9999), Is.Zero);
+            Assert.That(_source.TryGetTexture(9999, out _), Is.False);
             Assert.DoesNotThrow(() => _source.Release(9999));
             _AssertTablesEmpty();
             yield break;

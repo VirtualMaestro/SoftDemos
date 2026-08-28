@@ -165,29 +165,29 @@ namespace Client.Adapters.MagicWords.Systems
             foreach (var data in _bindings.Values)
             {
                 var state = AvatarLoadState.Missing;
-                var handleId = 0;
+                var requestId = 0;
 
                 if (data.SpeakerId >= 0 && _avatarLoads.Has(data.SpeakerId))
                 {
                     ref readonly var load = ref _avatarLoads.Read(data.SpeakerId);
                     state = load.State;
-                    handleId = load.HandleId;
+                    requestId = load.RequestId;
                 }
 
-                if (data.LastState == state && data.LastHandleId == handleId)
+                if (data.LastState == state && data.LastRequestId == requestId)
                     continue;
 
                 data.LastState = state;
-                data.LastHandleId = handleId;
+                data.LastRequestId = requestId;
 
-                if (state == AvatarLoadState.Ready && _avatars.TryGetSprite(handleId, out var sprite))
+                if (state == AvatarLoadState.Ready && _avatars.TryGetSprite(requestId, out var sprite))
                     data.Avatar = sprite;
                 else
                 {
                     data.Avatar = _channel.Placeholder;
 
                     if (state == AvatarLoadState.Ready)
-                        _log.Error($"Avatar handle #{handleId} does not resolve for a dialogue line.");
+                        _log.Error($"Avatar request #{requestId} does not resolve for a dialogue line.");
                 }
 
                 _list.UpdateItem(data);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using UnityEngine;
@@ -10,9 +11,8 @@ namespace Client.Adapters.MagicWords.Services
     {
         private readonly AtlasImageLoaderService _local;
         private readonly WebImageLoaderService _remote;
-        private readonly Dictionary<int, Route> _routes = new();
+        private readonly RequestTable<Route> _routes = new();
 
-        private int _nextRequestId;
         private bool _isDisposed;
 
         public AvatarImageRouterService(AtlasImageLoaderService local, WebImageLoaderService remote)
@@ -45,50 +45,37 @@ namespace Client.Adapters.MagicWords.Services
 
         public void SetMode(AvatarMode mode) => Mode = mode;
 
-        public int BeginLoad(string speakerName, string url)
+        public int Request(ImageLoadRequest request)
         {
-            var requestId = ++_nextRequestId;
             var innerRequestId = Mode == AvatarMode.Local
-                ? _local.BeginLoad(speakerName, url)
-                : _remote.BeginLoad(speakerName, url);
-            _routes.Add(requestId, new Route(Mode, innerRequestId));
-            return requestId;
+                ? _local.Request(request)
+                : _remote.Request(request);
+
+            return _routes.Add(new Route(Mode, innerRequestId));
         }
 
         public AsyncOpStatus Poll(int requestId)
         {
-            return _routes.TryGetValue(requestId, out var route)
+            return _routes.TryGet(requestId, out var route)
                 ? _Poll(route)
                 : AsyncOpStatus.Pending;
         }
 
-        public int ResolveHandle(int requestId)
+        /// <summary>
+        /// Turns a request id back into the sprite whichever loader owns it resolved. Adapter-side
+        /// only — this signature is exactly what the port is not allowed to expose.
+        /// </summary>
+        public bool TryGetSprite(int requestId, out Sprite sprite)
         {
-            if (_routes.TryGetValue(requestId, out var route) == false)
-                return 0;
-
-            return _ResolveInnerHandle(route) != 0 ? requestId : 0;
-        }
-
-        public bool TryGetSprite(int handleId, out Sprite sprite)
-        {
-            if (_routes.TryGetValue(handleId, out var route) == false)
-            {
-                sprite = null;
-                return false;
-            }
-
-            var innerHandle = _ResolveInnerHandle(route);
-
-            if (innerHandle == 0)
+            if (_routes.TryGet(requestId, out var route) == false)
             {
                 sprite = null;
                 return false;
             }
 
             return route.Owner == AvatarMode.Local
-                ? _local.TryGetSprite(innerHandle, out sprite)
-                : _remote.TryGetSprite(innerHandle, out sprite);
+                ? _local.TryGetSprite(route.InnerRequestId, out sprite)
+                : _remote.TryGetSprite(route.InnerRequestId, out sprite);
         }
 
         public void Release(int requestId)
@@ -118,13 +105,6 @@ namespace Client.Adapters.MagicWords.Services
             return route.Owner == AvatarMode.Local
                 ? _local.Poll(route.InnerRequestId)
                 : _remote.Poll(route.InnerRequestId);
-        }
-
-        private int _ResolveInnerHandle(Route route)
-        {
-            return route.Owner == AvatarMode.Local
-                ? _local.ResolveHandle(route.InnerRequestId)
-                : _remote.ResolveHandle(route.InnerRequestId);
         }
 
         private readonly struct Route

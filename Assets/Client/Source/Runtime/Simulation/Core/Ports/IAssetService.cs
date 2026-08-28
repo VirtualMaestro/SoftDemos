@@ -1,22 +1,14 @@
 namespace Client.Simulation.Core.Ports
 {
-    /// <summary>Loads an asset by address. Handle and poll.</summary>
+    /// <summary>Loads an asset by address. Request and poll.</summary>
     /// <remarks>
-    /// The port never returns an engine object. A finished request gives an opaque handle id that
-    /// only the adapter can resolve. A system can choose the asset without a Unity reference.
+    /// The port never returns an engine object, so it has no result at all: a Done request means
+    /// the asset is in the adapter's table under the request id, and the adapter's own
+    /// <c>TryGetAsset</c> — a signature this interface is not allowed to carry — is what turns it
+    /// back into a <c>UnityEngine.Object</c>. A system can therefore choose an asset without ever
+    /// holding a Unity reference.
     /// </remarks>
-    public interface IAssetService
+    public interface IAssetService : IAsyncService<AssetLoadRequest>
     {
-        /// <summary>Starts to load the asset at <paramref name="address"/>.</summary>
-        int BeginLoad(string address);
-
-        /// <summary>Status of <paramref name="requestId"/>. An unknown id reads as Pending.</summary>
-        AsyncOpStatus Poll(int requestId);
-
-        /// <summary>Handle to the asset. Valid only while the request is Done, else <c>0</c>.</summary>
-        int ResolveHandle(int requestId);
-
-        /// <summary>Releases the request and the asset. Without this the asset stays in memory.</summary>
-        void Release(int requestId);
     }
 }

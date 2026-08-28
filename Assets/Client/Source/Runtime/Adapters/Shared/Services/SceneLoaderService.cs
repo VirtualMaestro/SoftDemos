@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using MyGameDevTools.SceneLoading;
 
@@ -13,12 +13,13 @@ namespace Client.Adapters.Shared.Services
     /// the task and the <see cref="CancellationTokenSource"/>, gives the caller a request id, and
     /// reports the task state as an <see cref="AsyncOpStatus"/>. No port method throws. A failed
     /// load becomes <see cref="AsyncOpStatus.Failed"/> and one logged error.
+    /// <para>Loading and unloading share one id space and one table: they are two kinds of work,
+    /// not two services.</para>
     /// </remarks>
     public sealed class SceneLoaderService : ISceneService, IDisposable
     {
-        private readonly Dictionary<int, Request> _requests = new();
+        private readonly RequestTable<Entry> _requests = new();
         private readonly ILogService _log;
-        private int _nextId;
         private bool _isDisposed;
 
         public SceneLoaderService(ILogService log)
@@ -29,39 +30,39 @@ namespace Client.Adapters.Shared.Services
         /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
         public int OpenRequestCount => _requests.Count;
 
-        public int BeginLoad(string sceneId) => _Begin(sceneId, isLoad: true);
+        public int Request(SceneLoadRequest request) => _Begin(request.SceneId, isLoad: true);
 
-        public int BeginUnload(string sceneId) => _Begin(sceneId, isLoad: false);
+        public int Request(SceneUnloadRequest request) => _Begin(request.SceneId, isLoad: false);
 
         public AsyncOpStatus Poll(int requestId)
         {
             // An unknown or released id reads as Pending. Do not throw at a late poll.
-            if (!_requests.TryGetValue(requestId, out var request))
+            if (_requests.TryGet(requestId, out var entry) == false)
                 return AsyncOpStatus.Pending;
 
-            if (request.Status != AsyncOpStatus.Pending)
-                return request.Status;
+            if (entry.Status != AsyncOpStatus.Pending)
+                return entry.Status;
 
             // Get status of async operation for loading or unloading a scene
-            var status = _GetAsyncOpStatus(request, out var failureDetail);
+            var status = _GetAsyncOpStatus(entry, out var failureDetail);
 
             if (status == AsyncOpStatus.Pending)
                 return AsyncOpStatus.Pending;
 
-            request.Status = status;
+            entry.Status = status;
 
             if (status == AsyncOpStatus.Failed)
-                _log.Error($"Request #{requestId} {request.Operation} address '{request.Address}': Pending -> Failed. {failureDetail}");
+                _log.Error($"Request #{requestId} {entry.Operation} address '{entry.Address}': Pending -> Failed. {failureDetail}");
 
             return status;
         }
 
         public void Release(int requestId)
         {
-            if (!_requests.Remove(requestId, out var request))
+            if (_requests.Remove(requestId, out var entry) == false)
                 return;
 
-            request.Cancellation.Dispose();
+            entry.Cancellation.Dispose();
         }
 
         /// <summary>Cancels and drops every open request. Call it after the pipeline is destroyed.</summary>
@@ -76,11 +77,10 @@ namespace Client.Adapters.Shared.Services
 
             _isDisposed = true;
 
-            foreach (var entry in _requests)
+            foreach (var entry in _requests.Values)
             {
-                var request = entry.Value;
-                _CancelQuietly(request);
-                request.Cancellation.Dispose();
+                _CancelQuietly(entry);
+                entry.Cancellation.Dispose();
             }
 
             _requests.Clear();
@@ -88,51 +88,50 @@ namespace Client.Adapters.Shared.Services
 
         private int _Begin(string sceneId, bool isLoad)
         {
-            var requestId = ++_nextId;
-            var request = new Request(sceneId, isLoad);
-            _requests.Add(requestId, request);
+            var entry = new Entry(sceneId, isLoad);
+            var requestId = _requests.Add(entry);
 
             if (_isDisposed)
             {
-                request.Status = AsyncOpStatus.Failed;
-                _log.Error($"Request #{requestId} {request.Operation} address '{sceneId}' rejected: the service is disposed.");
+                entry.Status = AsyncOpStatus.Failed;
+                _log.Error($"Request #{requestId} {entry.Operation} address '{sceneId}' rejected: the service is disposed.");
                 return requestId;
             }
 
             try
             {
                 var parameters = new SceneParameters(new LoadSceneInfoAddress(sceneId), setActive: false);
-                request.Task = isLoad
-                    ? MySceneManager.LoadAsync(parameters, progress: null, token: request.Cancellation.Token)
-                    : MySceneManager.UnloadAsync(parameters, request.Cancellation.Token);
+                entry.Task = isLoad
+                    ? MySceneManager.LoadAsync(parameters, progress: null, token: entry.Cancellation.Token)
+                    : MySceneManager.UnloadAsync(parameters, entry.Cancellation.Token);
             }
             catch (Exception exception)
             {
                 // Some loader failures throw here instead of faulting the task. Same result.
-                request.Status = AsyncOpStatus.Failed;
-                _log.Error($"Request #{requestId} {request.Operation} address '{sceneId}' failed to start: {exception}");
+                entry.Status = AsyncOpStatus.Failed;
+                _log.Error($"Request #{requestId} {entry.Operation} address '{sceneId}' failed to start: {exception}");
             }
 
             return requestId;
         }
 
-        private static AsyncOpStatus _GetAsyncOpStatus(Request request, out string failureDetail)
+        private static AsyncOpStatus _GetAsyncOpStatus(Entry entry, out string failureDetail)
         {
             failureDetail = string.Empty;
 
-            if (request.Task == null)
+            if (entry.Task == null)
             {
                 failureDetail = "The operation was never started.";
                 return AsyncOpStatus.Failed;
             }
 
-            switch (request.Task.Status)
+            switch (entry.Task.Status)
             {
                 case TaskStatus.RanToCompletion:
-                    return _ClassifyResult(request, out failureDetail);
+                    return _ClassifyResult(entry, out failureDetail);
 
                 case TaskStatus.Faulted:
-                    failureDetail = request.Task.Exception?.ToString() ?? "Faulted with no exception.";
+                    failureDetail = entry.Task.Exception?.ToString() ?? "Faulted with no exception.";
                     return AsyncOpStatus.Failed;
 
                 case TaskStatus.Canceled:
@@ -146,19 +145,19 @@ namespace Client.Adapters.Shared.Services
 
         /// <summary>A completed task is not always a success. A load can return an invalid scene.</summary>
         /// <remarks>Only a load is checked. After an unload the scene is invalid by design.</remarks>
-        private static AsyncOpStatus _ClassifyResult(Request request, out string failureDetail)
+        private static AsyncOpStatus _ClassifyResult(Entry entry, out string failureDetail)
         {
             failureDetail = string.Empty;
 
-            if (request.IsLoad == false)
+            if (entry.IsLoad == false)
                 return AsyncOpStatus.Done;
 
             try
             {
-                if (request.Task.Result.GetScene().IsValid())
+                if (entry.Task.Result.GetScene().IsValid())
                     return AsyncOpStatus.Done;
 
-                failureDetail = $"The loader completed but returned no valid scene for address '{request.Address}'.";
+                failureDetail = $"The loader completed but returned no valid scene for address '{entry.Address}'.";
                 return AsyncOpStatus.Failed;
             }
             catch (Exception exception)
@@ -168,12 +167,12 @@ namespace Client.Adapters.Shared.Services
             }
         }
 
-        private static void _CancelQuietly(Request request)
+        private static void _CancelQuietly(Entry entry)
         {
             try
             {
-                if (request.Cancellation.IsCancellationRequested == false)
-                    request.Cancellation.Cancel();
+                if (entry.Cancellation.IsCancellationRequested == false)
+                    entry.Cancellation.Cancel();
             }
             catch (ObjectDisposedException)
             {
@@ -181,7 +180,7 @@ namespace Client.Adapters.Shared.Services
             }
         }
 
-        private sealed class Request
+        private sealed class Entry
         {
             public readonly string Address;
             public readonly bool IsLoad;
@@ -190,7 +189,7 @@ namespace Client.Adapters.Shared.Services
             public Task<SceneResult> Task;
             public AsyncOpStatus Status = AsyncOpStatus.Pending;
 
-            public Request(string sceneId, bool isLoad)
+            public Entry(string sceneId, bool isLoad)
             {
                 Address = sceneId;
                 IsLoad = isLoad;

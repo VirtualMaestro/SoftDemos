@@ -46,20 +46,6 @@ namespace Client.Simulation.Tests.MagicWords
         }
 
         [Test]
-        public void DoneWithoutHandle_IsFailedAndReleased()
-        {
-            ImageSource.ReturnZeroHandle = true;
-            var speakers = _LoadRealPayload();
-            var leonardId = speakers["Leonard"];
-
-            _RequestAvatar(leonardId);
-
-            Assert.That(_State(leonardId), Is.EqualTo(AvatarLoadState.Failed));
-            Assert.That(ImageSource.OpenRequestCount, Is.Zero);
-            Assert.That(Log.CountOf(FakeLogService.Level.Error, "Leonard"), Is.EqualTo(1));
-        }
-
-        [Test]
         public void MissingSpeaker_DoesNotStartRequestAndSurvivesCommandConsumption()
         {
             var speakers = _LoadRealPayload();

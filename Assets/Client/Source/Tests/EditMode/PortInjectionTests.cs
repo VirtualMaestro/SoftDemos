@@ -131,7 +131,7 @@ namespace Client.Simulation.Tests
         {
             var scenes = new FakeSceneService { CompleteAfterPolls = 3, TerminalStatus = AsyncOpStatus.Done };
 
-            var requestId = scenes.BeginLoad("SomeScene");
+            var requestId = scenes.Request(new SceneLoadRequest("SomeScene"));
 
             for (var poll = 1; poll < 3; poll++)
                 Assert.That(scenes.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending),
@@ -151,36 +151,33 @@ namespace Client.Simulation.Tests
         }
 
         [Test]
-        public void FakeAssetService_ResolvesAHandleOnlyWhenDone()
+        public void FakeAssetService_CarriesTheAddressOnTheRequest_AndSettlesOnce()
         {
             var assets = new FakeAssetService { CompleteAfterPolls = 2, TerminalStatus = AsyncOpStatus.Done };
 
-            var requestId = assets.BeginLoad("art/menu/background");
+            var requestId = assets.Request(new AssetLoadRequest("art/menu/background"));
 
+            Assert.That(assets.LoadCalls, Is.EqualTo(new[] { "art/menu/background" }),
+                $"The address travels on the request struct, not as an argument. {assets}");
             Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending), $"{assets}");
-            Assert.That(assets.ResolveHandle(requestId), Is.Zero,
-                $"A pending request must not resolve a handle. {assets}");
-
             Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done), $"{assets}");
-            Assert.That(assets.ResolveHandle(requestId), Is.Not.Zero,
-                $"A completed request must resolve a non-zero handle. {assets}");
 
             assets.Release(requestId);
             Assert.That(assets.OpenRequestCount, Is.Zero, $"Release must drop the request. {assets}");
-            Assert.That(assets.ResolveHandle(requestId), Is.Zero,
-                $"A released request must not resolve a handle. {assets}");
+            Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending),
+                $"A released id must read as Pending, never throw. {assets}");
         }
 
         [Test]
-        public void FakeAssetService_FailedRequestNeverResolvesAHandle()
+        public void FakeAssetService_FailedRequestStaysFailed()
         {
             var assets = new FakeAssetService { CompleteAfterPolls = 1, TerminalStatus = AsyncOpStatus.Failed };
 
-            var requestId = assets.BeginLoad("art/menu/missing");
+            var requestId = assets.Request(new AssetLoadRequest("art/menu/missing"));
 
             Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed), $"{assets}");
-            Assert.That(assets.ResolveHandle(requestId), Is.Zero,
-                $"A failed request must resolve to 0, not to a stale handle. {assets}");
+            Assert.That(assets.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed),
+                $"A settled request must keep reporting its terminal status. {assets}");
         }
 
         /// <summary>Throwaway probe: exists only to prove the injection arrived.</summary>

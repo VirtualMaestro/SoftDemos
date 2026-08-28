@@ -38,7 +38,7 @@ namespace Client.Adapters.Tests
         [UnityTest]
         public IEnumerator LoadThenUnload_ReachesDone_AndReleasesEveryRequest()
         {
-            var loadId = _service.BeginLoad(RealScene);
+            var loadId = _service.Request(new SceneLoadRequest(RealScene));
             yield return _PollUntilSettled(loadId);
 
             Assert.That(_service.Poll(loadId), Is.EqualTo(AsyncOpStatus.Done),
@@ -47,7 +47,7 @@ namespace Client.Adapters.Tests
             _service.Release(loadId);
             Assert.That(_service.OpenRequestCount, Is.Zero, "Release must drop the load request.");
 
-            var unloadId = _service.BeginUnload(RealScene);
+            var unloadId = _service.Request(new SceneUnloadRequest(RealScene));
             yield return _PollUntilSettled(unloadId);
 
             Assert.That(_service.Poll(unloadId), Is.EqualTo(AsyncOpStatus.Done),
@@ -72,7 +72,7 @@ namespace Client.Adapters.Tests
             LogAssert.Expect(LogType.Error, new Regex($@"No Location found for Key={MissingScene}"));
             LogAssert.Expect(LogType.Error, new Regex($@"\[Client\]\[Test\.Scenes\].*{MissingScene}"));
 
-            var requestId = _service.BeginLoad(MissingScene);
+            var requestId = _service.Request(new SceneLoadRequest(MissingScene));
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_service.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed),

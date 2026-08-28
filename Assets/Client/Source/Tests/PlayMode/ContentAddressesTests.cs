@@ -60,7 +60,7 @@ namespace Client.Adapters.Tests
         [UnityTest]
         public IEnumerator Address_Resolves([ValueSource(nameof(_cases))] AddressCase addressCase)
         {
-            var requestId = _source.BeginLoad(addressCase.Address);
+            var requestId = _source.Request(new AssetLoadRequest(addressCase.Address));
             yield return _PollUntilSettled(requestId);
 
             try
@@ -68,11 +68,8 @@ namespace Client.Adapters.Tests
                 Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done),
                     $"Loading '{addressCase.Address}' should reach Done.");
 
-                var handleId = _source.ResolveHandle(requestId);
-                Assert.That(handleId, Is.Not.Zero,
-                    $"Loading '{addressCase.Address}' must resolve a non-zero handle.");
-                Assert.That(_source.TryGetAsset(handleId, out var asset), Is.True,
-                    $"Handle #{handleId} for '{addressCase.Address}' must resolve.");
+                Assert.That(_source.TryGetAsset(requestId, out var asset), Is.True,
+                    $"Request #{requestId} for '{addressCase.Address}' must resolve.");
                 Assert.That(asset, Is.Not.Null,
                     $"Address '{addressCase.Address}' resolved to null.");
 

@@ -27,7 +27,7 @@ namespace Client.Simulation.Tests.Fakes.Services
         public IReadOnlyList<int> LoadCalls => _loadCalls;
         public int OpenRequestCount => _requests.OpenRequestCount;
 
-        public int BeginLoad()
+        public int Request(DialogueRequest request)
         {
             var id = _requests.Begin();
             _loadCalls.Add(id);

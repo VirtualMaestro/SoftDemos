@@ -156,8 +156,8 @@ namespace Client.Adapters.AceOfShadows.Systems
                 return;
 
             _aosScreen = current;
-            _atlasRequestId = _assets.BeginLoad(AtlasAddress);
-            _backgroundRequestId = _assets.BeginLoad(BackgroundAddress);
+            _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
+            _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
 
             _TransitionTo(StageState.Loading);
         }

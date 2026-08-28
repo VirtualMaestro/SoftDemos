@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Payload;
@@ -14,11 +14,10 @@ namespace Client.Adapters.MagicWords.Services
             "https://private-624120-softgamesassignment.apiary-mock.com/v3/magicwords";
         public const float DefaultTimeoutSeconds = 10f;
 
-        private readonly Dictionary<int, Request> _requests = new();
+        private readonly RequestTable<Entry> _requests = new();
         private readonly ILogService _log;
         private readonly string _url;
         private readonly float _timeoutSeconds;
-        private int _nextRequestId;
         private bool _isDisposed;
 
         public HttpDialogueService(
@@ -39,31 +38,35 @@ namespace Client.Adapters.MagicWords.Services
         /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
         public int OpenRequestCount => _requests.Count;
 
-        public int BeginLoad()
+        /// <remarks>
+        /// <paramref name="request"/> carries nothing: the endpoint is this adapter's own
+        /// configuration, so there is nothing for the simulation to say. The type exists so the
+        /// day it gains a field, no signature moves.
+        /// </remarks>
+        public int Request(DialogueRequest request)
         {
-            var requestId = ++_nextRequestId;
-            var request = new Request();
-            _requests.Add(requestId, request);
+            var entry = new Entry();
+            var requestId = _requests.Add(entry);
 
             if (_isDisposed)
             {
-                request.Status = AsyncOpStatus.Failed;
-                _LogFailure(requestId, request, "disposed", "The source is disposed.");
+                entry.Status = AsyncOpStatus.Failed;
+                _LogFailure(requestId, entry, "disposed", "The source is disposed.");
                 return requestId;
             }
 
             try
             {
-                request.Transport = UnityWebRequest.Get(_url);
-                request.Transport.SendWebRequest();
-                request.Deadline = Time.realtimeSinceStartup + _timeoutSeconds;
+                entry.Transport = UnityWebRequest.Get(_url);
+                entry.Transport.SendWebRequest();
+                entry.Deadline = Time.realtimeSinceStartup + _timeoutSeconds;
             }
             catch (Exception exception)
             {
-                request.Status = AsyncOpStatus.Failed;
-                request.Transport?.Dispose();
-                request.Transport = null;
-                _LogFailure(requestId, request, "start", exception.ToString());
+                entry.Status = AsyncOpStatus.Failed;
+                entry.Transport?.Dispose();
+                entry.Transport = null;
+                _LogFailure(requestId, entry, "start", exception.ToString());
             }
 
             return requestId;
@@ -71,88 +74,88 @@ namespace Client.Adapters.MagicWords.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (!_requests.TryGetValue(requestId, out var request))
+            if (_requests.TryGet(requestId, out var entry) == false)
                 return AsyncOpStatus.Pending;
 
-            if (request.Status != AsyncOpStatus.Pending)
-                return request.Status;
+            if (entry.Status != AsyncOpStatus.Pending)
+                return entry.Status;
 
-            var status = _Classify(request, out var failureBranch, out var failureDetail);
+            var status = _Classify(entry, out var failureBranch, out var failureDetail);
 
             if (status == AsyncOpStatus.Pending)
                 return status;
 
-            request.Status = status;
+            entry.Status = status;
 
             if (status == AsyncOpStatus.Failed)
-                _LogFailure(requestId, request, failureBranch, failureDetail);
+                _LogFailure(requestId, entry, failureBranch, failureDetail);
 
             return status;
         }
 
         public DialoguePayload Resolve(int requestId)
         {
-            if (!_requests.TryGetValue(requestId, out var request))
+            if (_requests.TryGet(requestId, out var entry) == false)
                 return null;
 
-            return request.Status == AsyncOpStatus.Done ? request.Payload : null;
+            return entry.Status == AsyncOpStatus.Done ? entry.Payload : null;
         }
 
         public void Release(int requestId)
         {
-            if (!_requests.Remove(requestId, out var request))
+            if (_requests.Remove(requestId, out var entry) == false)
                 return;
 
-            _ReleaseTransport(request);
+            _ReleaseTransport(entry);
         }
 
         public void Dispose()
         {
             _isDisposed = true;
 
-            foreach (var request in _requests.Values)
-                _ReleaseTransport(request);
+            foreach (var entry in _requests.Values)
+                _ReleaseTransport(entry);
 
             _requests.Clear();
         }
 
         private static AsyncOpStatus _Classify(
-            Request request,
+            Entry entry,
             out string failureBranch,
             out string failureDetail)
         {
             failureBranch = string.Empty;
             failureDetail = string.Empty;
 
-            if (request.Transport == null)
+            if (entry.Transport == null)
             {
                 failureBranch = "start";
                 failureDetail = "The request transport was not created.";
                 return AsyncOpStatus.Failed;
             }
 
-            if (request.Transport.result == UnityWebRequest.Result.InProgress)
+            if (entry.Transport.result == UnityWebRequest.Result.InProgress)
             {
-                if (Time.realtimeSinceStartup <= request.Deadline)
+                if (Time.realtimeSinceStartup <= entry.Deadline)
                     return AsyncOpStatus.Pending;
 
-                request.Transport.Abort();
+                entry.Transport.Abort();
                 failureBranch = "timeout";
                 failureDetail = "The adapter deadline elapsed.";
                 return AsyncOpStatus.Failed;
             }
 
-            switch (request.Transport.result)
+            switch (entry.Transport.result)
             {
                 case UnityWebRequest.Result.ConnectionError:
                 case UnityWebRequest.Result.ProtocolError:
                 case UnityWebRequest.Result.DataProcessingError:
                     failureBranch = "transport";
-                    failureDetail = request.Transport.error ?? "The transport failed without a reason.";
+                    failureDetail = entry.Transport.error ?? "The transport failed without a reason.";
                     return AsyncOpStatus.Failed;
 
                 case UnityWebRequest.Result.Success:
-                    var body = request.Transport.downloadHandler?.text;
+                    var body = entry.Transport.downloadHandler?.text;
 
                     if (string.IsNullOrWhiteSpace(body))
                     {
@@ -163,7 +166,7 @@ namespace Client.Adapters.MagicWords.Services
 
                     try
                     {
-                        request.Payload = JsonUtility.FromJson<DialoguePayload>(body);
+                        entry.Payload = JsonUtility.FromJson<DialoguePayload>(body);
                     }
                     catch (Exception exception)
                     {
@@ -172,7 +175,7 @@ namespace Client.Adapters.MagicWords.Services
                         return AsyncOpStatus.Failed;
                     }
 
-                    if (request.Payload != null)
+                    if (entry.Payload != null)
                         return AsyncOpStatus.Done;
 
                     failureBranch = "parse";
@@ -184,25 +187,25 @@ namespace Client.Adapters.MagicWords.Services
             }
         }
 
-        private static void _ReleaseTransport(Request request)
+        private static void _ReleaseTransport(Entry entry)
         {
-            if (request.Transport == null)
+            if (entry.Transport == null)
                 return;
 
-            if (request.Transport.result == UnityWebRequest.Result.InProgress)
-                request.Transport.Abort();
+            if (entry.Transport.result == UnityWebRequest.Result.InProgress)
+                entry.Transport.Abort();
 
-            request.Transport.Dispose();
-            request.Transport = null;
+            entry.Transport.Dispose();
+            entry.Transport = null;
         }
 
-        private void _LogFailure(int requestId, Request request, string branch, string detail)
+        private void _LogFailure(int requestId, Entry entry, string branch, string detail)
         {
             _log.Error($"Request #{requestId} GET '{_url}' failed in {branch}; " +
-                       $"HTTP {request.Transport?.responseCode ?? 0L}: {detail}");
+                       $"HTTP {entry.Transport?.responseCode ?? 0L}: {detail}");
         }
 
-        private sealed class Request
+        private sealed class Entry
         {
             public UnityWebRequest Transport;
             public DialoguePayload Payload;

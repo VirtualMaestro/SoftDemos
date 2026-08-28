@@ -40,7 +40,6 @@ namespace Client.Simulation.MagicWords.Systems
 
                     _imageSource.Release(load.RequestId);
                     load.RequestId = 0;
-                    load.HandleId = 0;
                     load.State = AvatarLoadState.NotRequested;
 
                     // A request from this frame's playback sits on a NotRequested speaker, which
@@ -61,7 +60,7 @@ namespace Client.Simulation.MagicWords.Systems
                 {
                     ref readonly var speaker = ref aspect.Speakers.Read(entityId);
                     ref readonly var avatar = ref _avatars.Read(entityId);
-                    load.RequestId = _imageSource.BeginLoad(speaker.Name, avatar.Url);
+                    load.RequestId = _imageSource.Request(new ImageLoadRequest(speaker.Name, avatar.Url));
                     load.State = AvatarLoadState.Loading;
                 }
             }
@@ -78,15 +77,6 @@ namespace Client.Simulation.MagicWords.Systems
 
                 if (status == AsyncOpStatus.Done)
                 {
-                    var handleId = _imageSource.ResolveHandle(requestId);
-
-                    if (handleId == 0)
-                    {
-                        _Fail(entityId, ref load, requestId, "completed without an image handle");
-                        continue;
-                    }
-
-                    load.HandleId = handleId;
                     load.State = AvatarLoadState.Ready;
                     _log.Info($"Avatar for '{aspect.Speakers.Read(entityId).Name}' is ready.");
                     continue;
@@ -101,7 +91,6 @@ namespace Client.Simulation.MagicWords.Systems
         {
             load.State = AvatarLoadState.Failed;
             load.RequestId = 0;
-            load.HandleId = 0;
             _imageSource.Release(requestId);
 
             _log.Error(

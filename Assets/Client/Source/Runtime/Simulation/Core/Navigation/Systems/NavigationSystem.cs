@@ -53,7 +53,7 @@ namespace Client.Simulation.Core.Navigation.Systems
 
                 state.LastOperationFailed = false;
                 state.ActiveDemoIndex = command.DemoIndex;
-                state.PendingRequestId = _sceneService.BeginLoad(_catalog[command.DemoIndex]);
+                state.PendingRequestId = _sceneService.Request(new SceneLoadRequest(_catalog[command.DemoIndex]));
 
                 _Transition(ref state, ScreenId.Loading);
             }
@@ -72,7 +72,7 @@ namespace Client.Simulation.Core.Navigation.Systems
                     continue;
                 }
 
-                state.PendingRequestId = _sceneService.BeginUnload(_catalog[state.ActiveDemoIndex]);
+                state.PendingRequestId = _sceneService.Request(new SceneUnloadRequest(_catalog[state.ActiveDemoIndex]));
                 _Transition(ref state, ScreenId.Unloading);
             }
         }

@@ -20,7 +20,7 @@ namespace Client.Adapters.MagicWords
 
         // Avatar poll state. The system owns it and nothing draws it.
         public AvatarLoadState LastState = (AvatarLoadState)(-1);
-        public int LastHandleId = -1;
+        public int LastRequestId = -1;
 
         public int ItemId { get; set; }
     }

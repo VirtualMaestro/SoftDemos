@@ -29,15 +29,15 @@ namespace Client.Simulation.Tests.Fakes.Services
         public IReadOnlyList<string> UnloadCalls => _unloadCalls;
         public int OpenRequestCount => _requests.OpenRequestCount;
 
-        public int BeginLoad(string sceneId)
+        public int Request(SceneLoadRequest request)
         {
-            _loadCalls.Add(sceneId);
+            _loadCalls.Add(request.SceneId);
             return _requests.Begin();
         }
 
-        public int BeginUnload(string sceneId)
+        public int Request(SceneUnloadRequest request)
         {
-            _unloadCalls.Add(sceneId);
+            _unloadCalls.Add(request.SceneId);
             return _requests.Begin();
         }
 

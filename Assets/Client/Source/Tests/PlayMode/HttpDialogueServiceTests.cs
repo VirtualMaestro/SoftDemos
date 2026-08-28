@@ -46,7 +46,7 @@ namespace Client.Adapters.Tests
         {
             _IgnoreIfOffline();
 
-            var requestId = _source.BeginLoad();
+            var requestId = _source.Request(default);
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
@@ -71,7 +71,7 @@ namespace Client.Adapters.Tests
             LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in timeout; HTTP"));
 
             var startedAt = Time.realtimeSinceStartup;
-            var requestId = _source.BeginLoad();
+            var requestId = _source.Request(default);
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -90,7 +90,7 @@ namespace Client.Adapters.Tests
             _ReplaceSource(UnreachableUrl);
             LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in transport; HTTP"));
 
-            var requestId = _source.BeginLoad();
+            var requestId = _source.Request(default);
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -106,7 +106,7 @@ namespace Client.Adapters.Tests
             _ReplaceSource(new Uri(_malformedPath).AbsoluteUri);
             LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in parse; HTTP"));
 
-            var requestId = _source.BeginLoad();
+            var requestId = _source.Request(default);
             yield return _PollUntilSettledWithoutThrowing(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -120,7 +120,7 @@ namespace Client.Adapters.Tests
             _ReplaceSource(new Uri(_emptyPath).AbsoluteUri);
             LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in empty body; HTTP"));
 
-            var requestId = _source.BeginLoad();
+            var requestId = _source.Request(default);
             yield return _PollUntilSettled(requestId);
 
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
@@ -130,14 +130,14 @@ namespace Client.Adapters.Tests
         }
 
         [UnityTest]
-        public IEnumerator UnparseableUrl_BeginLoadDoesNotThrow_AndReachesFailed()
+        public IEnumerator UnparseableUrl_RequestDoesNotThrow_AndReachesFailed()
         {
             _ReplaceSource("not a url");
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in (start|transport); HTTP"));
 
             var requestId = 0;
-            Assert.DoesNotThrow(() => requestId = _source.BeginLoad());
+            Assert.DoesNotThrow(() => requestId = _source.Request(default));
             yield return _PollUntilSettled(requestId);
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
 
@@ -153,13 +153,13 @@ namespace Client.Adapters.Tests
             Assert.DoesNotThrow(() => _source.Release(9999));
 
             _ReplaceSource(new Uri(_malformedPath).AbsoluteUri);
-            var requestId = _source.BeginLoad();
+            var requestId = _source.Request(default);
             _source.Release(requestId);
             Assert.That(_source.OpenRequestCount, Is.Zero);
 
             _source.Dispose();
             LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Dialogue\].*failed in disposed; HTTP"));
-            requestId = _source.BeginLoad();
+            requestId = _source.Request(default);
             Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
             Assert.That(_source.OpenRequestCount, Is.EqualTo(1));
 

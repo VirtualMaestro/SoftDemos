@@ -14,8 +14,7 @@ namespace Client.Adapters.Shared.Stage
         public static T GetAsset<T>(AddressablesAssetService assets, int requestId)
             where T : Object
         {
-            var handleId = assets.ResolveHandle(requestId);
-            return assets.TryGetAsset(handleId, out var asset) ? asset as T : null;
+            return assets.TryGetAsset(requestId, out var asset) ? asset as T : null;
         }
 
         /// <summary>
@@ -28,9 +27,8 @@ namespace Client.Adapters.Shared.Stage
             out bool ownsSprite)
         {
             ownsSprite = false;
-            var handleId = assets.ResolveHandle(requestId);
 
-            if (assets.TryGetAsset(handleId, out var asset) == false)
+            if (assets.TryGetAsset(requestId, out var asset) == false)
             {
                 log.Error($"{demoName} background address did not resolve.");
                 return null;

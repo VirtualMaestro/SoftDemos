@@ -6,6 +6,7 @@ using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Ports;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -68,11 +69,10 @@ namespace Client.Adapters.Tests
         [TestCase("Nobody", "mw-avatar-placeholder")]
         public void Local_ResolvesByCaseFoldedNameWithPlaceholder(string speaker, string expectedKey)
         {
-            var requestId = _local.BeginLoad(speaker, "https://ignored");
+            var requestId = _local.Request(new ImageLoadRequest(speaker, "https://ignored"));
 
             Assert.That(_local.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
-            var handleId = _local.ResolveHandle(requestId);
-            Assert.That(_local.TryGetSprite(handleId, out var sprite), Is.True);
+            Assert.That(_local.TryGetSprite(requestId, out var sprite), Is.True);
             Assert.That(sprite, Is.SameAs(_sprites[expectedKey]));
 
             _local.Release(requestId);
@@ -83,7 +83,7 @@ namespace Client.Adapters.Tests
         public void Local_PendsUntilSpritesAreSet()
         {
             _local.ClearSprites();
-            var requestId = _local.BeginLoad("Sheldon", "ignored");
+            var requestId = _local.Request(new ImageLoadRequest("Sheldon", "ignored"));
 
             Assert.That(_local.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending));
             _local.SetSprites(_sprites);
@@ -109,11 +109,10 @@ namespace Client.Adapters.Tests
         {
             Assert.That(_router.Mode, Is.EqualTo(AvatarMode.Local));
             _router.SetMode(AvatarMode.Remote);
-            var requestId = _router.BeginLoad("Remote", _pngUrl);
+            var requestId = _router.Request(new ImageLoadRequest("Remote", _pngUrl));
             yield return _WaitUntilSettled(requestId);
 
-            var handleId = _router.ResolveHandle(requestId);
-            Assert.That(_router.TryGetSprite(handleId, out var sprite), Is.True);
+            Assert.That(_router.TryGetSprite(requestId, out var sprite), Is.True);
             Assert.That(sprite, Is.Not.Null);
 
             _router.Release(requestId);
@@ -127,17 +126,17 @@ namespace Client.Adapters.Tests
         [UnityTest]
         public IEnumerator Router_SeparatesLocalAndRemoteIdSpaces()
         {
-            var localId = _router.BeginLoad("Sheldon", "ignored");
+            var localId = _router.Request(new ImageLoadRequest("Sheldon", "ignored"));
             Assert.That(_router.Poll(localId), Is.EqualTo(AsyncOpStatus.Done));
 
             _router.SetMode(AvatarMode.Remote);
-            var remoteId = _router.BeginLoad("Remote", _pngUrl);
+            var remoteId = _router.Request(new ImageLoadRequest("Remote", _pngUrl));
             yield return _WaitUntilSettled(remoteId);
 
             Assert.That(remoteId, Is.Not.EqualTo(localId));
-            Assert.That(_router.TryGetSprite(_router.ResolveHandle(localId), out var localSprite), Is.True);
+            Assert.That(_router.TryGetSprite(localId, out var localSprite), Is.True);
             Assert.That(localSprite, Is.SameAs(_sprites["avatar-sheldon"]));
-            Assert.That(_router.TryGetSprite(_router.ResolveHandle(remoteId), out var remoteSprite), Is.True);
+            Assert.That(_router.TryGetSprite(remoteId, out var remoteSprite), Is.True);
             Assert.That(remoteSprite, Is.Not.Null);
 
             _router.Release(localId);
@@ -149,14 +148,14 @@ namespace Client.Adapters.Tests
         public void Router_ModeSwitchDoesNotRewriteExistingRoute()
         {
             _local.ClearSprites();
-            var requestId = _router.BeginLoad("Sheldon", "ignored");
+            var requestId = _router.Request(new ImageLoadRequest("Sheldon", "ignored"));
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending));
 
             _router.SetMode(AvatarMode.Remote);
             _local.SetSprites(_sprites);
 
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
-            Assert.That(_router.TryGetSprite(_router.ResolveHandle(requestId), out var sprite), Is.True);
+            Assert.That(_router.TryGetSprite(requestId, out var sprite), Is.True);
             Assert.That(sprite, Is.SameAs(_sprites["avatar-sheldon"]));
 
             _router.Release(requestId);
@@ -167,13 +166,13 @@ namespace Client.Adapters.Tests
         public void Router_ContractEdgesAndDisposeAreSafe()
         {
             Assert.That(_router.Poll(9999), Is.EqualTo(AsyncOpStatus.Pending));
-            Assert.That(_router.ResolveHandle(9999), Is.Zero);
+            Assert.That(_router.TryGetSprite(9999, out _), Is.False);
             Assert.DoesNotThrow(() => _router.Release(9999));
 
             _router.Dispose();
             _router.Dispose();
             _AssertNoOpenRequests();
-            var requestId = _router.BeginLoad("Disposed", "ignored");
+            var requestId = _router.Request(new ImageLoadRequest("Disposed", "ignored"));
 
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
             _router.Release(requestId);
