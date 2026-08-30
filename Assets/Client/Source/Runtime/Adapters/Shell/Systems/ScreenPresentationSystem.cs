@@ -91,12 +91,12 @@ namespace Client.Adapters.Shell.Systems
             var loadingVisible = shellReady &&
                 (state.Current == ScreenId.Loading ||
                  state.Current == ScreenId.Unloading ||
-                 (demoActive && demoReady == false));
+                 (demoActive && !demoReady));
 
             _demoHud.SetDemoIndex(state.ActiveDemoIndex);
             // Keep the backdrop through the load, so the change is not a black flash. Remove it
             // for the demo, which brings its own by then.
-            _menuBackground.SetActive(demoVisible == false);
+            _menuBackground.SetActive(!demoVisible);
 
             _ApplyVisibility(_menu.gameObject, _menuGroup, menuVisible, ref _menuWasVisible);
             _ApplyVisibility(_demoHud.gameObject, _demoHudGroup, demoVisible, ref _demoWasVisible);
@@ -114,10 +114,10 @@ namespace Client.Adapters.Shell.Systems
             GameObject target, CanvasGroup group, bool isVisible, ref bool wasVisible)
         {
             target.SetActive(isVisible);
-            var isRisingEdge = isVisible && wasVisible == false;
+            var isRisingEdge = isVisible && !wasVisible;
             wasVisible = isVisible;
 
-            if (isRisingEdge == false || group == null)
+            if (!isRisingEdge || group == null)
                 return;
 
             _tweens.FadeIn(group, FadeSeconds);

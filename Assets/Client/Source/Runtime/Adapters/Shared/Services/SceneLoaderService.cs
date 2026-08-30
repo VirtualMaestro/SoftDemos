@@ -37,7 +37,7 @@ namespace Client.Adapters.Shared.Services
         public AsyncOpStatus Poll(int requestId)
         {
             // An unknown or released id reads as Pending. Do not throw at a late poll.
-            if (_requests.TryGet(requestId, out var entry) == false)
+            if (!_requests.TryGet(requestId, out var entry))
                 return AsyncOpStatus.Pending;
 
             if (entry.Status != AsyncOpStatus.Pending)
@@ -59,7 +59,7 @@ namespace Client.Adapters.Shared.Services
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out var entry) == false)
+            if (!_requests.Remove(requestId, out var entry))
                 return;
 
             entry.Cancellation.Dispose();
@@ -149,7 +149,7 @@ namespace Client.Adapters.Shared.Services
         {
             failureDetail = string.Empty;
 
-            if (entry.IsLoad == false)
+            if (!entry.IsLoad)
                 return AsyncOpStatus.Done;
 
             try
@@ -171,7 +171,7 @@ namespace Client.Adapters.Shared.Services
         {
             try
             {
-                if (entry.Cancellation.IsCancellationRequested == false)
+                if (!entry.Cancellation.IsCancellationRequested)
                     entry.Cancellation.Cancel();
             }
             catch (ObjectDisposedException)

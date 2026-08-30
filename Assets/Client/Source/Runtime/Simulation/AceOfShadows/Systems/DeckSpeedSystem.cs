@@ -29,7 +29,7 @@ namespace Client.Simulation.AceOfShadows.Systems
             {
                 var requestedMultiplier = aspect.Commands.Read(entityId).Multiplier;
 
-                if (state.IsDealt == false)
+                if (!state.IsDealt)
                     _log.Warn("SetDeckSpeedCommand ignored because the deck is not dealt.");
                 else if (float.IsNaN(requestedMultiplier) || float.IsInfinity(requestedMultiplier) ||
                     requestedMultiplier <= 0f)

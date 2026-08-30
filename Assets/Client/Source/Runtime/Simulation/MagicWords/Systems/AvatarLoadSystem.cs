@@ -46,7 +46,7 @@ namespace Client.Simulation.MagicWords.Systems
                     // A request from this frame's playback sits on a NotRequested speaker, which
                     // the guard above already skipped — so this never doubles. The check is the
                     // cheap half of not depending on that reading staying true.
-                    if (_requests.Has(entityId) == false)
+                    if (!_requests.Has(entityId))
                         _requests.Add(entityId);
                 }
 

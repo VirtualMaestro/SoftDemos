@@ -122,7 +122,7 @@ namespace Client.Adapters.Tests
 
             var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
 
-            while (completed.Has(entityId) == false)
+            while (!completed.Has(entityId))
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     $"MoveCompletedCommand never appeared within {TimeoutSeconds}s. " +

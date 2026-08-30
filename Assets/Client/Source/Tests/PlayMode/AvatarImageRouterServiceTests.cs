@@ -60,7 +60,7 @@ namespace Client.Adapters.Tests
             if (_pngTexture != null)
                 Object.DestroyImmediate(_pngTexture);
 
-            if (string.IsNullOrEmpty(_pngPath) == false && File.Exists(_pngPath))
+            if (!string.IsNullOrEmpty(_pngPath) && File.Exists(_pngPath))
                 File.Delete(_pngPath);
         }
 

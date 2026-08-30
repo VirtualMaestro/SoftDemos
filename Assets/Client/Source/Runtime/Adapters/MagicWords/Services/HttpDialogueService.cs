@@ -75,7 +75,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGet(requestId, out var entry) == false)
+            if (!_requests.TryGet(requestId, out var entry))
                 return AsyncOpStatus.Pending;
 
             if (entry.Status != AsyncOpStatus.Pending)
@@ -96,7 +96,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public DialoguePayload Resolve(int requestId)
         {
-            if (_requests.TryGet(requestId, out var entry) == false)
+            if (!_requests.TryGet(requestId, out var entry))
                 return null;
 
             return entry.Status == AsyncOpStatus.Done ? entry.Payload : null;
@@ -104,7 +104,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out var entry) == false)
+            if (!_requests.Remove(requestId, out var entry))
                 return;
 
             _ReleaseTransport(entry);

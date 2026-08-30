@@ -110,8 +110,8 @@ namespace Client.Simulation.MagicWords.Systems
 
         private void _RequestAvatar(entlong speaker)
         {
-            if (speaker.TryGetID(out var speakerEntityId) == false ||
-                _avatarLoads.Has(speakerEntityId) == false ||
+            if (!speaker.TryGetID(out var speakerEntityId) ||
+                !_avatarLoads.Has(speakerEntityId) ||
                 _avatarLoads.Read(speakerEntityId).State != AvatarLoadState.NotRequested ||
                 _avatarRequests.Has(speakerEntityId))
                 return;

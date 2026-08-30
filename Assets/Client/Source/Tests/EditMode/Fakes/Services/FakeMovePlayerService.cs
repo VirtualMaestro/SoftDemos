@@ -49,7 +49,7 @@ namespace Client.Simulation.Tests.Fakes.Services
             {
                 var pending = _pending[index];
 
-                if (pending.Entity.TryGetID(out _) == false)
+                if (!pending.Entity.TryGetID(out _))
                 {
                     _pending.RemoveAt(index);
                     continue;

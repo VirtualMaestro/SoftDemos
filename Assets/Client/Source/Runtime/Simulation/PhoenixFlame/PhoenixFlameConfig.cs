@@ -13,7 +13,7 @@ namespace Client.Simulation.PhoenixFlame
             FlamePhase startPhase = FlamePhase.Orange,
             float transitionDurationSeconds = 1f)
         {
-            if (FlamePhaseCycle.IsDefined(startPhase) == false)
+            if (!FlamePhaseCycle.IsDefined(startPhase))
                 throw new ArgumentOutOfRangeException(nameof(startPhase), startPhase, "Start phase is not a defined flame phase.");
 
             // NaN fails every comparison, infinity passes the positive test and then never counts

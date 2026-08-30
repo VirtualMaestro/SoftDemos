@@ -20,10 +20,10 @@ namespace Client.Simulation.PhoenixFlame.Systems
         {
             ref var state = ref _world.Get<FlameStateComp>();
 
-            if (state.IsActive == false)
+            if (!state.IsActive)
                 return;
 
-            if (state.IsTransitioning == false)
+            if (!state.IsTransitioning)
                 return;
 
             // The division below is safe without a guard: PhoenixFlameConfig rejects a non-positive

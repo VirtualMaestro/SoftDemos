@@ -45,9 +45,9 @@ namespace Client.Simulation.MagicWords
                 }
 
                 var side = _ParseSide(avatar.position, avatar.name, log);
-                var hasUrl = string.IsNullOrWhiteSpace(avatar.url) == false;
+                var hasUrl = !string.IsNullOrWhiteSpace(avatar.url);
 
-                if (hasUrl == false)
+                if (!hasUrl)
                     log.Warn($"Avatar for '{avatar.name}' has no URL and is indexed as missing.");
 
                 _entries.Add(avatar.name, new Entry(hasUrl ? avatar.url : null, side));

@@ -128,14 +128,14 @@ namespace Client.Adapters.AceOfShadows.Systems
         /// </remarks>
         private void _DrainCompletedTweens()
         {
-            if (_cardMovePlayer.HasCompletedTweens == false)
+            if (!_cardMovePlayer.HasCompletedTweens)
                 return;
 
             foreach (var completion in _cardMovePlayer.Completions)
             {
                 // The entity can die while its tween runs. entlong holds a generation, so a
                 // recycled id reads as dead.
-                if (completion.TryGetID(out var entityId) == false)
+                if (!completion.TryGetID(out var entityId))
                 {
                     _log.Warn("A tween completed for an entity that no longer exists. Ignoring.");
                     continue;
@@ -180,7 +180,7 @@ namespace Client.Adapters.AceOfShadows.Systems
                 if (atlasStatus != AsyncOpStatus.Done || backgroundStatus != AsyncOpStatus.Done)
                     return;
 
-                if (_ResolveContent() == false)
+                if (!_ResolveContent())
                 {
                     _Teardown(false);
                     return;
@@ -237,7 +237,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
                 _RecalculateLayout();
 
-            if (_aosScreen.SpeedRequested == false)
+            if (!_aosScreen.SpeedRequested)
                 return;
 
             _aosScreen.SpeedRequested = false;

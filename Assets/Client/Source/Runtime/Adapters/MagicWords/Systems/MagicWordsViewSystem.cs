@@ -37,7 +37,7 @@ namespace Client.Adapters.MagicWords.Systems
 
         public void Present()
         {
-            if (_demoReady.Count == 0 || _screens.TryGet(out MagicWordsScreen current) == false)
+            if (_demoReady.Count == 0 || !_screens.TryGet(out MagicWordsScreen current))
             {
                 _ResetFor(null);
                 return;

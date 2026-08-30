@@ -124,7 +124,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             _Tick(1f);
             Assert.That(_CountMovingCards(), Is.EqualTo(2));
 
-            for (var tick = 0; tick < 160 && World.Get<DeckStateComp>().IsComplete == false; tick++)
+            for (var tick = 0; tick < 160 && !World.Get<DeckStateComp>().IsComplete; tick++)
                 _Tick(1f);
 
             ref var state = ref World.Get<DeckStateComp>();
@@ -345,7 +345,7 @@ namespace Client.Simulation.Tests.AceOfShadows
             _Deal();
             _SetSpeed(8f);
 
-            for (var tick = 0; tick < 160 && World.Get<DeckStateComp>().IsComplete == false; tick++)
+            for (var tick = 0; tick < 160 && !World.Get<DeckStateComp>().IsComplete; tick++)
                 _Tick(0.125f);
 
             ref var state = ref World.Get<DeckStateComp>();

@@ -75,7 +75,7 @@ namespace Client.Adapters.MagicWords.Systems
             foreach (var entityId in _bindings.Keys)
                 _bound.TryDel(entityId);
 
-            if (_list != null && _list.IsDisposed == false)
+            if (_list != null && !_list.IsDisposed)
                 _list.Clear(0);
 
             _list = null;

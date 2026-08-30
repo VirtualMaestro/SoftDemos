@@ -74,7 +74,7 @@ namespace Client.Simulation.MagicWords.Systems
                         continue;
                     }
 
-                    if (speakers.TryGetValue(line.name, out var speaker) == false)
+                    if (!speakers.TryGetValue(line.name, out var speaker))
                     {
                         var speakerEntityId = _world.NewEntity();
                         _speakerPool.Add(speakerEntityId).Name = line.name;

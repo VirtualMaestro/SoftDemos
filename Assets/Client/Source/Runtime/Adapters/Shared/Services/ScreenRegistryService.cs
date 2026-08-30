@@ -54,7 +54,7 @@ namespace Client.Adapters.Shared.Services
 
         private void _Scan(Scene scene)
         {
-            if (scene.isLoaded == false)
+            if (!scene.isLoaded)
                 return;
 
             foreach (var root in scene.GetRootGameObjects())

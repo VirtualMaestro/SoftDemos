@@ -25,14 +25,14 @@ namespace Client.Simulation.Tests.Fakes.Systems
         {
             _player.AdvanceOneTick();
 
-            if (_player.HasCompletedMoves == false)
+            if (!_player.HasCompletedMoves)
                 return;
 
             foreach (var completion in _player.Completions)
             {
                 // The entity can die while its flight runs. entlong holds a generation, so a
                 // recycled id reads as dead.
-                if (completion.TryGetID(out var entityId) == false)
+                if (!completion.TryGetID(out var entityId))
                     continue;
 
                 _completedMoves.TryAdd(entityId);

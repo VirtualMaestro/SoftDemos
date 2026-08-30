@@ -38,7 +38,7 @@ namespace Client.Simulation.Tests.Fakes
             // An unknown or released id is Pending, never a throw — the port contract forbids
             // exceptions crossing the boundary, and the fake must not be more forgiving than
             // the real adapter.
-            if (_pollsLeft.TryGetValue(requestId, out var left) == false)
+            if (!_pollsLeft.TryGetValue(requestId, out var left))
                 return AsyncOpStatus.Pending;
 
             if (left > 0)

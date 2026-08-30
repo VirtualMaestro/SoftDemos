@@ -63,7 +63,7 @@ namespace Client.Adapters.Shared.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGet(requestId, out var entry) == false)
+            if (!_requests.TryGet(requestId, out var entry))
                 return AsyncOpStatus.Pending;
 
             if (entry.Status != AsyncOpStatus.Pending)
@@ -95,7 +95,7 @@ namespace Client.Adapters.Shared.Services
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out var entry) == false)
+            if (!_requests.Remove(requestId, out var entry))
                 return;
 
             _assets.Remove(requestId);
@@ -124,7 +124,7 @@ namespace Client.Adapters.Shared.Services
         {
             failureDetail = string.Empty;
 
-            if (entry.Handle.IsValid() == false)
+            if (!entry.Handle.IsValid())
             {
                 failureDetail = "The Addressables handle is not valid — the load was never started.";
                 return AsyncOpStatus.Failed;

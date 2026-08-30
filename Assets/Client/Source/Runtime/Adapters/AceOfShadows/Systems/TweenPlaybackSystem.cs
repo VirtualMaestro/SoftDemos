@@ -70,7 +70,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             {
                 var handleId = aspect.Views.Read(entityId).Id;
 
-                if (_viewRegistry.TryResolve(handleId, out var view, out var card) == false)
+                if (!_viewRegistry.TryResolve(handleId, out var view, out var card))
                 {
                     // Report a failure as a completion, through the queue rather than the world:
                     // the simulation must not wait forever, and a *Command written in Present dies

@@ -255,7 +255,7 @@ namespace Client.Adapters.Tests
             float timeoutSeconds)
         {
             yield return _WaitUntil(
-                () => world.Get<FlameStateComp>().IsTransitioning == false &&
+                () => !world.Get<FlameStateComp>().IsTransitioning &&
                       world.Get<FlameStateComp>().CurrentPhase == expected,
                 $"The flame never settled on {expected}. State: {world.Get<FlameStateComp>()}.",
                 timeoutSeconds);
@@ -265,7 +265,7 @@ namespace Client.Adapters.Tests
             float timeoutSeconds)
         {
             yield return _WaitUntil(
-                () => animator.IsInTransition(0) == false &&
+                () => !animator.IsInTransition(0) &&
                       animator.GetCurrentAnimatorStateInfo(0).shortNameHash == stateHash,
                 "The Animator did not settle on the expected state.", timeoutSeconds);
         }
@@ -284,7 +284,7 @@ namespace Client.Adapters.Tests
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
 
-            while (condition() == false)
+            while (!condition())
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), failureMessage);
                 yield return null;

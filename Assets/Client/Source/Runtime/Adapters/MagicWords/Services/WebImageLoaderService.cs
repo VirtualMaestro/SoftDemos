@@ -77,7 +77,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGet(requestId, out var entry) == false)
+            if (!_requests.TryGet(requestId, out var entry))
                 return AsyncOpStatus.Pending;
 
             if (entry.Status != AsyncOpStatus.Pending)
@@ -113,7 +113,7 @@ namespace Client.Adapters.MagicWords.Services
             if (_sprites.TryGetValue(requestId, out sprite))
                 return true;
 
-            if (_textures.TryGetValue(requestId, out var texture) == false)
+            if (!_textures.TryGetValue(requestId, out var texture))
                 return false;
 
             sprite = Sprite.Create(
@@ -132,7 +132,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out var entry) == false)
+            if (!_requests.Remove(requestId, out var entry))
                 return;
 
             _DestroyImages(requestId);
@@ -197,8 +197,8 @@ namespace Client.Adapters.MagicWords.Services
                 case UnityWebRequest.Result.Success:
                     var contentType = entry.Transport.GetResponseHeader("Content-Type");
 
-                    if (string.IsNullOrEmpty(contentType) == false &&
-                        contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) == false)
+                    if (!string.IsNullOrEmpty(contentType) &&
+                        !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
                     {
                         failureBranch = "content type";
                         failureDetail = $"Expected image content but received '{contentType}'.";

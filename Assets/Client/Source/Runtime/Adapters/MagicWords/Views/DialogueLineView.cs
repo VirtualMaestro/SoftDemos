@@ -35,7 +35,7 @@ namespace Client.Adapters.MagicWords.Views
         {
             var isLeft = side == AvatarSide.Left;
             leftSide.SetActive(isLeft);
-            rightSide.SetActive(isLeft == false);
+            rightSide.SetActive(!isLeft);
             leftFrame.sprite = frameSprite;
             rightFrame.sprite = frameSprite;
             bubble.sprite = bubbleSprite;

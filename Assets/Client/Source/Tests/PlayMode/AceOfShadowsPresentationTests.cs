@@ -111,7 +111,7 @@ namespace Client.Adapters.Tests
             for (var press = 0; press < 2; press++)
             {
                 sceneView.SpeedRequested = true;
-                yield return _WaitUntil(() => sceneView.SpeedRequested == false,
+                yield return _WaitUntil(() => !sceneView.SpeedRequested,
                     "The input phase did not drain the speed press.", 2f);
             }
 
@@ -193,7 +193,7 @@ namespace Client.Adapters.Tests
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
 
-            while (condition() == false)
+            while (!condition())
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), failureMessage);
                 yield return null;

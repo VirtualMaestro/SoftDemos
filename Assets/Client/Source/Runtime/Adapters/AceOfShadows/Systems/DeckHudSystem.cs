@@ -31,7 +31,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         public void Present()
         {
-            if (_screens.TryGet(out AceOfShadowsScreen current) == false)
+            if (!_screens.TryGet(out AceOfShadowsScreen current))
             {
                 _scene = null;
                 return;
@@ -42,7 +42,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
             ref readonly var state = ref _world.Get<DeckStateComp>();
 
-            if (state.IsDealt == false)
+            if (!state.IsDealt)
                 return;
 
             var sourceCount = 0;

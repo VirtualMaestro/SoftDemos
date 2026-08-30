@@ -39,7 +39,7 @@ namespace Client.Adapters.Shell.Systems
                 _menu.RequestedDemoIndex = MenuScreen.NoDemoRequested;
             }
 
-            if (_demoHud.CloseRequested == false)
+            if (!_demoHud.CloseRequested)
                 return;
 
             _demoHud.CloseRequested = false;

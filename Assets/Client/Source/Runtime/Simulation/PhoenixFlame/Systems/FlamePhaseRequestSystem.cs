@@ -24,7 +24,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
             // moment the in-flight transition ends.
             foreach (var commandEntity in _world.Where(out CommandAspect _))
             {
-                if (state.IsActive == false)
+                if (!state.IsActive)
                 {
                     _log.Warn("AdvanceFlamePhaseCommand ignored because the flame is not active.");
                     continue;

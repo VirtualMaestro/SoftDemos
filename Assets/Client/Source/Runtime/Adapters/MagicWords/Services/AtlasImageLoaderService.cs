@@ -51,7 +51,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public AsyncOpStatus Poll(int requestId)
         {
-            if (_requests.TryGet(requestId, out var entry) == false)
+            if (!_requests.TryGet(requestId, out var entry))
                 return AsyncOpStatus.Pending;
 
             if (entry.Status != AsyncOpStatus.Pending)
@@ -62,11 +62,11 @@ namespace Client.Adapters.MagicWords.Services
 
             var spriteKey = entry.SpriteKey;
 
-            if (_sprites.TryGetValue(spriteKey, out var sprite) == false)
+            if (!_sprites.TryGetValue(spriteKey, out var sprite))
             {
                 spriteKey = PlaceholderKey;
 
-                if (_sprites.TryGetValue(spriteKey, out sprite) == false)
+                if (!_sprites.TryGetValue(spriteKey, out sprite))
                 {
                     entry.Status = AsyncOpStatus.Failed;
                     _log.Error(

@@ -117,8 +117,8 @@ namespace Client.Adapters.Shell.Systems
 
         private bool _TryApplySkin()
         {
-            if (_TryResolveAtlas(_menuAtlasRequestId, MenuAtlasAddress, out var menuAtlas) == false ||
-                _TryResolveAtlas(_sharedAtlasRequestId, SharedAtlasAddress, out var sharedAtlas) == false)
+            if (!_TryResolveAtlas(_menuAtlasRequestId, MenuAtlasAddress, out var menuAtlas) ||
+                !_TryResolveAtlas(_sharedAtlasRequestId, SharedAtlasAddress, out var sharedAtlas))
                 return false;
 
             _ApplyHiddenUntilLoaded(_skin.Background, _CreateBackgroundSprite());
@@ -167,7 +167,7 @@ namespace Client.Adapters.Shell.Systems
         {
             atlas = null;
 
-            if (_assets.TryGetAsset(requestId, out var asset) == false || asset is not SpriteAtlas resolved)
+            if (!_assets.TryGetAsset(requestId, out var asset) || asset is not SpriteAtlas resolved)
             {
                 _log.Error($"Address '{address}' did not resolve to a {nameof(SpriteAtlas)}.");
                 return false;
@@ -197,7 +197,7 @@ namespace Client.Adapters.Shell.Systems
         /// <remarks>The backdrop is a standalone image, not an atlas entry. Its importer decides the type.</remarks>
         private Sprite _CreateBackgroundSprite()
         {
-            if (_assets.TryGetAsset(_backgroundRequestId, out var asset) == false)
+            if (!_assets.TryGetAsset(_backgroundRequestId, out var asset))
             {
                 _log.Error($"Address '{BackgroundAddress}' did not resolve.");
                 return null;

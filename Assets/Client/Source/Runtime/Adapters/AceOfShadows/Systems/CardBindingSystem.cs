@@ -33,7 +33,7 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         public void Present()
         {
-            if (_screens.TryGet<AceOfShadowsScreen>(out _) == false)
+            if (!_screens.TryGet<AceOfShadowsScreen>(out _))
                 return;
 
             // A rebuilt view pool unseats everything on its own, so a layout event on the same
@@ -62,7 +62,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             {
                 if (_bindCursor >= _channel.Views.Count || _bindCursor >= _channel.Handles.Count)
                 {
-                    if (_warnedOutOfViews == false)
+                    if (!_warnedOutOfViews)
                     {
                         _warnedOutOfViews = true;
                         _log.Warn($"Card view channel ran out of views after {_bindCursor} binding(s).");
@@ -103,7 +103,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             {
                 var handleId = aspect.Views.Read(entityId).Id;
 
-                if (_views.TryResolve(handleId, out var transform, out var cardView) == false ||
+                if (!_views.TryResolve(handleId, out var transform, out var cardView) ||
                     cardView == null)
                     continue;
 

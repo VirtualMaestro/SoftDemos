@@ -64,7 +64,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         public void Present()
         {
-            if (_screens.TryGet(out PhoenixFlameScreen current) == false)
+            if (!_screens.TryGet(out PhoenixFlameScreen current))
             {
                 _ResetPhaseTriggers();
                 _ResetFor(null);
@@ -76,7 +76,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
             ref readonly var flame = ref _world.Get<FlameStateComp>();
 
-            if (flame.IsActive == false)
+            if (!flame.IsActive)
             {
                 _EndRun();
                 return;
@@ -87,7 +87,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             else
                 _Snap(in flame);
 
-            _ApplyInteractable(flame.IsTransitioning == false);
+            _ApplyInteractable(!flame.IsTransitioning);
             _ApplyLabel(flame.CurrentPhase);
         }
 
@@ -112,7 +112,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _DriveAnimator(in FlameStateComp flame)
         {
-            if (flame.IsTransitioning == false || _shownPhase == flame.NextPhase)
+            if (!flame.IsTransitioning || _shownPhase == flame.NextPhase)
                 return;
 
             _shownPhase = flame.NextPhase;
@@ -172,7 +172,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             // Disable the button for the whole load. A tap must not queue an advance.
             _ApplyInteractable(false);
 
-            if (_hasSnapped == false)
+            if (!_hasSnapped)
                 return;
 
             _ResetPhaseTriggers();

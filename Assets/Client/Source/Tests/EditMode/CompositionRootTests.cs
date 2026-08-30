@@ -106,7 +106,7 @@ namespace Client.Simulation.Tests
             foreach (var port in types.Where(t => t.IsInterface))
             {
                 var implementations = types
-                    .Where(t => t.IsInterface == false && port.IsAssignableFrom(t))
+                    .Where(t => !t.IsInterface && port.IsAssignableFrom(t))
                     .ToArray();
 
                 if (implementations.Length > 1)
@@ -162,7 +162,7 @@ namespace Client.Simulation.Tests
 
             foreach (var type in _ProductSystemAndModuleTypes())
                 foreach (var injectedType in _InjectedTypesOf(type))
-                    if (InjectableTypeNames.Contains(injectedType.FullName ?? string.Empty) == false)
+                    if (!InjectableTypeNames.Contains(injectedType.FullName ?? string.Empty))
                         violations.Add($"{type.FullName} declares IEcsInject<{injectedType.Name}>");
 
             Assert.That(violations, Is.Empty,

@@ -67,7 +67,7 @@ namespace Client.Adapters.MagicWords.Services
         /// </summary>
         public bool TryGetSprite(int requestId, out Sprite sprite)
         {
-            if (_routes.TryGet(requestId, out var route) == false)
+            if (!_routes.TryGet(requestId, out var route))
             {
                 sprite = null;
                 return false;
@@ -80,7 +80,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public void Release(int requestId)
         {
-            if (_routes.Remove(requestId, out var route) == false)
+            if (!_routes.Remove(requestId, out var route))
                 return;
 
             if (route.Owner == AvatarMode.Local)

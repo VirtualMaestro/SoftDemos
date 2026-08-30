@@ -70,7 +70,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             // gating on it caused.
             if (_state != StageState.Idle && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
-                 _screens.TryGet<PhoenixFlameScreen>(out _) == false))
+                 !_screens.TryGet<PhoenixFlameScreen>(out _)))
                 _TransitionTo(StageState.Closing);
 
             switch (_state)
@@ -96,7 +96,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
         {
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (_screens.TryGet(out PhoenixFlameScreen current) == false || current == _flameScreen ||
+            if (!_screens.TryGet(out PhoenixFlameScreen current) || current == _flameScreen ||
                 screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != DemoIndex)
                 return;
 
@@ -121,7 +121,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             if (atlasStatus != AsyncOpStatus.Done || backgroundStatus != AsyncOpStatus.Done)
                 return;
 
-            if (_ResolveContent() == false)
+            if (!_ResolveContent())
             {
                 _FailLoad();
                 return;
@@ -146,7 +146,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
                 _RecalculateLayout();
 
-            if (_flameScreen.AdvanceRequested == false)
+            if (!_flameScreen.AdvanceRequested)
                 return;
 
             _flameScreen.AdvanceRequested = false;

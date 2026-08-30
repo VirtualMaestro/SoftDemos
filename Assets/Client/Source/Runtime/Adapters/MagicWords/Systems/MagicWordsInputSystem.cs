@@ -98,7 +98,7 @@ namespace Client.Adapters.MagicWords.Systems
         {
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (_screens.TryGet(out MagicWordsScreen current) == false || current == _mwScreen ||
+            if (!_screens.TryGet(out MagicWordsScreen current) || current == _mwScreen ||
                 screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != DemoIndex)
                 return;
 
@@ -127,7 +127,7 @@ namespace Client.Adapters.MagicWords.Systems
                 emojiStatus != AsyncOpStatus.Done)
                 return;
 
-            if (_ResolveContent() == false)
+            if (!_ResolveContent())
             {
                 _Teardown(false);
                 return;
@@ -159,7 +159,7 @@ namespace Client.Adapters.MagicWords.Systems
                 _world.GetPool<SkipDialogueCommand>().Add(_world.NewEntity());
             }
 
-            if (_mwScreen.ModeRequested == false)
+            if (!_mwScreen.ModeRequested)
                 return;
 
             _mwScreen.ModeRequested = false;

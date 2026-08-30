@@ -265,7 +265,7 @@ namespace Client.Adapters.Tests
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
 
-            while (condition() == false)
+            while (!condition())
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), failureMessage);
                 yield return null;

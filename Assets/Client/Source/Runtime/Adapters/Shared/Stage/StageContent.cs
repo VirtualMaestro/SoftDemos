@@ -28,7 +28,7 @@ namespace Client.Adapters.Shared.Stage
         {
             ownsSprite = false;
 
-            if (assets.TryGetAsset(requestId, out var asset) == false)
+            if (!assets.TryGetAsset(requestId, out var asset))
             {
                 log.Error($"{demoName} background address did not resolve.");
                 return null;
