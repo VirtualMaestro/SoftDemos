@@ -35,17 +35,6 @@ namespace Client.Adapters.MagicWords.Views
         /// <summary>Set by the avatar-mode button, cleared by the system that drains it.</summary>
         public bool ModeRequested { get; set; }
 
-        private void OnValidate()
-        {
-            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-            Debug.Assert(logScroll != null, $"'{nameof(logScroll)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-            Debug.Assert(logContent != null, $"'{nameof(logContent)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-            Debug.Assert(logList != null, $"'{nameof(logList)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-            Debug.Assert(avatarModeButton != null, $"'{nameof(avatarModeButton)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-            Debug.Assert(avatarModeLabel != null, $"'{nameof(avatarModeLabel)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-            Debug.Assert(statusLabel != null, $"'{nameof(statusLabel)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
-        }
-
         private void Awake()
         {
             avatarModeButton.onClick.AddListener(_OnAvatarModePressed);
@@ -60,6 +49,17 @@ namespace Client.Adapters.MagicWords.Views
         private void _OnAvatarModePressed()
         {
             ModeRequested = true;
+        }
+
+        private void OnValidate()
+        {
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(logScroll != null, $"'{nameof(logScroll)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(logContent != null, $"'{nameof(logContent)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(logList != null, $"'{nameof(logList)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(avatarModeButton != null, $"'{nameof(avatarModeButton)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(avatarModeLabel != null, $"'{nameof(avatarModeLabel)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
+            Debug.Assert(statusLabel != null, $"'{nameof(statusLabel)}' is not assigned on {nameof(MagicWordsScreen)}.", this);
         }
     }
 }

@@ -39,18 +39,6 @@ namespace Client.Adapters.AceOfShadows.Views
         /// </remarks>
         public bool SpeedRequested { get; set; }
 
-        private void OnValidate()
-        {
-            Debug.Assert(cardRoot != null, $"'{nameof(cardRoot)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(sourceCounter != null, $"'{nameof(sourceCounter)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(targetCounter != null, $"'{nameof(targetCounter)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(completionLabel != null, $"'{nameof(completionLabel)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(speedButton != null, $"'{nameof(speedButton)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(speedLabel != null, $"'{nameof(speedLabel)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-            Debug.Assert(cardPrefab != null, $"'{nameof(cardPrefab)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
-        }
-
         private void Awake()
         {
             speedButton.onClick.AddListener(_OnSpeedButtonPressed);
@@ -65,6 +53,18 @@ namespace Client.Adapters.AceOfShadows.Views
         private void _OnSpeedButtonPressed()
         {
             SpeedRequested = true;
+        }
+
+        private void OnValidate()
+        {
+            Debug.Assert(cardRoot != null, $"'{nameof(cardRoot)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(sourceCounter != null, $"'{nameof(sourceCounter)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(targetCounter != null, $"'{nameof(targetCounter)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(completionLabel != null, $"'{nameof(completionLabel)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(speedButton != null, $"'{nameof(speedButton)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(speedLabel != null, $"'{nameof(speedLabel)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
+            Debug.Assert(cardPrefab != null, $"'{nameof(cardPrefab)}' is not assigned on {nameof(AceOfShadowsScreen)}.", this);
         }
     }
 }

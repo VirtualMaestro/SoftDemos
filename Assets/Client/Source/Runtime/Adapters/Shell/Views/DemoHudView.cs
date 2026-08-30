@@ -35,12 +35,6 @@ namespace Client.Adapters.Shell.Views
                 : string.Empty;
         }
 
-        private void OnValidate()
-        {
-            Debug.Assert(backButton != null, $"'{nameof(backButton)}' is not assigned on {nameof(DemoHudView)}.", this);
-            Debug.Assert(title != null, $"'{nameof(title)}' is not assigned on {nameof(DemoHudView)}.", this);
-        }
-
         private void OnDestroy()
         {
             if (backButton != null)
@@ -48,5 +42,11 @@ namespace Client.Adapters.Shell.Views
         }
 
         private void _OnBackPressed() => CloseRequested = true;
+
+        private void OnValidate()
+        {
+            Debug.Assert(backButton != null, $"'{nameof(backButton)}' is not assigned on {nameof(DemoHudView)}.", this);
+            Debug.Assert(title != null, $"'{nameof(title)}' is not assigned on {nameof(DemoHudView)}.", this);
+        }
     }
 }

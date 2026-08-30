@@ -36,7 +36,6 @@ namespace Client.Bootstrap
 
         private EcsWorld _world;
         private EcsPipeline _pipeline;
-        private ILogService _log;
         private SceneLoaderService _sceneService;
         private AddressablesAssetService _assetSourceService;
         private HttpDialogueService _dialogueSourceService;
@@ -53,23 +52,9 @@ namespace Client.Bootstrap
         public AddressablesAssetService Assets => _assetSourceService;
         public AvatarImageRouterService Avatars => _avatarImagesService;
         public FadePlayerService Fades => _fadePlayerService;
-        public CardMovePlayerService CardMoves => _cardMovePlayerService;
-
-        private void OnValidate()
-        {
-            Debug.Assert(menuScreen != null, $"'{nameof(menuScreen)}' is not assigned on {nameof(Boot)}.", this);
-            Debug.Assert(demoHud != null, $"'{nameof(demoHud)}' is not assigned on {nameof(Boot)}.", this);
-            Debug.Assert(loadingIndicator != null, $"'{nameof(loadingIndicator)}' is not assigned on {nameof(Boot)}.", this);
-            Debug.Assert(shellSkin != null, $"'{nameof(shellSkin)}' is not assigned on {nameof(Boot)}.", this);
-        }
 
         private void Start()
         {
-            _log = new UnityLogService("Bootstrap");
-
-            if (_HasEveryInspectorReference() == false)
-                return;
-
             menuScreen.SetDemos(demos);
             demoHud.SetDemos(demos);
 
@@ -141,78 +126,6 @@ namespace Client.Bootstrap
                 .Add(new ShellInputSystem(menuScreen, demoHud))
                 .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
                 .BuildAndInit();
-        }
-
-        private bool _HasEveryInspectorReference()
-        {
-            var isComplete = true;
-
-            if (menuScreen == null)
-            {
-                _log.Error($"{nameof(menuScreen)} is not assigned on Boot.");
-                isComplete = false;
-            }
-
-            if (demoHud == null)
-            {
-                _log.Error($"{nameof(demoHud)} is not assigned on Boot.");
-                isComplete = false;
-            }
-
-            if (loadingIndicator == null)
-            {
-                _log.Error($"{nameof(loadingIndicator)} is not assigned on Boot.");
-                isComplete = false;
-            }
-
-            if (shellSkin == null)
-            {
-                _log.Error($"{nameof(shellSkin)} is not assigned on Boot.");
-                isComplete = false;
-            }
-            else if (shellSkin.HasEveryReference(_log) == false)
-                isComplete = false;
-
-            if (demos == null || demos.Length == 0)
-            {
-                _log.Error($"{nameof(demos)} is empty on Boot; the menu would open nothing.");
-                return false;
-            }
-
-            for (var i = 0; i < demos.Length; i++)
-            {
-                if (string.IsNullOrWhiteSpace(demos[i]?.Address))
-                {
-                    _log.Error($"{nameof(demos)}[{i}] has no addressable scene address.");
-                    isComplete = false;
-                }
-
-                if (string.IsNullOrWhiteSpace(demos[i]?.IconName))
-                {
-                    _log.Error($"{nameof(demos)}[{i}] has no atlas icon name; its menu button would stay blank.");
-                    isComplete = false;
-                }
-            }
-
-            // The buttons and the catalog share one order. A mismatch labels the wrong button or
-            // reads past the end of the list.
-            if (isComplete && menuScreen.ButtonCount != demos.Length)
-            {
-                _log.Error($"MenuScreen has {menuScreen.ButtonCount} button(s) but {nameof(demos)} " +
-                           $"holds {demos.Length} entries. They must match.");
-                isComplete = false;
-            }
-
-            // demoIcons[i] comes from demos[i].IconName, so these two share one order too.
-            // A different count leaves at least one button with a blank or old icon.
-            if (isComplete && shellSkin.DemoIconCount != demos.Length)
-            {
-                _log.Error($"{nameof(shellSkin)} exposes {shellSkin.DemoIconCount} demo icon(s) but " +
-                           $"{nameof(demos)} holds {demos.Length} entries. They must match.");
-                isComplete = false;
-            }
-
-            return isComplete;
         }
 
         private static string[] _GetDemoAddresses(DemoEntry[] demoList)
@@ -290,7 +203,38 @@ namespace Client.Bootstrap
 
             _world?.Destroy();
             _world = null;
-            _log = null;
+        }
+
+        private void OnValidate()
+        {
+            Debug.Assert(menuScreen != null, $"'{nameof(menuScreen)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(demoHud != null, $"'{nameof(demoHud)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(loadingIndicator != null, $"'{nameof(loadingIndicator)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(shellSkin != null, $"'{nameof(shellSkin)}' is not assigned on {nameof(Boot)}.", this);
+            Debug.Assert(demos != null && demos.Length > 0,
+                $"'{nameof(demos)}' is empty on {nameof(Boot)}; the menu would open nothing.", this);
+
+            for (var i = 0; demos != null && i < demos.Length; i++)
+            {
+                Debug.Assert(!string.IsNullOrWhiteSpace(demos[i]?.Address),
+                    $"'{nameof(demos)}[{i}]' has no addressable scene address.", this);
+                Debug.Assert(!string.IsNullOrWhiteSpace(demos[i]?.IconName),
+                    $"'{nameof(demos)}[{i}]' has no atlas icon name; its menu button would stay blank.", this);
+            }
+
+            // The buttons and the catalog share one order. A mismatch labels the wrong button or
+            // reads past the end of the list.
+            if (menuScreen != null && demos != null)
+                Debug.Assert(menuScreen.ButtonCount == demos.Length,
+                    $"{nameof(MenuScreen)} has {menuScreen.ButtonCount} button(s) but '{nameof(demos)}' holds " +
+                    $"{demos.Length} entries. They must match.", this);
+
+            // demoIcons[i] comes from demos[i].IconName, so these two share one order too.
+            // A different count leaves at least one button with a blank or old icon.
+            if (shellSkin != null && demos != null)
+                Debug.Assert(shellSkin.DemoIconCount == demos.Length,
+                    $"'{nameof(shellSkin)}' exposes {shellSkin.DemoIconCount} demo icon(s) but '{nameof(demos)}' " +
+                    $"holds {demos.Length} entries. They must match.", this);
         }
     }
 }

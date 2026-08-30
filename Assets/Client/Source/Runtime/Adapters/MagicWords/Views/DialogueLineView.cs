@@ -25,20 +25,6 @@ namespace Client.Adapters.MagicWords.Views
 
         public CanvasGroup Group => group;
 
-        private void OnValidate()
-        {
-            Debug.Assert(group != null, $"'{nameof(group)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(leftSide != null, $"'{nameof(leftSide)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(rightSide != null, $"'{nameof(rightSide)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(leftAvatar != null, $"'{nameof(leftAvatar)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(rightAvatar != null, $"'{nameof(rightAvatar)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(leftFrame != null, $"'{nameof(leftFrame)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(rightFrame != null, $"'{nameof(rightFrame)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(bubble != null, $"'{nameof(bubble)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(speakerLabel != null, $"'{nameof(speakerLabel)}' is not assigned on {nameof(DialogueLineView)}.", this);
-            Debug.Assert(bodyLabel != null, $"'{nameof(bodyLabel)}' is not assigned on {nameof(DialogueLineView)}.", this);
-        }
-
         private void _Configure(
             string speakerName,
             AvatarSide side,
@@ -79,6 +65,20 @@ namespace Client.Adapters.MagicWords.Views
                 leftAvatar.sprite = sprite;
             else
                 rightAvatar.sprite = sprite;
+        }
+
+        private void OnValidate()
+        {
+            Debug.Assert(group != null, $"'{nameof(group)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(leftSide != null, $"'{nameof(leftSide)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(rightSide != null, $"'{nameof(rightSide)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(leftAvatar != null, $"'{nameof(leftAvatar)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(rightAvatar != null, $"'{nameof(rightAvatar)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(leftFrame != null, $"'{nameof(leftFrame)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(rightFrame != null, $"'{nameof(rightFrame)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(bubble != null, $"'{nameof(bubble)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(speakerLabel != null, $"'{nameof(speakerLabel)}' is not assigned on {nameof(DialogueLineView)}.", this);
+            Debug.Assert(bodyLabel != null, $"'{nameof(bodyLabel)}' is not assigned on {nameof(DialogueLineView)}.", this);
         }
     }
 }

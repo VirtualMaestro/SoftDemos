@@ -11,17 +11,17 @@ namespace Client.Adapters.MagicWords.Views
         [FormerlySerializedAs("sceneView")]
         [SerializeField] private MagicWordsScreen screen;
 
-        private void OnValidate()
-        {
-            Debug.Assert(screen != null, $"'{nameof(screen)}' is not assigned on {nameof(DialogueTapArea)}.", this);
-        }
-
         public void OnPointerClick(PointerEventData eventData)
         {
             if (eventData.dragging)
                 return;
 
             screen.SkipRequested = true;
+        }
+
+        private void OnValidate()
+        {
+            Debug.Assert(screen != null, $"'{nameof(screen)}' is not assigned on {nameof(DialogueTapArea)}.", this);
         }
     }
 }

@@ -31,15 +31,6 @@ namespace Client.Adapters.PhoenixFlame.Views
         /// </remarks>
         public bool AdvanceRequested { get; set; }
 
-        private void OnValidate()
-        {
-            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
-            Debug.Assert(flameAnimator != null, $"'{nameof(flameAnimator)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
-            Debug.Assert(flameColor != null, $"'{nameof(flameColor)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
-            Debug.Assert(advanceButton != null, $"'{nameof(advanceButton)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
-            Debug.Assert(phaseLabel != null, $"'{nameof(phaseLabel)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
-        }
-
         private void Awake()
         {
             advanceButton.onClick.AddListener(_OnAdvancePressed);
@@ -55,6 +46,15 @@ namespace Client.Adapters.PhoenixFlame.Views
         private void _OnAdvancePressed()
         {
             AdvanceRequested = true;
+        }
+
+        private void OnValidate()
+        {
+            Debug.Assert(background != null, $"'{nameof(background)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(flameAnimator != null, $"'{nameof(flameAnimator)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(flameColor != null, $"'{nameof(flameColor)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(advanceButton != null, $"'{nameof(advanceButton)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
+            Debug.Assert(phaseLabel != null, $"'{nameof(phaseLabel)}' is not assigned on {nameof(PhoenixFlameScreen)}.", this);
         }
     }
 }

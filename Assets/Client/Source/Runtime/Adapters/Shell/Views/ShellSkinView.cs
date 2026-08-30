@@ -1,4 +1,3 @@
-using Client.Simulation.Core.Ports;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +25,7 @@ namespace Client.Adapters.Shell.Views
         public Image Spinner => spinner;
 
         /// <summary>How many demo icons this skin can paint. <c>Boot</c> checks it against the demo list.</summary>
-        public int DemoIconCount => demoIcons == null ? 0 : demoIcons.Length;
+        public int DemoIconCount => demoIcons?.Length ?? 0;
 
         private void OnValidate()
         {
@@ -34,46 +33,18 @@ namespace Client.Adapters.Shell.Views
             Debug.Assert(panel != null, $"'{nameof(panel)}' is not assigned on {nameof(ShellSkinView)}.", this);
             Debug.Assert(backIcon != null, $"'{nameof(backIcon)}' is not assigned on {nameof(ShellSkinView)}.", this);
             Debug.Assert(spinner != null, $"'{nameof(spinner)}' is not assigned on {nameof(ShellSkinView)}.", this);
-        }
+            Debug.Assert(buttons != null && buttons.Length > 0,
+                $"'{nameof(buttons)}' is empty on {nameof(ShellSkinView)}.", this);
+            Debug.Assert(demoIcons != null && demoIcons.Length > 0,
+                $"'{nameof(demoIcons)}' is empty on {nameof(ShellSkinView)}.", this);
 
-        /// <summary>Reports every unassigned target through <paramref name="log"/>. It does not throw.</summary>
-        /// <remarks>A missing reference gives one flat rectangle on screen. The game keeps running.</remarks>
-        public bool HasEveryReference(ILogService log)
-        {
-            var isComplete = true;
-            isComplete &= _Check(log, background, nameof(background));
-            isComplete &= _Check(log, panel, nameof(panel));
-            isComplete &= _Check(log, backIcon, nameof(backIcon));
-            isComplete &= _Check(log, spinner, nameof(spinner));
-            isComplete &= _CheckArray(log, buttons, nameof(buttons));
-            isComplete &= _CheckArray(log, demoIcons, nameof(demoIcons));
-            return isComplete;
-        }
+            for (var i = 0; buttons != null && i < buttons.Length; i++)
+                Debug.Assert(buttons[i] != null,
+                    $"'{nameof(buttons)}[{i}]' is not assigned on {nameof(ShellSkinView)}.", this);
 
-        private bool _Check(ILogService log, Object reference, string fieldName)
-        {
-            // `?.` skips Unity's null overload, so a destroyed Image would pass the check.
-            if (reference != null)
-                return true;
-
-            log.Error($"{fieldName} is not assigned on {nameof(ShellSkinView)}.");
-            return false;
-        }
-
-        private bool _CheckArray(ILogService log, Image[] references, string fieldName)
-        {
-            if (references == null || references.Length == 0)
-            {
-                log.Error($"{fieldName} is empty on {nameof(ShellSkinView)}.");
-                return false;
-            }
-
-            var isComplete = true;
-
-            for (var i = 0; i < references.Length; i++)
-                isComplete &= _Check(log, references[i], $"{fieldName}[{i}]");
-
-            return isComplete;
+            for (var i = 0; demoIcons != null && i < demoIcons.Length; i++)
+                Debug.Assert(demoIcons[i] != null,
+                    $"'{nameof(demoIcons)}[{i}]' is not assigned on {nameof(ShellSkinView)}.", this);
         }
     }
 }
