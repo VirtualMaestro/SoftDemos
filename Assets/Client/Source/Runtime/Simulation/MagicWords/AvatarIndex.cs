@@ -44,7 +44,7 @@ namespace Client.Simulation.MagicWords
                     continue;
                 }
 
-                var side = ParseSide(avatar.position, avatar.name, log);
+                var side = _ParseSide(avatar.position, avatar.name, log);
                 var hasUrl = string.IsNullOrWhiteSpace(avatar.url) == false;
 
                 if (hasUrl == false)
@@ -71,7 +71,7 @@ namespace Client.Simulation.MagicWords
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static AvatarSide ParseSide(string value, string speakerName, ILogService log)
+        private static AvatarSide _ParseSide(string value, string speakerName, ILogService log)
         {
             if (string.Equals(value, "left", StringComparison.OrdinalIgnoreCase))
                 return AvatarSide.Left;

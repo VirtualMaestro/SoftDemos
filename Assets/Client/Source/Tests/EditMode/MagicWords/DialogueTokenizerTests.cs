@@ -26,72 +26,72 @@ namespace Client.Simulation.Tests.MagicWords
         [Test]
         public void TextWithoutBraces_RemainsOneLiteralSegment()
         {
-            AssertSegments("plain text", KnownTokens, Text("plain text"));
+            _AssertSegments("plain text", KnownTokens, _Text("plain text"));
         }
 
         [Test]
         public void KnownToken_PreservesSurroundingSpaces()
         {
-            AssertSegments("a {win} b", KnownTokens, Text("a "), Emoji("win"), Text(" b"));
+            _AssertSegments("a {win} b", KnownTokens, _Text("a "), _Emoji("win"), _Text(" b"));
         }
 
         [Test]
         public void KnownTokenWithoutText_ReturnsOnlyEmoji()
         {
-            AssertSegments("{win}", KnownTokens, Emoji("win"));
+            _AssertSegments("{win}", KnownTokens, _Emoji("win"));
         }
 
         [Test]
         public void AdjacentKnownTokens_ReturnOnlyEmojis()
         {
-            AssertSegments("{win}{laughing}", KnownTokens, Emoji("win"), Emoji("laughing"));
+            _AssertSegments("{win}{laughing}", KnownTokens, _Emoji("win"), _Emoji("laughing"));
         }
 
         [Test]
         public void UnknownToken_RemainsLiteral()
         {
-            AssertSegments("{wat}", KnownTokens, Text("{wat}"));
+            _AssertSegments("{wat}", KnownTokens, _Text("{wat}"));
         }
 
         [Test]
         public void UnknownToken_MergesIntoLiteralRun()
         {
-            AssertSegments("a {wat} b", KnownTokens, Text("a {wat} b"));
+            _AssertSegments("a {wat} b", KnownTokens, _Text("a {wat} b"));
         }
 
         [Test]
         public void UnclosedToken_MergesIntoLiteralRun()
         {
-            AssertSegments("a {win", KnownTokens, Text("a {win"));
+            _AssertSegments("a {win", KnownTokens, _Text("a {win"));
         }
 
         [TestCase("{}")]
         [TestCase("{ }")]
         public void EmptyOrWhitespaceToken_RemainsLiteral(string text)
         {
-            AssertSegments(text, KnownTokens, Text(text));
+            _AssertSegments(text, KnownTokens, _Text(text));
         }
 
         [Test]
         public void UnicodeApostrophe_SurvivesUnchanged()
         {
-            AssertSegments("That’s {neutral}", KnownTokens, Text("That’s "), Emoji("neutral"));
+            _AssertSegments("That’s {neutral}", KnownTokens, _Text("That’s "), _Emoji("neutral"));
         }
 
         [Test]
         public void MissingCatalog_LeavesTokensLiteral()
         {
-            AssertSegments("{win}", null, Text("{win}"));
-            AssertSegments("{win}", new HashSet<string>(), Text("{win}"));
+            _AssertSegments("{win}", null, _Text("{win}"));
+            _AssertSegments("{win}", new HashSet<string>(), _Text("{win}"));
         }
 
-        private static DialogueSegment Text(string value) =>
+        private static DialogueSegment _Text(string value) =>
             new() { Kind = SegmentKind.Text, Value = value };
 
-        private static DialogueSegment Emoji(string value) =>
+        private static DialogueSegment _Emoji(string value) =>
             new() { Kind = SegmentKind.Emoji, Value = value };
 
-        private static void AssertSegments(
+        private static void _AssertSegments(
             string text,
             HashSet<string> knownTokens,
             params DialogueSegment[] expected)
