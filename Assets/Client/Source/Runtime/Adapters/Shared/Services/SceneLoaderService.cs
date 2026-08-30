@@ -30,9 +30,9 @@ namespace Client.Adapters.Shared.Services
         /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
         public int OpenRequestCount => _requests.Count;
 
-        public int Request(SceneLoadRequest request) => _Begin(request.SceneId, isLoad: true);
+        public int Request(in SceneLoadRequest request) => _Begin(request.SceneId, isLoad: true);
 
-        public int Request(SceneUnloadRequest request) => _Begin(request.SceneId, isLoad: false);
+        public int Request(in SceneUnloadRequest request) => _Begin(request.SceneId, isLoad: false);
 
         public AsyncOpStatus Poll(int requestId)
         {

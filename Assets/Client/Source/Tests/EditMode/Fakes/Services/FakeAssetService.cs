@@ -28,7 +28,7 @@ namespace Client.Simulation.Tests.Fakes.Services
         public IReadOnlyList<string> LoadCalls => _loadCalls;
         public int OpenRequestCount => _requests.OpenRequestCount;
 
-        public int Request(AssetLoadRequest request)
+        public int Request(in AssetLoadRequest request)
         {
             _loadCalls.Add(request.Address);
             return _requests.Begin();

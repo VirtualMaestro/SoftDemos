@@ -8,7 +8,7 @@ namespace Client.Simulation.Core.Ports
     /// back into a <c>UnityEngine.Object</c>. A system can therefore choose an asset without ever
     /// holding a Unity reference.
     /// </remarks>
-    public interface IAssetService : IAsyncService<AssetLoadRequest>
+    public interface IAssetService : IAsyncRequestService<AssetLoadRequest>
     {
     }
 }

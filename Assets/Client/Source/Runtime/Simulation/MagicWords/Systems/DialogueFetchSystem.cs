@@ -32,7 +32,7 @@ namespace Client.Simulation.MagicWords.Systems
                     _log.Warn($"LoadDialogueCommand ignored while dialogue state is {state.State}.");
                 else
                 {
-                    state.RequestId = _dialogueSource.Request(default);
+                    state.RequestId = _dialogueSource.Request();
                     state.State = DialogueLoadState.Loading;
                 }
             }

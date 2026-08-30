@@ -8,7 +8,7 @@ namespace Client.Simulation.MagicWords.Ports
     /// boundary. A Done request means the image sits in the adapter's table under the request id,
     /// and the adapter's own <c>TryGetSprite</c> resolves it on the engine side.
     /// </remarks>
-    public interface IImageLoadService : IAsyncService<ImageLoadRequest>
+    public interface IImageLoadService : IAsyncRequestService<ImageLoadRequest>
     {
     }
 }

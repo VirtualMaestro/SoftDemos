@@ -39,7 +39,7 @@ namespace Client.Adapters.MagicWords.Services
         /// <summary>Sprites created from downloaded textures and owned by this adapter.</summary>
         public int HeldSpriteCount => _sprites.Count;
 
-        public int Request(ImageLoadRequest request)
+        public int Request(in ImageLoadRequest request)
         {
             var entry = new Entry(request.SpeakerName, request.Url);
             var requestId = _requests.Add(entry);

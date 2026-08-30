@@ -38,7 +38,7 @@ namespace Client.Adapters.MagicWords.Services
             _resolved.Clear();
         }
 
-        public int Request(ImageLoadRequest request)
+        public int Request(in ImageLoadRequest request)
         {
             var speakerName = request.SpeakerName ?? string.Empty;
             var entry = new Entry(speakerName, $"avatar-{speakerName.ToLowerInvariant()}");

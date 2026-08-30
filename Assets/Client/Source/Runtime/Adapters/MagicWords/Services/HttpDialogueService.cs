@@ -44,7 +44,7 @@ namespace Client.Adapters.MagicWords.Services
         /// configuration, so there is nothing for the simulation to say. The type exists so the
         /// day it gains a field, no signature moves.
         /// </remarks>
-        public int Request(DialogueRequest request)
+        public int Request()
         {
             var entry = new Entry();
             var requestId = _requests.Add(entry);

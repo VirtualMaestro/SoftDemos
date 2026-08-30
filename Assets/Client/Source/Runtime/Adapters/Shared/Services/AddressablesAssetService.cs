@@ -35,7 +35,7 @@ namespace Client.Adapters.Shared.Services
         /// <summary>Assets currently held. Must reach 0 on a clean shutdown.</summary>
         public int HeldAssetCount => _assets.Count;
 
-        public int Request(AssetLoadRequest request)
+        public int Request(in AssetLoadRequest request)
         {
             var entry = new Entry(request.Address);
             var requestId = _requests.Add(entry);

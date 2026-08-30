@@ -7,7 +7,7 @@ namespace Client.Simulation.Core.Ports
     /// unloaded one are not one operation with a flag. There is no result either way — the
     /// completion status itself is the whole outcome.</para>
     /// </remarks>
-    public interface ISceneService : IAsyncService<SceneLoadRequest>, IAsyncService<SceneUnloadRequest>
+    public interface ISceneService : IAsyncRequestService<SceneLoadRequest>, IAsyncRequestService<SceneUnloadRequest>
     {
     }
 }

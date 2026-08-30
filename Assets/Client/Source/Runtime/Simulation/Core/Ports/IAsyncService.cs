@@ -23,29 +23,18 @@ namespace Client.Simulation.Core.Ports
         void Release(int requestId);
     }
 
-    /// <summary>An asynchronous port whose work is described by <typeparamref name="TRequest"/>.</summary>
-    /// <remarks>
-    /// The request is a named readonly struct declared beside the port, never a parameter list:
-    /// a parameter list cannot be read by a rule, cannot gain a field without changing every call
-    /// site, and loses its element names the moment somebody reaches for a tuple.
-    /// <para>A port with two kinds of work inherits this level twice — see
-    /// <see cref="ISceneService"/>, which loads and unloads.</para>
-    /// </remarks>
-    public interface IAsyncService<in TRequest> : IAsyncService
+    public interface IAsyncRequestService<TRequest> : IAsyncService where TRequest: struct
     {
-        /// <summary>Starts the work and returns the id that names it from here on.</summary>
-        int Request(TRequest request);
+        int Request(in TRequest request);
     }
 
-    /// <summary>An asynchronous port that hands a result back to the simulation.</summary>
-    /// <remarks>
-    /// Only for a result the boundary allows to cross — plain simulation data. A port that loads an
-    /// engine object stops at <see cref="IAsyncService{TRequest}"/> and lets its adapter resolve
-    /// the object from the request id on the engine side of the line.
-    /// </remarks>
-    public interface IAsyncService<in TRequest, out TResult> : IAsyncService<TRequest>
+    public interface IAsyncRequestService : IAsyncService
     {
-        /// <summary>The result. Valid only while the request is Done, else the type's default.</summary>
+        int Request();
+    }
+
+    public interface IAsyncResolveService<out TResult> : IAsyncService
+    {
         TResult Resolve(int requestId);
     }
 }

@@ -45,7 +45,7 @@ namespace Client.Adapters.MagicWords.Services
 
         public void SetMode(AvatarMode mode) => Mode = mode;
 
-        public int Request(ImageLoadRequest request)
+        public int Request(in ImageLoadRequest request)
         {
             var innerRequestId = Mode == AvatarMode.Local
                 ? _local.Request(request)

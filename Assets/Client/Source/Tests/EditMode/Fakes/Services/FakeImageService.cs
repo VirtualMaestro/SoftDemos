@@ -27,7 +27,7 @@ namespace Client.Simulation.Tests.Fakes.Services
         public IReadOnlyList<int> ReleaseCalls => _releaseCalls;
         public int OpenRequestCount => _requests.OpenRequestCount;
 
-        public int Request(ImageLoadRequest request)
+        public int Request(in ImageLoadRequest request)
         {
             _loadCalls.Add((request.SpeakerName, request.Url));
             return _requests.Begin();
