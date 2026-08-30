@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
@@ -76,6 +77,7 @@ namespace Client.Adapters.Shell.Systems
             _TransitionTo(StageState.Idle);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _BeginLoading()
         {
             _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
@@ -266,6 +268,7 @@ namespace Client.Adapters.Shell.Systems
 
         private void _TransitionTo(StageState next) => _state = next;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void _ClearSprite(Image image, bool disable)
         {
             if (image == null)

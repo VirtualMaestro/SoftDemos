@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Services;
@@ -272,6 +273,7 @@ namespace Client.Adapters.MagicWords.Systems
             _emojiRequestId = StageContent.Release(_assets, _emojiRequestId);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;

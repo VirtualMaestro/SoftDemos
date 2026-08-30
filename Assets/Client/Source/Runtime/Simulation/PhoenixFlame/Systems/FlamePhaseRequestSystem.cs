@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.PhoenixFlame.Components;
@@ -40,6 +41,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _StartTransition(ref FlameStateComp state)
         {
             state.NextPhase = FlamePhaseCycle.Next(state.CurrentPhase);

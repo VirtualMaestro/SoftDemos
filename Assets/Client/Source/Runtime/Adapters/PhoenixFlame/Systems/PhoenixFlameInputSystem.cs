@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
@@ -139,6 +140,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _TransitionTo(StageState.Ready);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _RunReady()
         {
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
@@ -258,6 +260,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _TransitionTo(StageState next) => _state = next;
 
         public void Inject(EcsWorld obj) => _world = obj;

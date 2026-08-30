@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Components;
@@ -118,6 +119,7 @@ namespace Client.Simulation.MagicWords.Systems
             _avatarRequests.Add(speakerEntityId);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _Complete(ref DialoguePlaybackComp playback, bool skipped)
         {
             playback.IsComplete = true;

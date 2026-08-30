@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
@@ -38,7 +39,7 @@ namespace Client.Adapters.MagicWords.Systems
         {
             if (_demoReady.Count == 0 || _screens.TryGet(out MagicWordsScreen current) == false)
             {
-                _Forget();
+                _ResetFor(null);
                 return;
             }
 
@@ -62,6 +63,7 @@ namespace Client.Adapters.MagicWords.Systems
             _screen.StatusLabel.text = failed ? FailedStatus : LoadingStatus;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _DrawAvatarModeLabel()
         {
             if (_shownAvatarMode == _avatars.Mode)
@@ -73,14 +75,13 @@ namespace Client.Adapters.MagicWords.Systems
                 : RemoteModeLabel;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ResetFor(MagicWordsScreen screen)
         {
             _screen = screen;
             _shownDialogueState = (DialogueLoadState)(-1);
             _shownAvatarMode = (AvatarMode)(-1);
         }
-
-        private void _Forget() => _ResetFor(null);
 
         public void Inject(EcsWorld obj)
         {

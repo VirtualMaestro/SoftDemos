@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
@@ -87,6 +88,7 @@ namespace Client.Simulation.MagicWords.Systems
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _Fail(int entityId, ref AvatarLoadComp load, int requestId, string reason)
         {
             load.State = AvatarLoadState.Failed;

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.PhoenixFlame.Components;
 using DCFApixels.DragonECS;
@@ -51,6 +52,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
 
         /// <summary>Takes no state: the world component IS the state, and a parameter that only
         /// ever gets wiped carries nothing in.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _Reset() => _world.Get<FlameStateComp>() = default;
 
         public void Inject(EcsWorld obj) => _world = obj;

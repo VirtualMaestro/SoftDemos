@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
@@ -47,6 +48,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             _SeatRestingCards();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ResetBindings()
         {
             _bindCursor = 0;

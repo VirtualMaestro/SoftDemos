@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
@@ -55,6 +56,7 @@ namespace Client.Simulation.MagicWords.Systems
         /// <see cref="DialogueFetchSystem"/> right after <c>Resolve</c>, so only a reset or a
         /// teardown mid-fetch reaches this.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ReleaseDialogueRequest()
         {
             ref var state = ref _world.Get<DialogueStateComp>();

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
@@ -65,7 +66,8 @@ namespace Client.Adapters.PhoenixFlame.Systems
         {
             if (_screens.TryGet(out PhoenixFlameScreen current) == false)
             {
-                _Forget();
+                _ResetPhaseTriggers();
+                _ResetFor(null);
                 return;
             }
 
@@ -107,6 +109,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 "simulation; the phase label and the colour will disagree.");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _DriveAnimator(in FlameStateComp flame)
         {
             if (flame.IsTransitioning == false || _shownPhase == flame.NextPhase)
@@ -128,6 +131,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 _screen.FlameAnimator.ResetTrigger(trigger);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ApplyInteractable(bool interactable)
         {
             if (_shownInteractable == interactable)
@@ -137,6 +141,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _screen.AdvanceButton.interactable = interactable;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ApplyLabel(FlamePhase phase)
         {
             if (_shownLabelPhase == phase)
@@ -183,12 +188,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _shownLabelPhase = (FlamePhase)(-1);
             _shownInteractable = null;
             _hasSnapped = false;
-        }
-
-        private void _Forget()
-        {
-            _ResetPhaseTriggers();
-            _ResetFor(null);
         }
 
         public void Inject(EcsWorld obj) => _world = obj;

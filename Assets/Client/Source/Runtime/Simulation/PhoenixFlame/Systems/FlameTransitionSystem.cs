@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.PhoenixFlame.Components;
@@ -52,6 +53,7 @@ namespace Client.Simulation.PhoenixFlame.Systems
             state.PhaseChangeCount++;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float _Clamp01(float value)
         {
             if (value < 0f)

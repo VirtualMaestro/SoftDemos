@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
@@ -116,6 +117,7 @@ namespace Client.Simulation.Core.Navigation.Systems
             _Transition(ref state, ScreenId.Menu);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void _Transition(ref ScreenStateComp state, ScreenId next) =>
             state.Current = next;
 

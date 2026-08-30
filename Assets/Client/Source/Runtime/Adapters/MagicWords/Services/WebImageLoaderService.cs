@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
@@ -227,6 +228,7 @@ namespace Client.Adapters.MagicWords.Services
                 Object.Destroy(texture);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void _ReleaseTransport(Entry entry)
         {
             if (entry.Transport == null)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Payload;
 
@@ -69,6 +70,7 @@ namespace Client.Simulation.MagicWords
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static AvatarSide ParseSide(string value, string speakerName, ILogService log)
         {
             if (string.Equals(value, "left", StringComparison.OrdinalIgnoreCase))

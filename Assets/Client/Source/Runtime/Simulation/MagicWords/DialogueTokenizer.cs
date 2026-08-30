@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Client.Simulation.MagicWords
 {
@@ -59,6 +60,7 @@ namespace Client.Simulation.MagicWords
             return segments.ToArray();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void _AddLiteral(List<DialogueSegment> segments, StringBuilder literal)
         {
             if (literal.Length == 0)
