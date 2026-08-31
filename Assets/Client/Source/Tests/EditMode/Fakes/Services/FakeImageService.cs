@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
+using Client.Simulation.MagicWords.Ports.Requests;
 
 namespace Client.Simulation.Tests.Fakes.Services
 {

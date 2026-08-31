@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Client.Adapters.Shared.Stage
+namespace Client.Adapters.Shared.Components
 {
     /// <summary>Says the shell has finished with its three addresses and the menu may be shown.</summary>
     /// <remarks>

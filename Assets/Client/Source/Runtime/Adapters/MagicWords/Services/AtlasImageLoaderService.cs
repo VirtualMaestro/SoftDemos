@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
+using Client.Simulation.MagicWords.Ports.Requests;
 using UnityEngine;
 
 namespace Client.Adapters.MagicWords.Services

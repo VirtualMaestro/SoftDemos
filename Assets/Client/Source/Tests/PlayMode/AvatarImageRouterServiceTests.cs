@@ -6,7 +6,7 @@ using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Core.Ports;
-using Client.Simulation.MagicWords.Ports;
+using Client.Simulation.MagicWords.Ports.Requests;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;

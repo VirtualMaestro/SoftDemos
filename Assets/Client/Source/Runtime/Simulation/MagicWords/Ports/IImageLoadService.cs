@@ -1,4 +1,5 @@
 using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Ports.Requests;
 
 namespace Client.Simulation.MagicWords.Ports
 {

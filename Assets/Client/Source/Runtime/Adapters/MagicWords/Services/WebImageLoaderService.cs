@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
+using Client.Simulation.MagicWords.Ports.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;

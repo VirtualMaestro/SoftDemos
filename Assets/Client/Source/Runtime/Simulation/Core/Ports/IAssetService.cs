@@ -1,3 +1,5 @@
+using Client.Simulation.Core.Ports.Requests;
+
 namespace Client.Simulation.Core.Ports
 {
     /// <summary>Loads an asset by address. Request and poll.</summary>

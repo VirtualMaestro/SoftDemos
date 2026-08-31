@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using MyGameDevTools.SceneLoading;
 
 namespace Client.Adapters.Shared.Services

@@ -1,4 +1,4 @@
-namespace Client.Simulation.MagicWords.Ports
+namespace Client.Simulation.MagicWords.Ports.Requests
 {
     /// <summary>Asks <see cref="IDialogueService"/> for the dialogue payload.</summary>
     /// <remarks>

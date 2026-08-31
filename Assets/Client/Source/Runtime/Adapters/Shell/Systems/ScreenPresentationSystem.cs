@@ -1,6 +1,6 @@
 using Client.Simulation.Core.Phases;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
-using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;

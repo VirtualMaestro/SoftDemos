@@ -2,6 +2,7 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
