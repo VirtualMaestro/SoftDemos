@@ -11,7 +11,7 @@ namespace Client.Simulation.Core.Navigation.Systems
     /// Handles open/close demo commands: starts scene load/unload, polls the async operation, and
     /// moves the screen state through Menu → Loading → Demo → Unloading → Menu.
     /// </summary>
-    public sealed class NavigationSystem : IEcsSim, IEcsInject<EcsWorld>,
+    internal sealed class NavigationSystem : IEcsSim, IEcsInject<EcsWorld>,
         IEcsInject<ISceneService>, IEcsInject<ILogService>
     {
         private readonly DemoCatalog _catalog;

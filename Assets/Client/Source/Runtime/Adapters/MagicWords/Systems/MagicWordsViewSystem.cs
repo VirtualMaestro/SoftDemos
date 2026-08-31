@@ -19,7 +19,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// content landed and the screen is covered. That tag is the only thing the two halves share —
     /// the load state machine stays private to the half that owns it.</para>
     /// </remarks>
-    public sealed class MagicWordsViewSystem : IEcsPresent, IEcsInject<EcsWorld>,
+    internal sealed class MagicWordsViewSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<AvatarImageRouterService>, IEcsInject<ScreenRegistryService>
     {
         private const string LocalModeLabel = "Avatars: Local";

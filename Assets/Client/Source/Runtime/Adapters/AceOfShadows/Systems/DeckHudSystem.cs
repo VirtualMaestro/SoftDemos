@@ -13,7 +13,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// Mirrors deck state onto the HUD: stack counters, speed label, completion message, and
     /// counter positions after a layout change.
     /// </summary>
-    public sealed class DeckHudSystem : IEcsPresent, IEcsInject<EcsWorld>,
+    internal sealed class DeckHudSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<ScreenRegistryService>
     {
         private static readonly Vector3 CounterOffset = new(0f, 1.5f, 0f);

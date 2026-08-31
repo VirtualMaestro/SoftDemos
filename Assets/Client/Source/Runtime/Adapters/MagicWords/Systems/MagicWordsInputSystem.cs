@@ -30,7 +30,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// system owns and must destroy, and every world write — an Input phase in everything but the
     /// interface name, which arrives in the flip.
     /// </remarks>
-    public sealed class MagicWordsInputSystem : IEcsInput, IEcsDestroy,
+    internal sealed class MagicWordsInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
         IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>,

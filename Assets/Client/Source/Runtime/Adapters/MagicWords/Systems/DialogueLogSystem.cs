@@ -22,7 +22,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// than direct calls from the stage system — systems must never hold other systems (see
     /// SystemIsolationTests).
     /// </summary>
-    public sealed class DialogueLogSystem : IEcsPresent, IEcsDestroy,
+    internal sealed class DialogueLogSystem : IEcsPresent, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
         IEcsInject<FadePlayerService>, IEcsInject<DialogueLogChannel>
     {

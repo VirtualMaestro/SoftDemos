@@ -32,7 +32,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// polling, the recorded press, the tween player's completion queue, the content it owns and
     /// must destroy, and every write into the world.
     /// </remarks>
-    public sealed class AceOfShadowsInputSystem : IEcsInput, IEcsDestroy,
+    internal sealed class AceOfShadowsInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,

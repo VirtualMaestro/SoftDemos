@@ -18,7 +18,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// says whether the demo is running, and the button stays off until it is — a tap during the
     /// load must not queue an advance.</para>
     /// </remarks>
-    public sealed class PhoenixFlameViewSystem : IEcsPresent, IEcsInject<EcsWorld>,
+    internal sealed class PhoenixFlameViewSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<ILogService>, IEcsInject<ScreenRegistryService>
     {
         private const string OrangeLabel = "Orange";

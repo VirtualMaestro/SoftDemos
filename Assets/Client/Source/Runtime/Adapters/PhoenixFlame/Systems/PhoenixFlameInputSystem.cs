@@ -25,7 +25,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// What is left is what the Input phase is for: the port polling, the recorded press, the
     /// content this system owns and must destroy, and every write into the world.
     /// </remarks>
-    public sealed class PhoenixFlameInputSystem : IEcsInput, IEcsDestroy,
+    internal sealed class PhoenixFlameInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
     {
