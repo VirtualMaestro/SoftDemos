@@ -115,11 +115,11 @@ namespace Client.Adapters.Shell.Systems
             _TransitionTo(StageState.Ready);
         }
 
-        private bool _TryApplySkin()
+        private void _TryApplySkin()
         {
             if (!_TryResolveAtlas(_menuAtlasRequestId, MenuAtlasAddress, out var menuAtlas) ||
                 !_TryResolveAtlas(_sharedAtlasRequestId, SharedAtlasAddress, out var sharedAtlas))
-                return false;
+                return;
 
             _ApplyHiddenUntilLoaded(_skin.Background, _CreateBackgroundSprite());
             _skin.Panel.sprite = _TakeSprite(sharedAtlas, PanelSpriteName);
@@ -139,8 +139,6 @@ namespace Client.Adapters.Shell.Systems
 
             for (var i = 0; i < iconCount; i++)
                 _ApplyHiddenUntilLoaded(_skin.DemoIcons[i], _TakeSprite(menuAtlas, _demos[i].IconName));
-
-            return true;
         }
 
         /// <summary>Assigns a sprite to an <see cref="Image"/> that starts disabled.</summary>
