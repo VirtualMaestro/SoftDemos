@@ -252,18 +252,9 @@ namespace Client.Adapters.Shell.Systems
 
         private void _ReleaseRequests()
         {
-            if (_backgroundRequestId != 0)
-                _assets.Release(_backgroundRequestId);
-
-            if (_menuAtlasRequestId != 0)
-                _assets.Release(_menuAtlasRequestId);
-
-            if (_sharedAtlasRequestId != 0)
-                _assets.Release(_sharedAtlasRequestId);
-
-            _backgroundRequestId = 0;
-            _menuAtlasRequestId = 0;
-            _sharedAtlasRequestId = 0;
+            _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
+            _menuAtlasRequestId = StageContent.Release(_assets, _menuAtlasRequestId);
+            _sharedAtlasRequestId = StageContent.Release(_assets, _sharedAtlasRequestId);
         }
 
         private void _TransitionTo(StageState next) => _state = next;
