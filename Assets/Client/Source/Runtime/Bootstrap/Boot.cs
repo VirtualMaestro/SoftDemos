@@ -1,12 +1,9 @@
 using Client.Adapters.AceOfShadows;
 using Client.Adapters.AceOfShadows.Services;
-using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Services;
-using Client.Adapters.MagicWords.Systems;
 using Client.Adapters.MagicWords.Views;
-using Client.Adapters.PhoenixFlame.Systems;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
@@ -22,6 +19,17 @@ using Client.Simulation.Core.Phases;
 using Client.Simulation.PhoenixFlame;
 using DCFApixels.DragonECS;
 using UnityEngine;
+
+// Both halves of a feature declare a module and the two share the feature's name, so every one of
+// them is aliased by half. Aliasing rather than qualifying at the call keeps the import list below
+// one line per feature-half, and the composition root is the one place that knows every feature by
+// name — the ambiguity belongs here and nowhere else.
+using AceOfShadowsSimulationModule = Client.Simulation.AceOfShadows.AceOfShadowsModule;
+using MagicWordsSimulationModule = Client.Simulation.MagicWords.MagicWordsModule;
+using PhoenixFlameSimulationModule = Client.Simulation.PhoenixFlame.PhoenixFlameModule;
+using AceOfShadowsAdapterModule = Client.Adapters.AceOfShadows.AceOfShadowsModule;
+using MagicWordsAdapterModule = Client.Adapters.MagicWords.MagicWordsModule;
+using PhoenixFlameAdapterModule = Client.Adapters.PhoenixFlame.PhoenixFlameModule;
 
 namespace Client.Bootstrap
 {
@@ -96,32 +104,22 @@ namespace Client.Bootstrap
                 .Inject(new CardViewChannel())
                 .Inject(new DialogueLogChannel())
 
-                // The simulation halves are modules because the test fixtures build a headless
-                // pipeline from the same ones. Presentation has no such reuse, so it is a plain
-                // list; a module around Add(new X()) would only hide the order.
+                // A feature ships as a module on both halves, and one line imports each. The order
+                // of the Add calls inside an Import is that feature's own decision and lives there,
+                // where DEU0136 can read it; the order BETWEEN modules is free, because each system
+                // names its phase on its own class line and a runner collects one interface.
                 .AddModule(new NavigationModule(new DemoCatalog(_GetDemoAddresses(demos))))
-                .AddModule(new AceOfShadowsModule(aceConfig))
-                .AddModule(new MagicWordsModule(new MagicWordsConfig()))
-                .AddModule(new PhoenixFlameModule(new PhoenixFlameConfig()))
+                .AddModule(new AceOfShadowsSimulationModule(aceConfig))
+                .AddModule(new MagicWordsSimulationModule(new MagicWordsConfig()))
+                .AddModule(new PhoenixFlameSimulationModule(new PhoenixFlameConfig()))
 
-                // The adapter half. Each system says which phase it runs in on its own class line,
-                // so this list decides only the order WITHIN a phase — a runner collects one
-                // interface and never sees the others, and the phase order is Update/LateUpdate
-                // below. Grouped by feature because that is what a reader looks for here.
-                .Add(new AceOfShadowsInputSystem(aceConfig))
-                .Add(new CardBindingSystem())
-                .Add(new DeckHudSystem())
-                .Add(new TweenPlaybackSystem())
-                .Add(new AceOfShadowsCleanupSystem())
+                .AddModule(new AceOfShadowsAdapterModule(aceConfig))
+                .AddModule(new MagicWordsAdapterModule())
+                .AddModule(new PhoenixFlameAdapterModule())
 
-                .Add(new MagicWordsInputSystem())
-                .Add(new MagicWordsViewSystem())
-                .Add(new DialogueLogSystem())
-                .Add(new MagicWordsCleanupSystem())
-
-                .Add(new PhoenixFlameInputSystem())
-                .Add(new PhoenixFlameViewSystem())
-
+                // Shell is the one adapter feature with no simulation half, and its three systems
+                // hold the scene references this component carries. Whether it is a feature at all
+                // or the composition shell is not settled, so it stays a plain list until it is.
                 .Add(new ShellStageSystem(shellSkin, demos))
                 .Add(new ShellInputSystem(menuScreen, demoHud))
                 .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
