@@ -66,7 +66,7 @@ namespace Client.Simulation.Core.Navigation.Systems
             // The entity id is not read: a close command carries nothing, and the one that deletes
             // it is NavigationCleanupSystem. Iterating still matters — a second command in the same
             // frame is reported, the way a second one always was.
-            foreach (var closeEntity in _world.Where(out CloseCommandAspect _))
+            foreach (var _ in _world.Where(out CloseCommandAspect _))
             {
                 if (state.Current != ScreenId.Demo)
                 {

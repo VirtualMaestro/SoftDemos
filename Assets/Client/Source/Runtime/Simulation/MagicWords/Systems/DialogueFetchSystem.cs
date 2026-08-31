@@ -25,8 +25,7 @@ namespace Client.Simulation.MagicWords.Systems
         {
             ref var state = ref _world.Get<DialogueStateComp>();
 
-            foreach (var loadEntity in _world.Where(out LoadCommandAspect _))
-            {
+            foreach (var _ in _world.Where(out LoadCommandAspect _))
                 if (state.State == DialogueLoadState.Loading ||
                     state.State == DialogueLoadState.Ready)
                     _log.Warn($"LoadDialogueCommand ignored while dialogue state is {state.State}.");
@@ -35,7 +34,6 @@ namespace Client.Simulation.MagicWords.Systems
                     state.RequestId = _dialogueSource.Request();
                     state.State = DialogueLoadState.Loading;
                 }
-            }
 
             if (state.State != DialogueLoadState.Loading || state.RequestId == 0)
                 return;
