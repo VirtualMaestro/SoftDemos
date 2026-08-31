@@ -8,7 +8,6 @@ using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell;
-using Client.Adapters.Shell.Systems;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.Core.Ports;
@@ -117,12 +116,12 @@ namespace Client.Bootstrap
                 .AddModule(new MagicWordsAdapterModule())
                 .AddModule(new PhoenixFlameAdapterModule())
 
-                // Shell is the one adapter feature with no simulation half, and its three systems
-                // hold the scene references this component carries. Whether it is a feature at all
-                // or the composition shell is not settled, so it stays a plain list until it is.
-                .Add(new ShellStageSystem(shellSkin, demos))
-                .Add(new ShellInputSystem(menuScreen, demoHud))
-                .Add(new ScreenPresentationSystem(menuScreen, demoHud, loadingIndicator, shellSkin))
+                // Shell has no simulation half - its counterpart is NavigationModule, put in the
+                // shared kernel on purpose - and it is the one feature whose systems hold scene
+                // references. Both facts describe the shell rather than disqualify it as a feature:
+                // the references below stay fields of this component either way, because SetDemos
+                // and OnValidate need them, so the module relays them and owns nothing extra.
+                .AddModule(new ShellModule(menuScreen, demoHud, loadingIndicator, shellSkin, demos))
                 .BuildAndInit();
         }
 
