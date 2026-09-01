@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
 namespace Client.Simulation.MagicWords.Components
@@ -8,8 +8,8 @@ namespace Client.Simulation.MagicWords.Components
     /// is world data because the fetch is one operation for the whole screen, not per entity.
     /// </summary>
     /// <remarks>
-    /// <c>DialogueFetchSystem</c> drives it from Loading to Ready or Failed, <c>DialogueIngestSystem</c>
-    /// flips it to Ready and fills the counts, <c>DialogueResetSystem</c> releases a live request and
+    /// <c>DialogueFetchSimSystem</c> drives it from Loading to Ready or Failed, <c>DialogueIngestSimSystem</c>
+    /// flips it to Ready and fills the counts, <c>DialogueResetSimSystem</c> releases a live request and
     /// zeroes it. Every other dialogue system gates on <c>State</c>. It lives as long as the world does.
     /// </remarks>
     public struct DialogueStateComp : IEcsWorldComponent<DialogueStateComp>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -70,7 +70,7 @@ namespace Client.Simulation.Tests
             //
             // AtlasImageLoaderService is deliberately absent: it also implements IImageLoadService,
             // so injecting it would attach it to that port's node and displace the router there.
-            // MagicWordsInputSystem reaches it through AvatarImageRouterService.
+            // MagicWordsInpSystem reaches it through AvatarImageRouterService.
             "Client.Adapters.Shared.Services.AddressablesAssetService",
             "Client.Adapters.MagicWords.Services.AvatarImageRouterService",
             "Client.Adapters.AceOfShadows.Services.ViewRegistryService",

@@ -1,4 +1,4 @@
-using Client.Simulation.MagicWords.Payload;
+﻿using Client.Simulation.MagicWords.Payload;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords.Components
@@ -8,8 +8,8 @@ namespace Client.Simulation.MagicWords.Components
     /// entities. One frame long: it exists for that hand-off and nothing else.
     /// </summary>
     /// <remarks>
-    /// Added on its own entity by <c>DialogueFetchSystem</c> when the request resolves, read by
-    /// <c>DialogueIngestSystem</c> in the same tick, and deleted by <c>DialogueCleanupSystem</c> at
+    /// Added on its own entity by <c>DialogueFetchSimSystem</c> when the request resolves, read by
+    /// <c>DialogueIngestSimSystem</c> in the same tick, and deleted by <c>DialogueClnSystem</c> at
     /// the end of the frame — which is the whole of its lifetime, stated by the suffix and enforced
     /// in one place.
     /// <para>It was a world component set and cleared in place until the phases arrived. That

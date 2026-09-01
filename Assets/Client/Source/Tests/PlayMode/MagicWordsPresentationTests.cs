@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Views;
@@ -39,7 +39,7 @@ namespace Client.Adapters.Tests
             Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
             Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
             // Boot's shell skin holds three requests for the whole session; that is the floor.
-            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
             Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
 
@@ -103,7 +103,7 @@ namespace Client.Adapters.Tests
                     "Remote avatar requests did not settle.", AvatarTimeoutSeconds);
                 Assert.That(_FindSpeakerLoad(boot.World, "Sheldon").State,
                     Is.EqualTo(AvatarLoadState.Ready));
-                // A test coroutine resumes in the Update phase, and DialogueLogSystem copies the
+                // A test coroutine resumes in the Update phase, and DialogueLogPreSystem copies the
                 // loaded sprite onto the view in LateRun — so the frame that reports Ready is not
                 // yet the frame that shows it. Without this tick the assertion races the binding
                 // and sometimes reads the placeholder.
@@ -129,8 +129,8 @@ namespace Client.Adapters.Tests
 
             Assert.That(Object.FindObjectsByType<DialogueLineView>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
-            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
             Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
             Assert.That(boot.Avatars.Local.OpenRequestCount, Is.Zero);
             Assert.That(boot.Avatars.Local.HeldSpriteCount, Is.Zero);

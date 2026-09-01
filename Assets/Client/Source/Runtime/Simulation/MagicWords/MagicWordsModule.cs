@@ -1,4 +1,4 @@
-using Client.Simulation.MagicWords.Systems;
+﻿using Client.Simulation.MagicWords.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords
@@ -14,12 +14,12 @@ namespace Client.Simulation.MagicWords
 
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new DialogueResetSystem());
-            builder.Add(new DialogueFetchSystem());
-            builder.Add(new DialogueIngestSystem(_config));
-            builder.Add(new DialoguePlaybackSystem(_config));
-            builder.Add(new AvatarLoadSystem());
-            builder.Add(new DialogueCleanupSystem());
+            builder.Add(new DialogueResetSimSystem());
+            builder.Add(new DialogueFetchSimSystem());
+            builder.Add(new DialogueIngestSimSystem(_config));
+            builder.Add(new DialoguePlaybackSimSystem(_config));
+            builder.Add(new AvatarLoadSimSystem());
+            builder.Add(new DialogueClnSystem());
         }
     }
 }

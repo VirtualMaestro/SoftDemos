@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Text.RegularExpressions;
 using Client.Adapters.PhoenixFlame.Views;
@@ -48,7 +48,7 @@ namespace Client.Adapters.Tests
             Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
             Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
             // Boot's shell skin holds three requests for the whole session; that is the floor.
-            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
             var world = boot.World;
 
@@ -180,8 +180,8 @@ namespace Client.Adapters.Tests
 
             Assert.That(UnityEngine.Object.FindObjectsByType<PhoenixFlameScreen>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
-            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
             var closedState = world.Get<FlameStateComp>();
             Assert.That(closedState.IsActive, Is.False);
             Assert.That(closedState.IsTransitioning, Is.False);

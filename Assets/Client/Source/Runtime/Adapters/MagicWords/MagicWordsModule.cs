@@ -1,4 +1,4 @@
-using Client.Adapters.MagicWords.Systems;
+﻿using Client.Adapters.MagicWords.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.MagicWords
@@ -7,10 +7,10 @@ namespace Client.Adapters.MagicWords
     {
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new MagicWordsInputSystem());
-            builder.Add(new MagicWordsViewSystem());
-            builder.Add(new DialogueLogSystem());
-            builder.Add(new MagicWordsCleanupSystem());
+            builder.Add(new MagicWordsInpSystem());
+            builder.Add(new MagicWordsPreSystem());
+            builder.Add(new DialogueLogPreSystem());
+            builder.Add(new MagicWordsClnSystem());
         }
     }
 }

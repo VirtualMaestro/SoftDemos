@@ -1,0 +1,150 @@
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Client.Simulation.Core.Phases;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords.Components;
+using DCFApixels.DragonECS;
+
+namespace Client.Simulation.MagicWords.Systems
+{
+    /// <summary>
+    /// Reveals dialogue lines one by one on a timer (or all at once on skip) and asks for the
+    /// speaker's avatar as their first line appears.
+    /// </summary>
+    internal sealed class DialoguePlaybackSimSystem :
+        IEcsSim,
+        IEcsInject<EcsWorld>,
+        IEcsInject<ITimeService>,
+        IEcsInject<ILogService>
+    {
+        private readonly MagicWordsConfig _config;
+        private readonly List<int> _pendingLines = new();
+
+        private EcsWorld _world;
+        private ITimeService _time;
+        private ILogService _log;
+        private EcsPool<SkipDialogueCommand> _skipCommands;
+        private EcsPool<DialogueLineComp> _lines;
+        private EcsTagPool<LineVisibleTag> _visibleLines;
+        private EcsPool<AvatarLoadComp> _avatarLoads;
+        private EcsPool<RequestAvatarCommand> _avatarRequests;
+
+        public DialoguePlaybackSimSystem(MagicWordsConfig config)
+        {
+            _config = config;
+        }
+
+        public void Sim()
+        {
+            // A tap made while the payload is still in flight is discarded rather than queued: the
+            // command is one frame long, so the readiness gate below simply lets it expire.
+            var skip = _skipCommands.Count > 0;
+            ref var state = ref _world.Get<DialogueStateComp>();
+
+            if (state.State != DialogueLoadState.Ready)
+                return;
+
+            ref var playback = ref _world.Get<DialoguePlaybackComp>();
+
+            if (playback.IsComplete)
+                return;
+
+            // The list is only read within this Run; stale content is cleared here, not on exit.
+            _pendingLines.Clear();
+
+            foreach (var entityId in _world.Where(out PendingLineAspect aspect))
+                _pendingLines.Add(entityId);
+
+            if (_pendingLines.Count == 0)
+            {
+                _Complete(ref playback, skip);
+                return;
+            }
+
+            if (skip)
+            {
+                while (_pendingLines.Count > 0)
+                    _RevealNext(ref playback);
+
+                _Complete(ref playback, true);
+                return;
+            }
+
+            if (playback.VisibleLineCount > 0)
+            {
+                playback.SecondsUntilNextLine -= _time.DeltaSeconds;
+
+                if (playback.SecondsUntilNextLine > 0f)
+                    return;
+            }
+
+            _RevealNext(ref playback);
+            playback.SecondsUntilNextLine = _config.LineIntervalSeconds;
+
+            if (_pendingLines.Count == 0)
+                _Complete(ref playback, false);
+        }
+
+        private void _RevealNext(ref DialoguePlaybackComp playback)
+        {
+            var nextListIndex = 0;
+            var nextLineIndex = _lines.Read(_pendingLines[0]).Index;
+
+            for (var listIndex = 1; listIndex < _pendingLines.Count; listIndex++)
+            {
+                var lineIndex = _lines.Read(_pendingLines[listIndex]).Index;
+
+                if (lineIndex >= nextLineIndex)
+                    continue;
+
+                nextListIndex = listIndex;
+                nextLineIndex = lineIndex;
+            }
+
+            var entityId = _pendingLines[nextListIndex];
+            _pendingLines.RemoveAt(nextListIndex);
+            _visibleLines.TryAdd(entityId);
+            playback.VisibleLineCount++;
+            _RequestAvatar(_lines.Read(entityId).Speaker);
+        }
+
+        private void _RequestAvatar(entlong speaker)
+        {
+            if (!speaker.TryGetID(out var speakerEntityId) ||
+                !_avatarLoads.Has(speakerEntityId) ||
+                _avatarLoads.Read(speakerEntityId).State != AvatarLoadState.NotRequested ||
+                _avatarRequests.Has(speakerEntityId))
+                return;
+
+            _avatarRequests.Add(speakerEntityId);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void _Complete(ref DialoguePlaybackComp playback, bool skipped)
+        {
+            playback.IsComplete = true;
+            _log.Info(
+                $"Dialogue playback completed with {playback.VisibleLineCount} revealed line(s); " +
+                $"skipped={skipped}.");
+        }
+
+        public void Inject(EcsWorld obj)
+        {
+            _world = obj;
+            _skipCommands = obj.GetPool<SkipDialogueCommand>();
+            _lines = obj.GetPool<DialogueLineComp>();
+            _visibleLines = obj.GetPool<LineVisibleTag>();
+            _avatarLoads = obj.GetPool<AvatarLoadComp>();
+            _avatarRequests = obj.GetPool<RequestAvatarCommand>();
+        }
+
+        public void Inject(ITimeService obj) => _time = obj;
+        public void Inject(ILogService obj) => _log = obj;
+
+        private sealed class PendingLineAspect : EcsAspect
+        {
+            public readonly EcsPool<DialogueLineComp> Lines = Inc;
+            public readonly EcsTagPool<LineVisibleTag> Visible = Exc;
+        }
+    }
+}

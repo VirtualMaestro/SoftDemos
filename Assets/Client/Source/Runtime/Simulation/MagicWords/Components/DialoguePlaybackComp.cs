@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
 namespace Client.Simulation.MagicWords.Components
@@ -8,8 +8,8 @@ namespace Client.Simulation.MagicWords.Components
     /// the dialogue has finished. Kept apart from the load state because a reload restarts the reveal.
     /// </summary>
     /// <remarks>
-    /// Owned by <c>DialoguePlaybackSystem</c>, which is the only writer, and zeroed by
-    /// <c>DialogueResetSystem</c>. <c>IsComplete</c> is what stops the timer from running forever after
+    /// Owned by <c>DialoguePlaybackSimSystem</c>, which is the only writer, and zeroed by
+    /// <c>DialogueResetSimSystem</c>. <c>IsComplete</c> is what stops the timer from running forever after
     /// the last line. It lives as long as the world does.
     /// </remarks>
     internal struct DialoguePlaybackComp : IEcsWorldComponent<DialoguePlaybackComp>

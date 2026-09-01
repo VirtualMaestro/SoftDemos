@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,7 +11,7 @@ namespace Client.Adapters.Shell.Views
 
         /// <summary>The demo index whose button was clicked, or <c>-1</c> for none.</summary>
         /// <remarks>
-        /// <c>ShellInputSystem</c> drains this into an <c>OpenDemoCommand</c> and puts it back to
+        /// <c>ShellInpSystem</c> drains this into an <c>OpenDemoCommand</c> and puts it back to
         /// <c>-1</c>; the view knows nothing about the world. A pending press is not world state —
         /// it has no lifetime and no owner — and holding it here is what makes the frame the
         /// command lands in readable: a click that wrote the world from uGUI's callback landed in

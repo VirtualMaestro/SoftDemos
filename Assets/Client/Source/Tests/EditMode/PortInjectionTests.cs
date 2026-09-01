@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.Core.Ports.Requests;
@@ -61,7 +61,7 @@ namespace Client.Simulation.Tests
             var assets = new FakeAssetService();
             var dialogue = new FakeDialogueService();
             var images = new FakeImageService();
-            var probe = new AllPortsProbeSystem();
+            var probe = new AllPortsProbeSimSystem();
 
             _pipeline = EcsPipeline.New()
                 .Inject(_world)
@@ -97,7 +97,7 @@ namespace Client.Simulation.Tests
                     _pipeline = EcsPipeline.New()
                         .Inject(_world)
                         .Inject(time)
-                        .Add(new TimeProbeSystem())
+                        .Add(new TimeProbeSimSystem())
                         .BuildAndInit();
                 },
                 "Injecting the concrete type must not satisfy IEcsInject<ITimeService>. " +
@@ -111,7 +111,7 @@ namespace Client.Simulation.Tests
         public void AddNode_ThenInjectConcrete_IsEquivalentToExplicitGeneric()
         {
             var time = new FakeTimeService { DeltaSeconds = 0.5f };
-            var probe = new TimeProbeSystem();
+            var probe = new TimeProbeSimSystem();
 
             // The node exists before the injection, so FakeTimeService's branch picks it up by
             // ITimeService.IsAssignableFrom(FakeTimeService). Same result, more moving parts —
@@ -182,7 +182,7 @@ namespace Client.Simulation.Tests
         }
 
         /// <summary>Throwaway probe: exists only to prove the injection arrived.</summary>
-        private sealed class AllPortsProbeSystem :
+        private sealed class AllPortsProbeSimSystem :
             IEcsSim,
             IEcsInject<ITimeService>,
             IEcsInject<ILogService>,
@@ -201,7 +201,7 @@ namespace Client.Simulation.Tests
             public void Sim() { }
 
             public override string ToString() =>
-                $"AllPortsProbeSystem(time={_Describe(Time)}, " +
+                $"AllPortsProbeSimSystem(time={_Describe(Time)}, " +
                 $"log={_Describe(Log)}, scenes={_Describe(Scenes)}, assets={_Describe(Assets)}, " +
                 $"dialogue={_Describe(Dialogue)}, images={_Describe(Images)})";
 
@@ -216,14 +216,14 @@ namespace Client.Simulation.Tests
         }
 
         /// <summary>Single-port probe for the negative and AddNode cases.</summary>
-        private sealed class TimeProbeSystem : IEcsSim, IEcsInject<ITimeService>
+        private sealed class TimeProbeSimSystem : IEcsSim, IEcsInject<ITimeService>
         {
             public ITimeService Time { get; private set; }
 
             public void Sim() { }
 
             public override string ToString() =>
-                $"TimeProbeSystem(time={(Time == null ? "<null>" : Time.ToString())})";
+                $"TimeProbeSimSystem(time={(Time == null ? "<null>" : Time.ToString())})";
 
             public void Inject(ITimeService obj) => Time = obj;
         }

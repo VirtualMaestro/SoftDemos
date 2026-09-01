@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Client.Adapters.AceOfShadows;
 using Client.Adapters.AceOfShadows.Components;
@@ -24,8 +24,8 @@ namespace Client.Adapters.Tests
     /// <see cref="MoveCompletedCommand"/> out, position reached, and the flight itself untouched.
     /// That contract holds even if DOTween is replaced later.
     /// <para>Both adapter halves are in the pipeline, because the cycle now spans both:
-    /// <see cref="TweenPlaybackSystem"/> starts the tween in Present and
-    /// <see cref="AceOfShadowsInputSystem"/> turns the player's completion queue into the command
+    /// <see cref="TweenPlaybackPreSystem"/> starts the tween in Present and
+    /// <see cref="AceOfShadowsInpSystem"/> turns the player's completion queue into the command
     /// in Input. Driving only one of them would test half a round trip and pass.</para>
     /// <para>The tick here is <c>Input(); Present();</c> and no Cleanup: there is no Sim system to
     /// consume the command, and Cleanup would delete the very thing the assertion waits for. That
@@ -74,8 +74,8 @@ namespace Client.Adapters.Tests
                 .Inject(_assets)
                 .Inject(new SharedUiSprites())
                 .Inject(_screens)
-                .Add(new AceOfShadowsInputSystem(new AceOfShadowsConfig()))
-                .Add(new TweenPlaybackSystem())
+                .Add(new AceOfShadowsInpSystem(new AceOfShadowsConfig()))
+                .Add(new TweenPlaybackPreSystem())
                 .BuildAndInit();
         }
 

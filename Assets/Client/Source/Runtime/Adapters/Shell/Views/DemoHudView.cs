@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,7 +14,7 @@ namespace Client.Adapters.Shell.Views
 
         /// <summary>Set when the back button is clicked, cleared by the system that drains it.</summary>
         /// <remarks>
-        /// <c>ShellInputSystem</c> turns this into a <c>CloseDemoCommand</c> inside its phase; the
+        /// <c>ShellInpSystem</c> turns this into a <c>CloseDemoCommand</c> inside its phase; the
         /// view knows nothing about the world. A pending press is not world state — it has no
         /// lifetime and no owner — and holding it here is what makes the frame the command lands
         /// in readable.

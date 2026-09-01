@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows.Components
 {
@@ -8,11 +8,11 @@ namespace Client.Simulation.AceOfShadows.Components
     /// how long the flight lasts.
     /// </summary>
     /// <remarks>
-    /// Added by <c>CardCadenceSystem</c> and removed by <c>MoveCompletionSystem</c> once
+    /// Added by <c>CardCadenceSimSystem</c> and removed by <c>MoveCompletionSimSystem</c> once
     /// <c>MoveCompletedCommand</c> arrives, so it lives exactly as long as the flight does — which is
     /// what makes it a component and not a one-frame command. The adapter reads it to start the
     /// tween and never writes it. Its presence also keeps the card out of the cadence pick and
-    /// raises the view's sorting order in <c>CardBindingSystem</c>.
+    /// raises the view's sorting order in <c>CardBindingPreSystem</c>.
     /// There are no coordinates here: the simulation knows slot indices and the adapter's layout
     /// turns an index into a position, so portrait and landscape share one simulation.
     /// </remarks>

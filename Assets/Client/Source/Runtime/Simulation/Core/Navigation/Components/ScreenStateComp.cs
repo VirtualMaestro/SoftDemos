@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
 namespace Client.Simulation.Core.Navigation.Components
@@ -8,7 +8,7 @@ namespace Client.Simulation.Core.Navigation.Components
     /// the one place that says a load is running, so a second open cannot start on top of it.
     /// </summary>
     /// <remarks>
-    /// <c>NavigationSystem</c> is the only writer: it moves Menu to Loading to Demo to Unloading and
+    /// <c>NavigationSimSystem</c> is the only writer: it moves Menu to Loading to Demo to Unloading and
     /// back, and sets <c>LastOperationFailed</c> when a scene request fails. The shell's presentation
     /// systems read it to show the right screen. It lives as long as the world does, and starts at Menu
     /// with the indices at -1.

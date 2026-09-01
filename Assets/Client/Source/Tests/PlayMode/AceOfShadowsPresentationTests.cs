@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Client.Adapters.AceOfShadows.Views;
@@ -78,7 +78,7 @@ namespace Client.Adapters.Tests
             // Not zero: Boot's own shell skin holds three requests for the whole session. The
             // claim is still "no card art yet" — anything above that floor is a preload.
             Assert.That(boot.Assets.OpenRequestCount,
-                Is.EqualTo(ShellStageSystem.AddressCount), "Boot must not preload card art.");
+                Is.EqualTo(ShellStageInpSystem.AddressCount), "Boot must not preload card art.");
 
             yield return _Open(boot.World);
             yield return _WaitUntil(
@@ -142,8 +142,8 @@ namespace Client.Adapters.Tests
             yield return Resources.UnloadUnusedAssets();
             yield return null;
             Assert.That(boot.Views.Count, Is.Zero);
-            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageSystem.AddressCount));
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
 
             foreach (var sprite in ownedSprites)
                 Assert.That(sprite == null, Is.True, "Closing the demo must destroy every owned sprite copy.");

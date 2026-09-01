@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace Client.Adapters.Shell.Views
@@ -6,7 +6,7 @@ namespace Client.Adapters.Shell.Views
     /// <summary>Every sprite target of the persistent shell, in one serialized place.</summary>
     /// <remarks>
     /// The shell art loads by address, so the scene holds the <see cref="Image"/> components and
-    /// not the sprites. <c>ShellStageSystem</c> is the only writer. This view says where.
+    /// not the sprites. <c>ShellStageInpSystem</c> is the only writer. This view says where.
     /// </remarks>
     public sealed class ShellSkinView : MonoBehaviour
     {

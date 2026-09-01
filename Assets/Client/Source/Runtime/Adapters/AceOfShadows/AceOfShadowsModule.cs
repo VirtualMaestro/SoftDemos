@@ -1,4 +1,4 @@
-using Client.Adapters.AceOfShadows.Systems;
+﻿using Client.Adapters.AceOfShadows.Systems;
 using Client.Simulation.AceOfShadows;
 using DCFApixels.DragonECS;
 
@@ -21,11 +21,11 @@ namespace Client.Adapters.AceOfShadows
         /// </remarks>
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new AceOfShadowsInputSystem(_config));
-            builder.Add(new CardBindingSystem());
-            builder.Add(new DeckHudSystem());
-            builder.Add(new TweenPlaybackSystem());
-            builder.Add(new AceOfShadowsCleanupSystem());
+            builder.Add(new AceOfShadowsInpSystem(_config));
+            builder.Add(new CardBindingPreSystem());
+            builder.Add(new DeckHudPreSystem());
+            builder.Add(new TweenPlaybackPreSystem());
+            builder.Add(new AceOfShadowsClnSystem());
         }
     }
 }

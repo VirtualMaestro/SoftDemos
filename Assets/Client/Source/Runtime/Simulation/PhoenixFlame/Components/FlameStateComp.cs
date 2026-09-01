@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 using DCFApixels.DragonECS.Core;
 
 namespace Client.Simulation.PhoenixFlame.Components
@@ -8,8 +8,8 @@ namespace Client.Simulation.PhoenixFlame.Components
     /// its 0..1 progress. One flame per screen, so it is world data rather than an entity's.
     /// </summary>
     /// <remarks>
-    /// <c>FlameSetupSystem</c> starts and wipes it, <c>FlamePhaseRequestSystem</c> opens a transition,
-    /// <c>FlameTransitionSystem</c> counts it down and swaps the phase. The adapter's flame view reads
+    /// <c>FlameSetupSimSystem</c> starts and wipes it, <c>FlamePhaseRequestSimSystem</c> opens a transition,
+    /// <c>FlameTransitionSimSystem</c> counts it down and swaps the phase. The adapter's flame view reads
     /// <c>Progress</c> to blend the colours. It lives as long as the world does; reset returns it to
     /// default instead of removing it.
     /// </remarks>

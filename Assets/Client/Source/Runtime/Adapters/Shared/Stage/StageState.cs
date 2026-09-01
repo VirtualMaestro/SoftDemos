@@ -1,8 +1,8 @@
-namespace Client.Adapters.Shared.Stage
+﻿namespace Client.Adapters.Shared.Stage
 {
     /// <summary>The lifecycle every stage input system steps through, one step per frame.</summary>
     /// <remarks>
-    /// Each system uses the subset it needs: <c>ShellStageSystem</c> never enters
+    /// Each system uses the subset it needs: <c>ShellStageInpSystem</c> never enters
     /// <see cref="Closing"/>, because the shell lives for the whole session.
     /// <para>There used to be a <c>Starting</c> step between <see cref="Loading"/> and
     /// <see cref="Ready"/>, entered only by the flame demo, which wrote <c>StartFlameCommand</c>

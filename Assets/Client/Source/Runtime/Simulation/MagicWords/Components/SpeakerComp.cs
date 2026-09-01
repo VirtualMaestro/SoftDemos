@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords.Components
 {
@@ -7,9 +7,9 @@ namespace Client.Simulation.MagicWords.Components
     /// line, because a single avatar load has to be shared by all the lines that person says.
     /// </summary>
     /// <remarks>
-    /// Created by <c>DialogueIngestSystem</c>, once per distinct name in the payload. Read by
-    /// <c>AvatarLoadSystem</c> for the log message and by <c>DialogueLogSystem</c> for the name on the
-    /// bubble. Removed only when <c>DialogueResetSystem</c> deletes the speaker entity.
+    /// Created by <c>DialogueIngestSimSystem</c>, once per distinct name in the payload. Read by
+    /// <c>AvatarLoadSimSystem</c> for the log message and by <c>DialogueLogPreSystem</c> for the name on the
+    /// bubble. Removed only when <c>DialogueResetSimSystem</c> deletes the speaker entity.
     /// </remarks>
     public struct SpeakerComp : IEcsComponent
     {

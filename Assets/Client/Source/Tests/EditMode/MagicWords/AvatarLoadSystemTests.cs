@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace Client.Simulation.Tests.MagicWords
 {
-    public sealed class AvatarLoadSystemTests : MagicWordsTestFixture
+    public sealed class AvatarLoadSimSystemTests : MagicWordsTestFixture
     {
         [Test]
         public void Avatar_TransitionsFromNotRequestedThroughLoadingToReady()

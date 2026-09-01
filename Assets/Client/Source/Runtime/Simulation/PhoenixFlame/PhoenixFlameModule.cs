@@ -1,4 +1,4 @@
-using Client.Simulation.PhoenixFlame.Systems;
+﻿using Client.Simulation.PhoenixFlame.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.PhoenixFlame
@@ -22,10 +22,10 @@ namespace Client.Simulation.PhoenixFlame
         /// </remarks>
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new FlameSetupSystem(_config));
-            builder.Add(new FlamePhaseRequestSystem());
-            builder.Add(new FlameTransitionSystem());
-            builder.Add(new FlameCleanupSystem());
+            builder.Add(new FlameSetupSimSystem(_config));
+            builder.Add(new FlamePhaseRequestSimSystem());
+            builder.Add(new FlameTransitionSimSystem());
+            builder.Add(new FlameClnSystem());
         }
     }
 }

@@ -1,4 +1,4 @@
-using Client.Adapters.Shell.Systems;
+﻿using Client.Adapters.Shell.Systems;
 using Client.Adapters.Shell.Views;
 using DCFApixels.DragonECS;
 using UnityEngine;
@@ -38,9 +38,9 @@ namespace Client.Adapters.Shell
         /// </remarks>
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new ShellStageSystem(_skin, _demos));
-            builder.Add(new ShellInputSystem(_menu, _demoHud));
-            builder.Add(new ScreenPresentationSystem(_menu, _demoHud, _loadingIndicator, _skin));
+            builder.Add(new ShellStageInpSystem(_skin, _demos));
+            builder.Add(new ShellInpSystem(_menu, _demoHud));
+            builder.Add(new ScreenPreSystem(_menu, _demoHud, _loadingIndicator, _skin));
         }
     }
 }

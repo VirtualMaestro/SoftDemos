@@ -1,4 +1,4 @@
-using DCFApixels.DragonECS;
+﻿using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords.Components
 {
@@ -7,8 +7,8 @@ namespace Client.Simulation.MagicWords.Components
     /// Every speaker carries one, even a speaker with no avatar.
     /// </summary>
     /// <remarks>
-    /// Added by <c>DialogueIngestSystem</c> as <c>NotRequested</c> or <c>Missing</c> and driven by
-    /// <c>AvatarLoadSystem</c> through Loading to Ready or Failed. <c>DialogueLogSystem</c> reads it to
+    /// Added by <c>DialogueIngestSimSystem</c> as <c>NotRequested</c> or <c>Missing</c> and driven by
+    /// <c>AvatarLoadSimSystem</c> through Loading to Ready or Failed. <c>DialogueLogPreSystem</c> reads it to
     /// swap the placeholder for the real image. Reset releases the request and deletes the entity; the
     /// id is cleared to zero first, so nothing is released twice.
     /// <para>One id, not two: the request names the image as well, and the adapter resolves the

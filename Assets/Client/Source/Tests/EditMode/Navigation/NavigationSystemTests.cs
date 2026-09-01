@@ -1,4 +1,4 @@
-using Client.Simulation.Core.Navigation;
+﻿using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.Tests.Fakes.Services;
@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Client.Simulation.Tests.Navigation
 {
-    public sealed class NavigationSystemTests
+    public sealed class NavigationSimSystemTests
     {
         private static readonly string[] Addresses =
         {

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Client.Adapters.AceOfShadows.Views;
 using DCFApixels.DragonECS;
 using DG.Tweening;
@@ -10,7 +10,7 @@ namespace Client.Adapters.AceOfShadows.Services
     /// <remarks>
     /// This is not a system, and it never touches the world: the <see cref="entlong"/> it takes
     /// is an opaque correlation token it hands back through <see cref="Completions"/>, and every
-    /// world change stays in <c>TweenPlaybackSystem</c>, which drains the queue in one place at
+    /// world change stays in <c>TweenPlaybackPreSystem</c>, which drains the queue in one place at
     /// one point in the frame. The teardown calls are synchronous, because the caller destroys
     /// the views in the same frame.
     /// </remarks>
@@ -59,7 +59,7 @@ namespace Client.Adapters.AceOfShadows.Services
         /// No world cleanup here — a killed tween never calls back, and a completion already
         /// queued is dropped by the entity's generation check when the system drains the queue.
         /// The orphaned move components are the system's own business
-        /// (<c>TweenPlaybackSystem._CancelOrphanedMoves</c>).
+        /// (<c>TweenPlaybackPreSystem._CancelOrphanedMoves</c>).
         /// </remarks>
         public void KillTweensFor(IReadOnlyList<int> handleIds)
         {

@@ -1,4 +1,4 @@
-using Client.Adapters.PhoenixFlame.Systems;
+﻿using Client.Adapters.PhoenixFlame.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.PhoenixFlame
@@ -7,8 +7,8 @@ namespace Client.Adapters.PhoenixFlame
     {
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new PhoenixFlameInputSystem());
-            builder.Add(new PhoenixFlameViewSystem());
+            builder.Add(new PhoenixFlameInpSystem());
+            builder.Add(new PhoenixFlamePreSystem());
         }
     }
 }
