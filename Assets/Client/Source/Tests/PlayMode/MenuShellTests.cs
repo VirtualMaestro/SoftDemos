@@ -1,5 +1,5 @@
 using System.Collections;
-using Client.Adapters.Shared.Stage;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shell.Views;
 using Client.Bootstrap;
 using Client.Simulation.Core.Navigation;

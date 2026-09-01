@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Client.Adapters.Shared.Stage
+namespace Client.Adapters.Shared.Components
 {
     /// <summary>Says the live demo has painted itself and the shell may hand the screen over.</summary>
     /// <remarks>

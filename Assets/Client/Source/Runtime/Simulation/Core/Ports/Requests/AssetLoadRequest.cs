@@ -1,4 +1,4 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Core.Ports.Requests
 {
     /// <summary>Asks <see cref="IAssetService"/> for the asset at an address.</summary>
     public readonly struct AssetLoadRequest

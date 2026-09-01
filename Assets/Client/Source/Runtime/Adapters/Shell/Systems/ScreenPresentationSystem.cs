@@ -1,6 +1,6 @@
 using Client.Simulation.Core.Phases;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
-using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
@@ -18,7 +18,7 @@ namespace Client.Adapters.Shell.Systems
     /// record are drained by <see cref="ShellInputSystem"/>. The <c>_last*</c> fields are a repaint
     /// cache — what is on screen right now — not state passed between systems.
     /// </remarks>
-    public sealed class ScreenPresentationSystem : IEcsPresent, IEcsDestroy, IEcsInject<EcsWorld>,
+    internal sealed class ScreenPresentationSystem : IEcsPresent, IEcsDestroy, IEcsInject<EcsWorld>,
         IEcsInject<FadePlayerService>
     {
         private const float FadeSeconds = 0.18f;

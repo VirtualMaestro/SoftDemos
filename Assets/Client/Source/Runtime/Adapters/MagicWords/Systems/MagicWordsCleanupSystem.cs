@@ -11,7 +11,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// own entity, so the entity goes with it. This becomes an <c>IEcsCleanup</c> system unchanged
     /// once the phase interfaces exist.
     /// </remarks>
-    public sealed class MagicWordsCleanupSystem : IEcsCleanup, IEcsInject<EcsWorld>
+    internal sealed class MagicWordsCleanupSystem : IEcsCleanup, IEcsInject<EcsWorld>
     {
         private EcsWorld _world;
 

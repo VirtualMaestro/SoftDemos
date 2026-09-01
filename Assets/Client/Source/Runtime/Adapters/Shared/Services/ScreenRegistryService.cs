@@ -58,7 +58,6 @@ namespace Client.Adapters.Shared.Services
                 return;
 
             foreach (var root in scene.GetRootGameObjects())
-            {
                 foreach (var type in _trackedTypes)
                 {
                     var found = root.GetComponentInChildren(type, true);
@@ -66,7 +65,6 @@ namespace Client.Adapters.Shared.Services
                     if (found != null)
                         _screens[type] = found;
                 }
-            }
         }
     }
 }

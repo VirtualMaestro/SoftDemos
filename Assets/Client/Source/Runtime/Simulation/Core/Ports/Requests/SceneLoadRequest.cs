@@ -1,4 +1,4 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Core.Ports.Requests
 {
     /// <summary>Asks <see cref="ISceneService"/> to load a scene additively.</summary>
     public readonly struct SceneLoadRequest

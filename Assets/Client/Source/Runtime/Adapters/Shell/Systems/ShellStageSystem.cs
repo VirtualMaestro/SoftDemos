@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
@@ -19,7 +21,7 @@ namespace Client.Adapters.Shell.Systems
     /// not retried. Every sprite from <see cref="SpriteAtlas.GetSprite"/> is a copy this system
     /// owns and must destroy in <see cref="Destroy"/>.
     /// </remarks>
-    public sealed class ShellStageSystem : IEcsInput, IEcsDestroy, IEcsInject<EcsWorld>,
+    internal sealed class ShellStageSystem : IEcsInput, IEcsDestroy, IEcsInject<EcsWorld>,
         IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>, IEcsInject<SharedUiSprites>
     {
         /// <summary>How many Addressables requests the shell keeps open for the whole session.</summary>
@@ -250,18 +252,9 @@ namespace Client.Adapters.Shell.Systems
 
         private void _ReleaseRequests()
         {
-            if (_backgroundRequestId != 0)
-                _assets.Release(_backgroundRequestId);
-
-            if (_menuAtlasRequestId != 0)
-                _assets.Release(_menuAtlasRequestId);
-
-            if (_sharedAtlasRequestId != 0)
-                _assets.Release(_sharedAtlasRequestId);
-
-            _backgroundRequestId = 0;
-            _menuAtlasRequestId = 0;
-            _sharedAtlasRequestId = 0;
+            _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
+            _menuAtlasRequestId = StageContent.Release(_assets, _menuAtlasRequestId);
+            _sharedAtlasRequestId = StageContent.Release(_assets, _sharedAtlasRequestId);
         }
 
         private void _TransitionTo(StageState next) => _state = next;

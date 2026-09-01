@@ -1,12 +1,14 @@
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Simulation.PhoenixFlame.Components;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
@@ -23,7 +25,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// What is left is what the Input phase is for: the port polling, the recorded press, the
     /// content this system owns and must destroy, and every write into the world.
     /// </remarks>
-    public sealed class PhoenixFlameInputSystem : IEcsInput, IEcsDestroy,
+    internal sealed class PhoenixFlameInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
     {

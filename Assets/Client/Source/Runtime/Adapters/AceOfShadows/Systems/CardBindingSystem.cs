@@ -14,7 +14,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// Attaches pooled card views to card entities, keeps resting cards seated at their slot
     /// position, and raises the sorting order of cards in flight.
     /// </summary>
-    public sealed class CardBindingSystem : IEcsPresent, IEcsInject<EcsWorld>, IEcsInject<ILogService>,
+    internal sealed class CardBindingSystem : IEcsPresent, IEcsInject<EcsWorld>, IEcsInject<ILogService>,
         IEcsInject<ViewRegistryService>, IEcsInject<StackSlotLayoutService>, IEcsInject<CardViewChannel>,
         IEcsInject<ScreenRegistryService>
     {

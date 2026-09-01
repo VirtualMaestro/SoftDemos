@@ -16,7 +16,7 @@ namespace Client.Adapters.Shell.Systems
     /// <c>MenuScreen.SetDemos</c> enabling the buttons and <c>BuildAndInit</c> injecting the world.
     /// A recorded press just waits for the first tick.</para>
     /// </remarks>
-    public sealed class ShellInputSystem : IEcsInput, IEcsInject<EcsWorld>
+    internal sealed class ShellInputSystem : IEcsInput, IEcsInject<EcsWorld>
     {
         private readonly MenuScreen _menu;
         private readonly DemoHudView _demoHud;

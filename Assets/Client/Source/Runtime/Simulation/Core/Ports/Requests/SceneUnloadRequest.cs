@@ -1,4 +1,4 @@
-namespace Client.Simulation.Core.Ports
+namespace Client.Simulation.Core.Ports.Requests
 {
     /// <summary>Asks <see cref="ISceneService"/> to unload a scene.</summary>
     /// <remarks>

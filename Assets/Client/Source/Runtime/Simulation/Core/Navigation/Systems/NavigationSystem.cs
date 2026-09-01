@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.Core.Navigation.Systems
@@ -10,7 +11,7 @@ namespace Client.Simulation.Core.Navigation.Systems
     /// Handles open/close demo commands: starts scene load/unload, polls the async operation, and
     /// moves the screen state through Menu → Loading → Demo → Unloading → Menu.
     /// </summary>
-    public sealed class NavigationSystem : IEcsSim, IEcsInject<EcsWorld>,
+    internal sealed class NavigationSystem : IEcsSim, IEcsInject<EcsWorld>,
         IEcsInject<ISceneService>, IEcsInject<ILogService>
     {
         private readonly DemoCatalog _catalog;
@@ -65,7 +66,7 @@ namespace Client.Simulation.Core.Navigation.Systems
             // The entity id is not read: a close command carries nothing, and the one that deletes
             // it is NavigationCleanupSystem. Iterating still matters — a second command in the same
             // frame is reported, the way a second one always was.
-            foreach (var closeEntity in _world.Where(out CloseCommandAspect _))
+            foreach (var _ in _world.Where(out CloseCommandAspect _))
             {
                 if (state.Current != ScreenId.Demo)
                 {

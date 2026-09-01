@@ -19,7 +19,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// frame's Cleanup, unseen by any Sim. The queue is what makes the hand-off legal: the player
     /// never touches the world, and the world is written from one phase body.</para>
     /// </remarks>
-    public sealed class TweenPlaybackSystem : IEcsInit, IEcsPresent, IEcsDestroy,
+    internal sealed class TweenPlaybackSystem : IEcsInit, IEcsPresent, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<CardMovePlayerService>,
         IEcsInject<CardViewChannel>

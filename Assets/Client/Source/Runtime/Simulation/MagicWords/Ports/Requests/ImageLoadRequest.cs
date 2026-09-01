@@ -1,4 +1,4 @@
-namespace Client.Simulation.MagicWords.Ports
+namespace Client.Simulation.MagicWords.Ports.Requests
 {
     /// <summary>Asks <see cref="IImageLoadService"/> for one speaker's avatar.</summary>
     /// <remarks>

@@ -5,12 +5,14 @@ using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Simulation.MagicWords.Components;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using TMPro;
 using UnityEngine;
@@ -28,7 +30,7 @@ namespace Client.Adapters.MagicWords.Systems
     /// system owns and must destroy, and every world write — an Input phase in everything but the
     /// interface name, which arrives in the flip.
     /// </remarks>
-    public sealed class MagicWordsInputSystem : IEcsInput, IEcsDestroy,
+    internal sealed class MagicWordsInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<AvatarImageRouterService>,
         IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>,

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;

@@ -4,6 +4,7 @@ using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Simulation.AceOfShadows;
@@ -12,6 +13,7 @@ using Client.Simulation.Core.Components;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using UnityEngine;
 using UnityEngine.U2D;
@@ -30,7 +32,7 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// polling, the recorded press, the tween player's completion queue, the content it owns and
     /// must destroy, and every write into the world.
     /// </remarks>
-    public sealed class AceOfShadowsInputSystem : IEcsInput, IEcsDestroy,
+    internal sealed class AceOfShadowsInputSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,

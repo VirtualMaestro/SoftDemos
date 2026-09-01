@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 
 namespace Client.Simulation.Tests.Fakes.Services
 {

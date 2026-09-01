@@ -54,12 +54,6 @@ namespace Client.Bootstrap
         private CardMovePlayerService _cardMovePlayerService;
         private ScreenRegistryService _screens;
 
-        public EcsWorld World => _world;
-        public ViewRegistryService Views => _viewRegistryService;
-        public AddressablesAssetService Assets => _assetSourceService;
-        public AvatarImageRouterService Avatars => _avatarImagesService;
-        public FadePlayerService Fades => _fadePlayerService;
-
         private void Start()
         {
             menuScreen.SetDemos(demos);
@@ -201,6 +195,13 @@ namespace Client.Bootstrap
             _world?.Destroy();
             _world = null;
         }
+
+        // Properties are used only for tests
+        internal EcsWorld World => _world;
+        internal ViewRegistryService Views => _viewRegistryService;
+        internal AddressablesAssetService Assets => _assetSourceService;
+        internal AvatarImageRouterService Avatars => _avatarImagesService;
+        internal FadePlayerService Fades => _fadePlayerService;
 
         private void OnValidate()
         {
