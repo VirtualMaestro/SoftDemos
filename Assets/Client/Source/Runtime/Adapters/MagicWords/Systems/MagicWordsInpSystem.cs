@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
@@ -21,19 +20,21 @@ using UnityEngine.U2D;
 namespace Client.Adapters.MagicWords.Systems
 {
     /// <summary>
-    /// Runs the dialogue demo's screen lifecycle: loads atlas/background/emoji, hands content to
-    /// the dialogue log channel, drains the skip and avatar-mode buttons into commands.
+    /// Runs the dialogue demo's screen lifecycle: loads atlas/background/emoji, writes the art ids
+    /// into the world, drains the skip and avatar-mode buttons into commands.
     /// </summary>
     /// <remarks>
     /// The two labels this used to paint moved to <see cref="MagicWordsPreSystem"/>, which is the
-    /// half that reads the world and draws. What is left is the port polling, the content this
-    /// system owns and must destroy, and every world write — an Input phase in everything but the
-    /// interface name, which arrives in the flip.
+    /// half that reads the world and draws. What is left is the port polling and every world write.
+    /// <para>It holds no engine object. The atlas, the background and the emoji asset belong to
+    /// <see cref="AddressablesAssetService"/>, the three UI sprites are cut out of the atlas under
+    /// ids of their own, and those four ids cross to the Present half as
+    /// <see cref="DialogueLogArtComp"/> — which is what <c>DialogueLogChannel</c> used to carry as
+    /// resolved objects (adr-an-engine-object-has-one-owner-per-kind, DEU0146).</para>
     /// </remarks>
     internal sealed class MagicWordsInpSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
-        IEcsInject<AvatarImageRouterService>,
-        IEcsInject<DialogueLogChannel>, IEcsInject<FadePlayerService>,
+        IEcsInject<AvatarImageRouterService>, IEcsInject<FadePlayerService>,
         IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/magic-words/atlas";
@@ -45,21 +46,21 @@ namespace Client.Adapters.MagicWords.Systems
         private const string DemoName = "Magic Words";
         private const int DemoIndex = 1;
 
-        private readonly Dictionary<string, Sprite> _sprites = new(StringComparer.Ordinal);
-
         private EcsWorld _world;
         private ILogService _log;
         private AddressablesAssetService _assets;
         private AvatarImageRouterService _avatars;
-        private DialogueLogChannel _dialogueChannel;
         private FadePlayerService _tweens;
         private ScreenRegistryService _screens;
         private StageState _state;
-        private MagicWordsScreen _mwScreen;
-        private Camera _camera;
-        private Sprite[] _atlasSprites = Array.Empty<Sprite>();
-        private Sprite _backgroundSprite;
-        private bool _ownsBackgroundSprite;
+
+        /// <summary>
+        /// The instance id of the screen this system opened on, so a reopened scene reads as a
+        /// different screen without a reference to the old one being kept.
+        /// </summary>
+        private int _screenInstanceId;
+
+        private int _backgroundId;
         private int _atlasRequestId;
         private int _backgroundRequestId;
         private int _emojiRequestId;
@@ -68,7 +69,7 @@ namespace Client.Adapters.MagicWords.Systems
 
         public void Input()
         {
-            // Not "_mwScreen != null": what must be torn down is this system's own state, and
+            // Not "the screen is gone": what must be torn down is this system's own state, and
             // that is what a non-Idle state says. The screen is a Unity object the scene unload can
             // destroy before this phase runs again — see AceOfShadowsInpSystem for the leak that
             // gating on it caused.
@@ -100,11 +101,12 @@ namespace Client.Adapters.MagicWords.Systems
         {
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (!_screens.TryGet(out MagicWordsScreen current) || current == _mwScreen ||
+            if (!_screens.TryGet(out MagicWordsScreen current) ||
+                current.GetInstanceID() == _screenInstanceId ||
                 screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != DemoIndex)
                 return;
 
-            _mwScreen = current;
+            _screenInstanceId = current.GetInstanceID();
             _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
             _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
             _emojiRequestId = _assets.Request(new AssetLoadRequest(EmojiAddress));
@@ -113,6 +115,9 @@ namespace Client.Adapters.MagicWords.Systems
 
         private void _ContinueLoading()
         {
+            if (!_screens.TryGet(out MagicWordsScreen screen))
+                return;
+
             var atlasStatus = _assets.Poll(_atlasRequestId);
             var backgroundStatus = _assets.Poll(_backgroundRequestId);
             var emojiStatus = _assets.Poll(_emojiRequestId);
@@ -135,41 +140,48 @@ namespace Client.Adapters.MagicWords.Systems
                 return;
             }
 
-            _mwScreen.Background.sprite = _backgroundSprite;
+            if (_assets.TryGetAsset(_backgroundId, out var background))
+                screen.Background.sprite = background as Sprite;
+
             // The screen is covered now, so the shell can hand over.
             _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
-            _avatars.SetLocalSprites(_sprites);
-            _dialogueChannel.SetContent(
-                StageContent.GetAsset<TMP_SpriteAsset>(_assets, _emojiRequestId),
-                _sprites[BubbleSpriteName],
-                _sprites[FrameSpriteName],
-                _sprites[PlaceholderSpriteName],
-                _mwScreen);
-            _RecalculateLayout();
+            _avatars.SetLocalAtlas(_atlasRequestId);
+            _RecalculateLayout(screen);
             _world.GetPool<LoadDialogueCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
         }
 
         private void _RunReady()
         {
-            if (Screen.width != _screenWidth || Screen.height != _screenHeight)
-                _RecalculateLayout();
+            if (!_screens.TryGet(out MagicWordsScreen screen))
+                return;
 
-            if (_mwScreen.SkipRequested)
+            if (Screen.width != _screenWidth || Screen.height != _screenHeight)
+                _RecalculateLayout(screen);
+
+            if (screen.SkipRequested)
             {
-                _mwScreen.SkipRequested = false;
+                screen.SkipRequested = false;
                 _world.GetPool<SkipDialogueCommand>().Add(_world.NewEntity());
             }
 
-            if (!_mwScreen.ModeRequested)
+            if (!screen.ModeRequested)
                 return;
 
-            _mwScreen.ModeRequested = false;
+            screen.ModeRequested = false;
             var next = _avatars.Mode == AvatarMode.Local ? AvatarMode.Remote : AvatarMode.Local;
             _avatars.SetMode(next);
             _world.GetPool<ReloadAvatarsCommand>().Add(_world.NewEntity());
         }
 
+        /// <summary>
+        /// Resolves the three loaded assets and cuts the demo's UI sprites out of the atlas, then
+        /// writes the four ids the Present half draws with into the world.
+        /// </summary>
+        /// <remarks>
+        /// The cut runs ONCE per open and the asset service owns every copy: releasing the atlas
+        /// takes all three with it, which is what <c>_DestroySpriteCopies</c> used to do by hand.
+        /// </remarks>
         private bool _ResolveContent()
         {
             var atlasAsset = StageContent.GetAsset<SpriteAtlas>(_assets, _atlasRequestId);
@@ -181,48 +193,58 @@ namespace Client.Adapters.MagicWords.Systems
                 return false;
             }
 
-            _backgroundSprite = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log, out _ownsBackgroundSprite);
+            _backgroundId = StageContent.ResolveBackground(
+                _assets, _backgroundRequestId, DemoName, _log);
 
-            if (_backgroundSprite == null)
+            if (_backgroundId == 0)
                 return false;
 
-            _atlasSprites = new Sprite[atlasAsset.spriteCount];
-            var count = atlasAsset.GetSprites(_atlasSprites);
+            var names = StageContent.ReadAtlasNames(atlasAsset, out var readCount);
 
-            if (count != atlasAsset.spriteCount)
+            if (readCount != atlasAsset.spriteCount)
             {
-                _log.Error($"Magic Words atlas returned {count} of {atlasAsset.spriteCount} sprite(s).");
+                _log.Error($"Magic Words atlas returned {readCount} of {atlasAsset.spriteCount} sprite(s).");
                 return false;
             }
 
-            _sprites.Clear();
-
-            foreach (var sprite in _atlasSprites)
+            if (Array.IndexOf(names, BubbleSpriteName) < 0 ||
+                Array.IndexOf(names, FrameSpriteName) < 0 ||
+                Array.IndexOf(names, PlaceholderSpriteName) < 0)
             {
-                var spriteName = sprite.name.Replace("(Clone)", string.Empty).Trim();
-                _sprites[spriteName] = sprite;
+                _log.Error("Magic Words atlas is missing a required dialogue UI sprite.");
+                return false;
             }
 
-            if (_sprites.ContainsKey(BubbleSpriteName) && _sprites.ContainsKey(FrameSpriteName) &&
-                _sprites.ContainsKey(PlaceholderSpriteName))
+            ref var art = ref _world.Get<DialogueLogArtComp>();
+            art.Emoji = _emojiRequestId;
+            art.Bubble = _DeriveFromAtlas(BubbleSpriteName);
+            art.Frame = _DeriveFromAtlas(FrameSpriteName);
+            art.Placeholder = _DeriveFromAtlas(PlaceholderSpriteName);
+
+            if (art.Bubble != 0 && art.Frame != 0 && art.Placeholder != 0)
                 return true;
 
-            _log.Error("Magic Words atlas is missing a required dialogue UI sprite.");
+            _log.Error("Magic Words atlas would not hand over a required dialogue UI sprite.");
             return false;
         }
 
-        private void _RecalculateLayout()
+        private int _DeriveFromAtlas(string spriteName) =>
+            StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteName);
+
+        private void _RecalculateLayout(MagicWordsScreen screen)
         {
             _screenWidth = Screen.width;
             _screenHeight = Screen.height;
-            _camera = StageContent.FitBackground(_camera, _mwScreen.Background.transform,
-                _backgroundSprite, DemoName, _log, out _);
+
+            _assets.TryGetAsset(_backgroundId, out var background);
+
+            StageContent.FitBackground(screen.StageCamera, screen.Background.transform,
+                background as Sprite, DemoName, _log, out _);
         }
 
         private void _Teardown(bool resetDialogue)
         {
-            if (_state == StageState.Idle && _mwScreen == null && _atlasRequestId == 0 &&
+            if (_state == StageState.Idle && _screenInstanceId == 0 && _atlasRequestId == 0 &&
                 _backgroundRequestId == 0 && _emojiRequestId == 0)
                 return;
 
@@ -236,36 +258,26 @@ namespace Client.Adapters.MagicWords.Systems
             // The log owns its views and destroys them itself; this only says they are stale.
             // A direct call would be one system holding another, which SystemIsolationTests
             // forbids and the event exists to replace.
-            _dialogueChannel.Reset();
             _world.GetPool<DialogueLogResetEvent>().Add(_world.NewEntity());
-            _avatars.ClearLocalSprites();
-            _DestroySpriteCopies();
-            StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
+            _avatars.ClearLocalAtlas();
+            _world.Get<DialogueLogArtComp>() = default;
 
-            if (_mwScreen != null)
+            if (_screens.TryGet(out MagicWordsScreen screen))
             {
-                _mwScreen.SkipRequested = false;
-                _mwScreen.ModeRequested = false;
-                _mwScreen.Background.sprite = null;
+                screen.SkipRequested = false;
+                screen.ModeRequested = false;
+                screen.Background.sprite = null;
             }
 
+            // Releasing the atlas takes the three sprites cut from it, and releasing the background
+            // takes the sprite derived from its texture — the whole of _DestroySpriteCopies.
             _ReleaseRequests();
 
-            _mwScreen = null;
-            _camera = null;
+            _backgroundId = 0;
+            _screenInstanceId = 0;
             _screenWidth = -1;
             _screenHeight = -1;
             _TransitionTo(StageState.Idle);
-        }
-
-        private void _DestroySpriteCopies()
-        {
-            foreach (var sprite in _atlasSprites)
-                if (sprite != null)
-                    UnityEngine.Object.Destroy(sprite);
-
-            _atlasSprites = Array.Empty<Sprite>();
-            _sprites.Clear();
         }
 
         private void _ReleaseRequests()
@@ -282,9 +294,7 @@ namespace Client.Adapters.MagicWords.Systems
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
-        public void Inject(DialogueLogChannel obj) => _dialogueChannel = obj;
         public void Inject(FadePlayerService obj) => _tweens = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
-
     }
 }

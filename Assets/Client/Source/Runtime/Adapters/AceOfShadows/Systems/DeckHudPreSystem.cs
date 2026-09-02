@@ -22,7 +22,10 @@ namespace Client.Adapters.AceOfShadows.Systems
         private StackSlotLayoutService _layout;
         private ScreenRegistryService _screens;
         private EcsTagPool<LayoutChangedEvent> _layoutChanged;
-        private AceOfShadowsScreen _scene;
+        // The screen's instance id, not the screen: a system holds no engine object (DEU0146).
+        // It answers the one question the cache was for — is this the screen the cached counters
+        // belong to — and the screen itself is resolved through its registry, per call.
+        private int _screenInstanceId;
         private int _sourceCount = int.MinValue;
         private int _targetCount = int.MinValue;
         private int _totalCards = int.MinValue;
@@ -31,14 +34,14 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         public void Present()
         {
-            if (!_screens.TryGet(out AceOfShadowsScreen current))
+            if (!_screens.TryGet(out AceOfShadowsScreen scene))
             {
-                _scene = null;
+                _screenInstanceId = 0;
                 return;
             }
 
-            if (_scene != current)
-                _ResetFor(current);
+            if (_screenInstanceId != scene.GetInstanceID())
+                _ResetFor(scene);
 
             ref readonly var state = ref _world.Get<DeckStateComp>();
 
@@ -61,49 +64,49 @@ namespace Client.Adapters.AceOfShadows.Systems
             if (_sourceCount != sourceCount)
             {
                 _sourceCount = sourceCount;
-                _scene.SourceCounter.SetText("{0}", sourceCount);
+                scene.SourceCounter.SetText("{0}", sourceCount);
             }
 
             if (_targetCount != targetCount)
             {
                 _targetCount = targetCount;
-                _scene.TargetCounter.SetText("{0}", targetCount);
+                scene.TargetCounter.SetText("{0}", targetCount);
             }
 
             if (!Mathf.Approximately(_speedMultiplier, state.SpeedMultiplier))
             {
                 _speedMultiplier = state.SpeedMultiplier;
-                _scene.SpeedLabel.SetText("×{0:0}", _speedMultiplier);
+                scene.SpeedLabel.SetText("×{0:0}", _speedMultiplier);
             }
 
             if (_isComplete != state.IsComplete)
             {
                 _isComplete = state.IsComplete;
-                _scene.CompletionLabel.gameObject.SetActive(_isComplete);
+                scene.CompletionLabel.gameObject.SetActive(_isComplete);
 
                 if (_isComplete)
-                    _scene.CompletionLabel.SetText("All {0} cards moved.", state.TotalCards);
+                    scene.CompletionLabel.SetText("All {0} cards moved.", state.TotalCards);
             }
 
             if (_layoutChanged.Count == 0 && _totalCards == state.TotalCards)
                 return;
 
             _totalCards = state.TotalCards;
-            _scene.SourceCounter.transform.position =
+            scene.SourceCounter.transform.position =
                 _layout.SlotPosition(state.SourceStack, state.TotalCards) + CounterOffset;
-            _scene.TargetCounter.transform.position =
+            scene.TargetCounter.transform.position =
                 _layout.SlotPosition(state.TargetStack, state.TotalCards) + CounterOffset;
         }
 
         private void _ResetFor(AceOfShadowsScreen scene)
         {
-            _scene = scene;
+            _screenInstanceId = scene.GetInstanceID();
             _sourceCount = int.MinValue;
             _targetCount = int.MinValue;
             _totalCards = int.MinValue;
             _speedMultiplier = float.NaN;
             _isComplete = false;
-            _scene.CompletionLabel.gameObject.SetActive(false);
+            scene.CompletionLabel.gameObject.SetActive(false);
         }
 
         public void Inject(EcsWorld obj)

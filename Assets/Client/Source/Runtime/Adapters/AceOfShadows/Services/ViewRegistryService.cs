@@ -54,11 +54,5 @@ namespace Client.Adapters.AceOfShadows.Services
 
         /// <summary>Every live view. Use it to kill tweens that would outlive the world.</summary>
         public IEnumerable<Transform> Views => _views.Values;
-
-        public void Clear()
-        {
-            _views.Clear();
-            _cards.Clear();
-        }
     }
 }

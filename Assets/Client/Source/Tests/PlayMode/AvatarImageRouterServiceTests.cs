@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.Core.Ports;
+using Client.Simulation.Core.Ports.Requests;
 using Client.Simulation.MagicWords.Ports.Requests;
 using NUnit.Framework;
 using UnityEngine;
@@ -14,29 +14,50 @@ using Object = UnityEngine.Object;
 
 namespace Client.Adapters.Tests
 {
+    /// <summary>
+    /// The avatar router and its local half, against the demo's real atlas.
+    /// </summary>
+    /// <remarks>
+    /// The local loader owns no sprite: it asks <see cref="AddressablesAssetService"/> to cut one
+    /// out of the atlas and keeps the id (adr-an-engine-object-has-one-owner-per-kind). That is
+    /// why the fixture loads the shipped atlas rather than building a sprite table by hand — a
+    /// hand-built table has no owner to cut from, and the thing under test is the cut.
+    /// </remarks>
     public sealed class AvatarImageRouterServiceTests
     {
-        private const float TimeoutSeconds = 5f;
+        private const string AtlasAddress = "art/magic-words/atlas";
+        private const float TimeoutSeconds = 15f;
 
-        private readonly Dictionary<string, Sprite> _sprites = new();
-
+        private AddressablesAssetService _assets;
         private AtlasImageLoaderService _local;
         private WebImageLoaderService _remote;
         private AvatarImageRouterService _router;
-        private Texture2D _atlasTexture;
+        private int _atlasRequestId;
         private Texture2D _pngTexture;
         private string _pngPath;
         private string _pngUrl;
 
-        [SetUp]
-        public void SetUp()
+        [UnitySetUp]
+        public IEnumerator SetUp()
         {
             var log = new UnityLogService("Test.AvatarRouter");
-            _local = new AtlasImageLoaderService(log);
+            _assets = new AddressablesAssetService(log);
+            _local = new AtlasImageLoaderService(log, _assets);
             _remote = new WebImageLoaderService(log);
             _router = new AvatarImageRouterService(_local, _remote);
-            _CreateAtlasSprites();
-            _local.SetSprites(_sprites);
+
+            _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
+            var deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+
+            while (_assets.Poll(_atlasRequestId) == AsyncOpStatus.Pending)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    $"Loading '{AtlasAddress}' never settled within {TimeoutSeconds}s.");
+                yield return null;
+            }
+
+            Assert.That(_assets.Poll(_atlasRequestId), Is.EqualTo(AsyncOpStatus.Done));
+            _router.SetLocalAtlas(_atlasRequestId);
             _CreatePng();
         }
 
@@ -48,14 +69,8 @@ namespace Client.Adapters.Tests
             _local = null;
             _remote = null;
 
-            foreach (var sprite in _sprites.Values)
-                if (sprite != null)
-                    Object.DestroyImmediate(sprite);
-
-            _sprites.Clear();
-
-            if (_atlasTexture != null)
-                Object.DestroyImmediate(_atlasTexture);
+            _assets?.Dispose();
+            _assets = null;
 
             if (_pngTexture != null)
                 Object.DestroyImmediate(_pngTexture);
@@ -73,20 +88,23 @@ namespace Client.Adapters.Tests
 
             Assert.That(_local.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
             Assert.That(_local.TryGetSprite(requestId, out var sprite), Is.True);
-            Assert.That(sprite, Is.SameAs(_sprites[expectedKey]));
+            // GetSprite names its copy "<name>(Clone)".
+            Assert.That(sprite.name, Does.StartWith(expectedKey));
 
             _local.Release(requestId);
+            Assert.That(_local.HeldSpriteCount, Is.Zero,
+                "Releasing the request must release the sprite the service cut for it.");
             _AssertNoOpenRequests();
         }
 
         [Test]
-        public void Local_PendsUntilSpritesAreSet()
+        public void Local_PendsUntilTheAtlasArrives()
         {
-            _local.ClearSprites();
+            _local.ClearAtlas();
             var requestId = _local.Request(new ImageLoadRequest("Sheldon", "ignored"));
 
             Assert.That(_local.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending));
-            _local.SetSprites(_sprites);
+            _local.SetAtlas(_atlasRequestId);
             Assert.That(_local.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
 
             _local.Release(requestId);
@@ -94,13 +112,13 @@ namespace Client.Adapters.Tests
         }
 
         [Test]
-        public void Local_ClearSpritesDoesNotDestroySourceSprites()
+        public void Local_ClearAtlasLeavesTheAtlasWithItsOwner()
         {
-            var sprite = _sprites["avatar-sheldon"];
+            _local.ClearAtlas();
 
-            _local.ClearSprites();
-
-            Assert.That(sprite, Is.Not.Null);
+            Assert.That(_assets.TryGetAsset(_atlasRequestId, out var atlas), Is.True,
+                "The loader borrows the atlas; releasing it is the asset service's business.");
+            Assert.That(atlas, Is.Not.Null);
             _AssertNoOpenRequests();
         }
 
@@ -135,7 +153,7 @@ namespace Client.Adapters.Tests
 
             Assert.That(remoteId, Is.Not.EqualTo(localId));
             Assert.That(_router.TryGetSprite(localId, out var localSprite), Is.True);
-            Assert.That(localSprite, Is.SameAs(_sprites["avatar-sheldon"]));
+            Assert.That(localSprite.name, Does.StartWith("avatar-sheldon"));
             Assert.That(_router.TryGetSprite(remoteId, out var remoteSprite), Is.True);
             Assert.That(remoteSprite, Is.Not.Null);
 
@@ -147,16 +165,16 @@ namespace Client.Adapters.Tests
         [Test]
         public void Router_ModeSwitchDoesNotRewriteExistingRoute()
         {
-            _local.ClearSprites();
+            _local.ClearAtlas();
             var requestId = _router.Request(new ImageLoadRequest("Sheldon", "ignored"));
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Pending));
 
             _router.SetMode(AvatarMode.Remote);
-            _local.SetSprites(_sprites);
+            _router.SetLocalAtlas(_atlasRequestId);
 
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
             Assert.That(_router.TryGetSprite(requestId, out var sprite), Is.True);
-            Assert.That(sprite, Is.SameAs(_sprites["avatar-sheldon"]));
+            Assert.That(sprite.name, Does.StartWith("avatar-sheldon"));
 
             _router.Release(requestId);
             _AssertNoOpenRequests();
@@ -192,28 +210,6 @@ namespace Client.Adapters.Tests
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
         }
 
-        private void _CreateAtlasSprites()
-        {
-            _atlasTexture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
-
-            foreach (var key in new[]
-                     {
-                         "avatar-sheldon",
-                         "avatar-penny",
-                         "avatar-leonard",
-                         "mw-avatar-placeholder"
-                     })
-            {
-                var sprite = Sprite.Create(
-                    _atlasTexture,
-                    new Rect(0f, 0f, 4f, 4f),
-                    new Vector2(0.5f, 0.5f),
-                    100f);
-                sprite.name = key;
-                _sprites.Add(key, sprite);
-            }
-        }
-
         private void _CreatePng()
         {
             _pngTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
@@ -229,6 +225,5 @@ namespace Client.Adapters.Tests
             Assert.That(_local.OpenRequestCount, Is.Zero);
             Assert.That(_remote.OpenRequestCount, Is.Zero);
         }
-
     }
 }

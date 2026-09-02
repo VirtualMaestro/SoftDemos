@@ -1,4 +1,5 @@
 using TMPro;
+using Client.Adapters.Shared;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,12 +17,21 @@ namespace Client.Adapters.PhoenixFlame.Views
         [SerializeField] private FlameColorView flameColor;
         [SerializeField] private Button advanceButton;
         [SerializeField] private TMP_Text phaseLabel;
+        // Optional: a screen that carries none falls back to Camera.main.
+        [Optional] [SerializeField] private Camera stageCamera;
 
         public SpriteRenderer Background => background;
         public Animator FlameAnimator => flameAnimator;
         public FlameColorView FlameColor => flameColor;
         public Button AdvanceButton => advanceButton;
         public TMP_Text PhaseLabel => phaseLabel;
+
+        /// <summary>
+        /// The camera the background is cover-fitted to. It lives on the screen rather than cached
+        /// on the stage system: a camera is a <c>UnityEngine.Object</c> and a system holds none
+        /// (DEU0146). Left unassigned it falls back to <see cref="Camera.main"/>.
+        /// </summary>
+        public Camera StageCamera => stageCamera;
 
         /// <summary>Set by the advance button, cleared by the system that drains it into a command.</summary>
         /// <remarks>

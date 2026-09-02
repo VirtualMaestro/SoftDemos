@@ -1,5 +1,6 @@
 using Client.Adapters.Vendor.OptVList;
 using TMPro;
+using Client.Adapters.Shared;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,8 @@ namespace Client.Adapters.MagicWords.Views
         [SerializeField] private Button avatarModeButton;
         [SerializeField] private TMP_Text avatarModeLabel;
         [SerializeField] private TMP_Text statusLabel;
+        // Optional: a screen that carries none falls back to Camera.main.
+        [Optional] [SerializeField] private Camera stageCamera;
 
         public SpriteRenderer Background => background;
         public ScrollRect LogScroll => logScroll;
@@ -22,6 +25,13 @@ namespace Client.Adapters.MagicWords.Views
         public Button AvatarModeButton => avatarModeButton;
         public TMP_Text AvatarModeLabel => avatarModeLabel;
         public TMP_Text StatusLabel => statusLabel;
+
+        /// <summary>
+        /// The camera the background is cover-fitted to. It lives on the screen rather than
+        /// cached on the stage system: a camera is a <c>UnityEngine.Object</c> and a system
+        /// holds none (DEU0146). Left unassigned it falls back to <see cref="Camera.main"/>.
+        /// </summary>
+        public Camera StageCamera => stageCamera;
 
         /// <summary>Set by a tap on the log, cleared by the system that drains it into a command.</summary>
         /// <remarks>

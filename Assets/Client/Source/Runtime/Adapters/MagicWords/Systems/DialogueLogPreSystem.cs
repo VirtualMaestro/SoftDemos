@@ -1,15 +1,18 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Vendor.OptVList;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
 using DCFApixels.DragonECS;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,14 +20,22 @@ namespace Client.Adapters.MagicWords.Systems
 {
     /// <summary>
     /// Feeds the dialogue <see cref="VList"/> with one data record per visible line. The list owns
-    /// the pooled, virtualized views; this system owns the records only. Content arrives through
-    /// <see cref="DialogueLogChannel"/> and teardown through <c>DialogueLogResetEvent</c>, rather
-    /// than direct calls from the stage system — systems must never hold other systems (see
-    /// SystemIsolationTests).
+    /// the pooled, virtualized views; this system owns the records only. Teardown arrives through
+    /// <c>DialogueLogResetEvent</c> rather than a direct call from the stage system — systems must
+    /// never hold other systems (see SystemIsolationTests).
     /// </summary>
+    /// <remarks>
+    /// It holds no engine object. The four art pieces a line draws with arrive as
+    /// <see cref="DialogueLogArtComp"/> — 4 <c>int</c>s the Input half wrote — and are resolved
+    /// through <see cref="AddressablesAssetService"/> on the call that builds the line; the screen
+    /// and its list come from <see cref="ScreenRegistryService"/> per call. Readiness is
+    /// <c>DemoReadyTag</c>, the same fact its sibling <c>MagicWordsPreSystem</c> gates on, rather
+    /// than a latch of its own (adr-an-engine-object-has-one-owner-per-kind, DEU0146).
+    /// </remarks>
     internal sealed class DialogueLogPreSystem : IEcsPresent, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
-        IEcsInject<FadePlayerService>, IEcsInject<DialogueLogChannel>
+        IEcsInject<FadePlayerService>, IEcsInject<AddressablesAssetService>,
+        IEcsInject<ScreenRegistryService>
     {
         private const float FadeSeconds = 0.2f;
 
@@ -40,28 +51,33 @@ namespace Client.Adapters.MagicWords.Systems
         private ILogService _log;
         private AvatarImageRouterService _avatars;
         private FadePlayerService _tweens;
-        private DialogueLogChannel _channel;
+        private AddressablesAssetService _assets;
+        private ScreenRegistryService _screens;
         private EcsTagPool<DialogueLineBoundTag> _bound;
         private EcsPool<DialogueLineComp> _lines;
         private EcsPool<DialogueTextComp> _texts;
         private EcsPool<SpeakerComp> _speakers;
         private EcsPool<AvatarComp> _avatarData;
         private EcsPool<AvatarLoadComp> _avatarLoads;
-        // The channel nulls Scene when it resets, so teardown needs its own reference.
         private EcsTagPool<DialogueLogResetEvent> _logReset;
-        private VList _list;
+        private EcsTagPool<DemoReadyTag> _demoReady;
 
         public void Present()
         {
             if (_logReset.Count > 0)
                 _ClearViews();
 
-            if (_channel.Scene == null)
+            // The same readiness fact the sibling MagicWordsPreSystem gates on. The Input half
+            // deletes the tag before it releases anything, so this frame's Present is already out
+            // by the time an art id stops resolving.
+            if (_demoReady.Count == 0)
                 return;
 
-            _list = _channel.Scene.LogList;
-            _SpawnVisibleLines();
-            _ApplyAvatars();
+            if (!_screens.TryGet(out MagicWordsScreen screen))
+                return;
+
+            _SpawnVisibleLines(screen);
+            _ApplyAvatars(screen);
         }
 
         /// <summary>The list dies with the pipeline even when no teardown bump arrived first.</summary>
@@ -75,19 +91,24 @@ namespace Client.Adapters.MagicWords.Systems
             foreach (var entityId in _bindings.Keys)
                 _bound.TryDel(entityId);
 
-            if (_list != null && !_list.IsDisposed)
-                _list.Clear(0);
+            if (_screens.TryGet(out MagicWordsScreen screen))
+            {
+                var list = screen.LogList;
 
-            _list = null;
+                if (list != null && !list.IsDisposed)
+                    list.Clear(0);
+            }
+
             _bindings.Clear();
             _pendingLines.Clear();
             _justAddedItemIds.Clear();
             _body.Clear();
         }
 
-        private void _SpawnVisibleLines()
+        private void _SpawnVisibleLines(MagicWordsScreen screen)
         {
-            var mwScreen = _channel.Scene;
+            var list = screen.LogList;
+            ref readonly var art = ref _world.Get<DialogueLogArtComp>();
 
             foreach (var entityId in _world.Where(out VisibleLineAspect _))
                 _pendingLines.Add(entityId);
@@ -110,14 +131,16 @@ namespace Client.Adapters.MagicWords.Systems
                     Side = speakerId >= 0 && _avatarData.Has(speakerId)
                         ? _avatarData.Read(speakerId).Side
                         : AvatarSide.Left,
-                    Bubble = _channel.Bubble,
-                    Frame = _channel.Frame,
-                    Emoji = _channel.Emoji,
+                    Bubble = _Sprite(art.Bubble),
+                    Frame = _Sprite(art.Frame),
+                    Emoji = _assets.TryGetAsset(art.Emoji, out var emoji)
+                        ? emoji as TMP_SpriteAsset
+                        : null,
                     Body = _BuildBody(_texts.Read(entityId).Segments),
-                    Avatar = _channel.Placeholder,
+                    Avatar = _Sprite(art.Placeholder),
                 };
 
-                _list.AddItem(data);
+                list.AddItem(data);
                 _bindings.Add(entityId, data);
                 _bound.TryAdd(entityId);
                 _justAddedItemIds.Add(data.ItemId);
@@ -126,9 +149,9 @@ namespace Client.Adapters.MagicWords.Systems
             if (_pendingLines.Count > 0)
             {
                 Canvas.ForceUpdateCanvases();
-                _list.RefreshViewport();
-                _ScrollToNewest(mwScreen.LogScroll);
-                _list.ForEachVisual(_FadeInJustAdded);
+                list.RefreshViewport();
+                _ScrollToNewest(screen.LogScroll);
+                list.ForEachVisual(_FadeInJustAdded);
                 _justAddedItemIds.Clear();
             }
 
@@ -160,8 +183,11 @@ namespace Client.Adapters.MagicWords.Systems
                 _tweens.FadeIn(view.Group, FadeSeconds);
         }
 
-        private void _ApplyAvatars()
+        private void _ApplyAvatars(MagicWordsScreen screen)
         {
+            var list = screen.LogList;
+            ref readonly var art = ref _world.Get<DialogueLogArtComp>();
+
             foreach (var data in _bindings.Values)
             {
                 var state = AvatarLoadState.Missing;
@@ -184,13 +210,13 @@ namespace Client.Adapters.MagicWords.Systems
                     data.Avatar = sprite;
                 else
                 {
-                    data.Avatar = _channel.Placeholder;
+                    data.Avatar = _Sprite(art.Placeholder);
 
                     if (state == AvatarLoadState.Ready)
                         _log.Error($"Avatar request #{requestId} does not resolve for a dialogue line.");
                 }
 
-                _list.UpdateItem(data);
+                list.UpdateItem(data);
             }
         }
 
@@ -212,6 +238,11 @@ namespace Client.Adapters.MagicWords.Systems
             return _body.ToString();
         }
 
+        /// <summary>The sprite an art id names, resolved through its owner and kept by nobody.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Sprite _Sprite(int requestId) =>
+            _assets.TryGetAsset(requestId, out var asset) ? asset as Sprite : null;
+
         private int _CompareLineIndices(int left, int right) =>
             _lines.Read(left).Index.CompareTo(_lines.Read(right).Index);
 
@@ -225,12 +256,14 @@ namespace Client.Adapters.MagicWords.Systems
             _avatarData = obj.GetPool<AvatarComp>();
             _avatarLoads = obj.GetPool<AvatarLoadComp>();
             _logReset = obj.GetPool<DialogueLogResetEvent>();
+            _demoReady = obj.GetPool<DemoReadyTag>();
         }
 
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AvatarImageRouterService obj) => _avatars = obj;
         public void Inject(FadePlayerService obj) => _tweens = obj;
-        public void Inject(DialogueLogChannel obj) => _channel = obj;
+        public void Inject(AddressablesAssetService obj) => _assets = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
 
         private sealed class VisibleLineAspect : EcsAspect
         {

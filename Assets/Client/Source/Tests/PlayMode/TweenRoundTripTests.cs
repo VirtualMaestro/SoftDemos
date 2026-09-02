@@ -1,11 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Client.Adapters.AceOfShadows;
 using Client.Adapters.AceOfShadows.Components;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.Shared.Services;
-using Client.Adapters.Shared.Stage;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
 using Client.Simulation.Core.Components;
@@ -42,7 +40,6 @@ namespace Client.Adapters.Tests
         private EcsWorld _world;
         private EcsPipeline _pipeline;
         private ViewRegistryService _registry;
-        private CardViewChannel _channel;
         private StackSlotLayoutService _layout;
         private GameObject _view;
         // Only here so the input half builds; it loads nothing, and both must be released.
@@ -60,7 +57,6 @@ namespace Client.Adapters.Tests
             _layout.Recalculate(1080, 1920, 5f);
 
             _world = new EcsWorld();
-            _channel = new CardViewChannel();
             var player = new CardMovePlayerService(_registry);
             _assets = new AddressablesAssetService(new UnityLogService("Test.Tween.Assets"));
             _screens = new ScreenRegistryService();
@@ -68,11 +64,9 @@ namespace Client.Adapters.Tests
                 .Inject(_world)
                 .Inject<ILogService>(new UnityLogService("Test.Tween"))
                 .Inject<ViewRegistryService>(_registry)
-                .Inject(_channel)
                 .Inject(_layout)
                 .Inject(player)
                 .Inject(_assets)
-                .Inject(new SharedUiSprites())
                 .Inject(_screens)
                 .Add(new AceOfShadowsInpSystem(new AceOfShadowsConfig()))
                 .Add(new TweenPlaybackPreSystem())
@@ -178,10 +172,9 @@ namespace Client.Adapters.Tests
 
         private int _CreateMovingEntity(float duration)
         {
+            // The playback system reads an EMPTY REGISTRY as "stage closed" and cancels moves,
+            // so registering the handle is what tells it the stage is open. No CardView needed.
             var handleId = _registry.Register(_view.transform);
-            // The playback system reads an empty channel as "stage closed" and cancels moves,
-            // so the test registers its handle the way the stage system does. No CardView needed.
-            _channel.Add(null, handleId);
 
             var entityId = _world.NewEntity();
             _world.GetPool<ViewHandleComp>().Add(entityId).Id = handleId;

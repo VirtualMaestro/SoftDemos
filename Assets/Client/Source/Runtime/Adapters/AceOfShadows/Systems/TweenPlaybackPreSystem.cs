@@ -21,15 +21,13 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// </remarks>
     internal sealed class TweenPlaybackPreSystem : IEcsInit, IEcsPresent, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
-        IEcsInject<StackSlotLayoutService>, IEcsInject<CardMovePlayerService>,
-        IEcsInject<CardViewChannel>
+        IEcsInject<StackSlotLayoutService>, IEcsInject<CardMovePlayerService>
     {
         private EcsWorld _world;
         private ILogService _log;
         private ViewRegistryService _viewRegistry;
         private StackSlotLayoutService _stackSlotLayout;
         private CardMovePlayerService _tweenPlayer;
-        private CardViewChannel _cardViewChannel;
 
         private EcsTagPool<TweenRunningTag> _runningTweens;
 
@@ -45,7 +43,7 @@ namespace Client.Adapters.AceOfShadows.Systems
             // earlier in the frame, so on the teardown frame this cancels before any move could
             // read as failed. The cards in flight are the simulation's and its reset deletes them;
             // the tween marker is this system's, and dropping it is all a cancellation is.
-            if (_cardViewChannel.Handles.Count == 0)
+            if (_viewRegistry.Count == 0)
                 _ForgetRunningTweens();
             else
                 _StartNewTweens();
@@ -96,7 +94,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         public void Inject(ViewRegistryService obj) => _viewRegistry = obj;
         public void Inject(StackSlotLayoutService obj) => _stackSlotLayout = obj;
         public void Inject(CardMovePlayerService obj) => _tweenPlayer = obj;
-        public void Inject(CardViewChannel obj) => _cardViewChannel = obj;
 
         private sealed class MoveAspect : EcsAspect
         {

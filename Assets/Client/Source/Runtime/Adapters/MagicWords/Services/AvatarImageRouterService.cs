@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
@@ -27,21 +26,21 @@ namespace Client.Adapters.MagicWords.Services
         public AtlasImageLoaderService Local => _local;
         public WebImageLoaderService Remote => _remote;
 
-        /// <summary>Hands the local loader the sprite table it resolves speaker names against.</summary>
+        /// <summary>Hands the local loader the atlas it cuts avatars out of, by request id.</summary>
         /// <remarks>
         /// The atlas loader is reached through the router, never injected on its own. It also
         /// implements <see cref="IImageLoadService"/>, so injecting it would attach it to that
         /// port's injection node and displace this router there — the simulation would then talk
         /// to the atlas directly and the router would never see the request.
         /// </remarks>
-        public void SetLocalSprites(IReadOnlyDictionary<string, Sprite> sprites)
+        public void SetLocalAtlas(int atlasRequestId)
         {
-            _local.SetSprites(sprites);
+            _local.SetAtlas(atlasRequestId);
         }
 
-        public void ClearLocalSprites()
+        public void ClearLocalAtlas()
         {
-            _local.ClearSprites();
+            _local.ClearAtlas();
         }
 
         public void SetMode(AvatarMode mode) => Mode = mode;

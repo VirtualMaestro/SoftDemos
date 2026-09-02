@@ -1,42 +1,83 @@
 using System;
 using System.Collections.Generic;
 using Client.Adapters.Shared.Async;
+using Client.Adapters.Shared.Services;
+using Client.Adapters.Shared.Stage;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Ports.Requests;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Client.Adapters.MagicWords.Services
 {
+    /// <summary>
+    /// Serves avatars out of the demo's sprite atlas, by request id like every other loader.
+    /// </summary>
+    /// <remarks>
+    /// It owns no sprite. The atlas belongs to <see cref="AddressablesAssetService"/> and so does
+    /// every sprite cut from it: this service asks for a cut, keeps the <c>int</c> that comes back,
+    /// and releases it through the same owner
+    /// (adr-an-engine-object-has-one-owner-per-kind). It used to hold the copies the stage system
+    /// had already cut, which made two holders of one set of sprites and left the destroying to
+    /// whichever of them remembered.
+    /// </remarks>
     public sealed class AtlasImageLoaderService : IImageLoadService, IDisposable
     {
         private const string PlaceholderKey = "mw-avatar-placeholder";
 
         private readonly RequestTable<Entry> _requests = new();
-        private readonly Dictionary<int, Sprite> _resolved = new();
-        private readonly ILogService _log;
 
-        private IReadOnlyDictionary<string, Sprite> _sprites;
+        /// <summary>Request id -> the derived sprite's id, which the asset service owns.</summary>
+        private readonly Dictionary<int, int> _resolved = new();
+
+        /// <summary>The names the atlas carries, read once when it is handed over.</summary>
+        private readonly HashSet<string> _names = new(StringComparer.Ordinal);
+
+        private readonly ILogService _log;
+        private readonly AddressablesAssetService _assets;
+
+        private int _atlasRequestId;
         private bool _isDisposed;
 
-        public AtlasImageLoaderService(ILogService log)
+        public AtlasImageLoaderService(ILogService log, AddressablesAssetService assets)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
+            _assets = assets ?? throw new ArgumentNullException(nameof(assets));
         }
 
         public int OpenRequestCount => _requests.Count;
+
+        /// <summary>Derived sprite ids currently held. Each one is a row in the asset service.</summary>
         public int HeldSpriteCount => _resolved.Count;
 
-        public void SetSprites(IReadOnlyDictionary<string, Sprite> sprites)
+        /// <summary>Hands over the atlas the avatars are cut from, by the id it loaded under.</summary>
+        public void SetAtlas(int atlasRequestId)
         {
-            _sprites = sprites ?? throw new ArgumentNullException(nameof(sprites));
+            _atlasRequestId = atlasRequestId;
             _resolved.Clear();
+            _names.Clear();
+
+            if (!_assets.TryGetAsset(atlasRequestId, out var asset) || asset is not SpriteAtlas atlas)
+            {
+                _log.Error($"Avatar atlas #{atlasRequestId} did not resolve to a SpriteAtlas.");
+                _atlasRequestId = 0;
+                return;
+            }
+
+            foreach (var name in StageContent.ReadAtlasNames(atlas, out _))
+                _names.Add(name);
         }
 
-        public void ClearSprites()
+        /// <summary>
+        /// Forgets the atlas. The sprites cut from it are released with it by the asset service,
+        /// which is the owner — this only drops the ids naming them.
+        /// </summary>
+        public void ClearAtlas()
         {
-            _sprites = null;
+            _atlasRequestId = 0;
             _resolved.Clear();
+            _names.Clear();
         }
 
         public int Request(in ImageLoadRequest request)
@@ -58,16 +99,16 @@ namespace Client.Adapters.MagicWords.Services
             if (entry.Status != AsyncOpStatus.Pending)
                 return entry.Status;
 
-            if (_sprites == null)
+            if (_atlasRequestId == 0)
                 return AsyncOpStatus.Pending;
 
             var spriteKey = entry.SpriteKey;
 
-            if (!_sprites.TryGetValue(spriteKey, out var sprite))
+            if (!_names.Contains(spriteKey))
             {
                 spriteKey = PlaceholderKey;
 
-                if (!_sprites.TryGetValue(spriteKey, out sprite))
+                if (!_names.Contains(spriteKey))
                 {
                     entry.Status = AsyncOpStatus.Failed;
                     _log.Error(
@@ -76,22 +117,42 @@ namespace Client.Adapters.MagicWords.Services
                 }
             }
 
+            var derivedId = StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteKey);
+
+            if (derivedId == 0)
+            {
+                entry.Status = AsyncOpStatus.Failed;
+                return entry.Status;
+            }
+
             entry.Status = AsyncOpStatus.Done;
-            _resolved.Add(requestId, sprite);
+            _resolved.Add(requestId, derivedId);
             return entry.Status;
         }
 
         /// <summary>
-        /// Turns a request id back into the atlas sprite it resolved. Adapter-side only — this
-        /// signature is exactly what the port is not allowed to expose.
+        /// Turns a request id back into the sprite the asset service cut for it. Adapter-side only
+        /// — this signature is exactly what the port is not allowed to expose.
         /// </summary>
-        public bool TryGetSprite(int requestId, out Sprite sprite) =>
-            _resolved.TryGetValue(requestId, out sprite);
+        public bool TryGetSprite(int requestId, out Sprite sprite)
+        {
+            sprite = null;
+
+            if (!_resolved.TryGetValue(requestId, out var derivedId) ||
+                !_assets.TryGetAsset(derivedId, out var asset))
+                return false;
+
+            sprite = asset as Sprite;
+            return sprite != null;
+        }
 
         public void Release(int requestId)
         {
-            if (_requests.Remove(requestId, out _))
-                _resolved.Remove(requestId);
+            if (!_requests.Remove(requestId, out _))
+                return;
+
+            if (_resolved.Remove(requestId, out var derivedId))
+                _assets.Release(derivedId);
         }
 
         public void Dispose()
@@ -100,8 +161,14 @@ namespace Client.Adapters.MagicWords.Services
                 return;
 
             _isDisposed = true;
+
+            // The asset service is disposed by the composition root too, and a released id reads as
+            // unknown either way. Releasing here keeps the leak counters honest when a demo closes.
+            foreach (var derivedId in _resolved.Values)
+                _assets.Release(derivedId);
+
             _requests.Clear();
-            ClearSprites();
+            ClearAtlas();
         }
 
         private sealed class Entry

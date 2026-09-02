@@ -17,19 +17,11 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         public void Cleanup()
         {
-            foreach (var entityId in _world.Where(out ViewsResetAspect _))
-                _world.DelEntity(entityId);
-
             foreach (var entityId in _world.Where(out LayoutChangedAspect _))
                 _world.DelEntity(entityId);
         }
 
         public void Inject(EcsWorld obj) => _world = obj;
-
-        private sealed class ViewsResetAspect : EcsAspect
-        {
-            public readonly EcsTagPool<ViewsResetEvent> _ = Inc;
-        }
 
         private sealed class LayoutChangedAspect : EcsAspect
         {

@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
@@ -13,11 +13,14 @@ namespace Client.Adapters.MagicWords.Systems
     /// <summary>Mirrors dialogue load state and avatar mode onto the two labels of the demo.</summary>
     /// <remarks>
     /// The drawing half of the dialogue stage. It writes nothing to the world and holds no state
-    /// but what it last rendered, so the two fields below are a repaint cache, not a channel: drop
-    /// them and the screen still ends up correct, only repainted every frame.
+    /// but what it last rendered, so the fields below are a repaint cache: drop them and the screen
+    /// still ends up correct, only repainted every frame.
     /// <para>It draws while <see cref="DemoReadyTag"/> exists, which is the Input half saying the
     /// content landed and the screen is covered. That tag is the only thing the two halves share —
     /// the load state machine stays private to the half that owns it.</para>
+    /// <para>The screen is resolved through its registry per call and never kept: a system holds no
+    /// engine object (DEU0146). Its INSTANCE ID is kept instead, which is the one question the old
+    /// reference answered — is this the screen the repaint cache belongs to.</para>
     /// </remarks>
     internal sealed class MagicWordsPreSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<AvatarImageRouterService>, IEcsInject<ScreenRegistryService>
@@ -31,26 +34,26 @@ namespace Client.Adapters.MagicWords.Systems
         private AvatarImageRouterService _avatars;
         private ScreenRegistryService _screens;
         private EcsTagPool<DemoReadyTag> _demoReady;
-        private MagicWordsScreen _screen;
+        private int _screenInstanceId;
         private DialogueLoadState _shownDialogueState = (DialogueLoadState)(-1);
         private AvatarMode _shownAvatarMode = (AvatarMode)(-1);
 
         public void Present()
         {
-            if (_demoReady.Count == 0 || !_screens.TryGet(out MagicWordsScreen current))
+            if (_demoReady.Count == 0 || !_screens.TryGet(out MagicWordsScreen screen))
             {
-                _ResetFor(null);
+                _Forget();
                 return;
             }
 
-            if (_screen != current)
-                _ResetFor(current);
+            if (_screenInstanceId != screen.GetInstanceID())
+                _ResetFor(screen);
 
-            _DrawStatusLabel();
-            _DrawAvatarModeLabel();
+            _DrawStatusLabel(screen);
+            _DrawAvatarModeLabel(screen);
         }
 
-        private void _DrawStatusLabel()
+        private void _DrawStatusLabel(MagicWordsScreen screen)
         {
             ref readonly var dialogue = ref _world.Get<DialogueStateComp>();
 
@@ -59,18 +62,18 @@ namespace Client.Adapters.MagicWords.Systems
 
             _shownDialogueState = dialogue.State;
             var failed = dialogue.State == DialogueLoadState.Failed;
-            _screen.StatusLabel.gameObject.SetActive(dialogue.State != DialogueLoadState.Ready);
-            _screen.StatusLabel.text = failed ? FailedStatus : LoadingStatus;
+            screen.StatusLabel.gameObject.SetActive(dialogue.State != DialogueLoadState.Ready);
+            screen.StatusLabel.text = failed ? FailedStatus : LoadingStatus;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _DrawAvatarModeLabel()
+        private void _DrawAvatarModeLabel(MagicWordsScreen screen)
         {
             if (_shownAvatarMode == _avatars.Mode)
                 return;
 
             _shownAvatarMode = _avatars.Mode;
-            _screen.AvatarModeLabel.text = _shownAvatarMode == AvatarMode.Local
+            screen.AvatarModeLabel.text = _shownAvatarMode == AvatarMode.Local
                 ? LocalModeLabel
                 : RemoteModeLabel;
         }
@@ -78,7 +81,15 @@ namespace Client.Adapters.MagicWords.Systems
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ResetFor(MagicWordsScreen screen)
         {
-            _screen = screen;
+            _screenInstanceId = screen.GetInstanceID();
+            _shownDialogueState = (DialogueLoadState)(-1);
+            _shownAvatarMode = (AvatarMode)(-1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void _Forget()
+        {
+            _screenInstanceId = 0;
             _shownDialogueState = (DialogueLoadState)(-1);
             _shownAvatarMode = (AvatarMode)(-1);
         }

@@ -1,4 +1,5 @@
 using TMPro;
+using Client.Adapters.Shared;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,8 @@ namespace Client.Adapters.AceOfShadows.Views
         [SerializeField] private Button speedButton;
         [SerializeField] private TMP_Text speedLabel;
         [SerializeField] private CardView cardPrefab;
+        // Optional: a screen that carries none falls back to Camera.main.
+        [Optional] [SerializeField] private Camera stageCamera;
 
         public Transform CardRoot => cardRoot;
         public SpriteRenderer Background => background;
@@ -22,6 +25,14 @@ namespace Client.Adapters.AceOfShadows.Views
         public TMP_Text CompletionLabel => completionLabel;
         public TMP_Text SpeedLabel => speedLabel;
         public CardView CardPrefab => cardPrefab;
+
+        /// <summary>
+        /// The camera the background is cover-fitted to. It lives on the screen rather than cached
+        /// on the stage system: a camera is a <c>UnityEngine.Object</c> and a system holds none
+        /// (DEU0146). Left unassigned it falls back to <see cref="Camera.main"/>, which is what the
+        /// cache used to do on its first frame.
+        /// </summary>
+        public Camera StageCamera => stageCamera;
 
         /// <summary>
         /// The speed button's own target graphic, so the stage can skin it with the shared atlas

@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Components;
@@ -22,8 +22,13 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// <remarks>
     /// The Animator, the phase label and the button state moved to
     /// <see cref="PhoenixFlamePreSystem"/>, which is the half that reads the world and draws.
-    /// What is left is what the Input phase is for: the port polling, the recorded press, the
-    /// content this system owns and must destroy, and every write into the world.
+    /// What is left is what the Input phase is for: the port polling, the recorded press, and every
+    /// write into the world.
+    /// <para>It holds no engine object. The atlas, the background and the 6 sprites cut out of the
+    /// atlas belong to <see cref="AddressablesAssetService"/> under ids of their own; the screen
+    /// belongs to <see cref="ScreenRegistryService"/> and is resolved per call. The sprites are
+    /// resolved once, at the hand-over to the view that shows them
+    /// (adr-an-engine-object-has-one-owner-per-kind, DEU0146).</para>
     /// </remarks>
     internal sealed class PhoenixFlameInpSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
@@ -47,18 +52,24 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private const string DemoName = "Phoenix Flame";
         private const int DemoIndex = 2;
 
+        /// <summary>Ids of the four flame frames, handed out by the asset service.</summary>
+        private readonly int[] _flameFrameIds = new int[FlameFrameSpriteNames.Length];
+
         private EcsWorld _world;
         private ILogService _log;
         private AddressablesAssetService _assets;
         private ScreenRegistryService _screens;
         private StageState _state;
-        private PhoenixFlameScreen _flameScreen;
-        private Camera _camera;
-        private Sprite[] _flameFrames;
-        private Sprite _smokeSprite;
-        private Sprite _sparkSprite;
-        private Sprite _backgroundSprite;
-        private bool _ownsBackgroundSprite;
+
+        /// <summary>
+        /// The instance id of the screen this system opened on, so a reopened scene reads as a
+        /// different screen without a reference to the old one being kept.
+        /// </summary>
+        private int _screenInstanceId;
+
+        private int _smokeId;
+        private int _sparkId;
+        private int _backgroundId;
         private int _atlasRequestId;
         private int _backgroundRequestId;
         private int _screenWidth = -1;
@@ -66,7 +77,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         public void Input()
         {
-            // Not "_flameScreen != null": what must be torn down is this system's own state, and
+            // Not "the screen is gone": what must be torn down is this system's own state, and
             // that is what a non-Idle state says. The screen is a Unity object the scene unload can
             // destroy before this phase runs again — see AceOfShadowsInpSystem for the leak that
             // gating on it caused.
@@ -98,11 +109,12 @@ namespace Client.Adapters.PhoenixFlame.Systems
         {
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (!_screens.TryGet(out PhoenixFlameScreen current) || current == _flameScreen ||
+            if (!_screens.TryGet(out PhoenixFlameScreen current) ||
+                current.GetInstanceID() == _screenInstanceId ||
                 screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != DemoIndex)
                 return;
 
-            _flameScreen = current;
+            _screenInstanceId = current.GetInstanceID();
             _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
             _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
             _TransitionTo(StageState.Loading);
@@ -110,13 +122,16 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         private void _ContinueLoading()
         {
+            if (!_screens.TryGet(out PhoenixFlameScreen screen))
+                return;
+
             var atlasStatus = _assets.Poll(_atlasRequestId);
             var backgroundStatus = _assets.Poll(_backgroundRequestId);
 
             if (atlasStatus == AsyncOpStatus.Failed || backgroundStatus == AsyncOpStatus.Failed)
             {
                 _log.Error("Phoenix Flame content load failed; retrying while the scene remains active.");
-                _FailLoad();
+                _FailLoad(screen);
                 return;
             }
 
@@ -125,40 +140,63 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
             if (!_ResolveContent())
             {
-                _FailLoad();
+                _FailLoad(screen);
                 return;
             }
 
-            _flameScreen.Background.sprite = _backgroundSprite;
+            if (_assets.TryGetAsset(_backgroundId, out var background))
+                screen.Background.sprite = background as Sprite;
+
             // The screen is covered now, so the shell can hand over.
             _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
-            _flameScreen.FlameColor.SetSprites(_flameFrames, _smokeSprite, _sparkSprite);
-            _RecalculateLayout();
+            _HandSpritesToView(screen);
+            _RecalculateLayout(screen);
             // FlameSetupSimSystem takes this in the Sim phase, which is why there is no longer a
             // Starting state to wait in: the view half finds the flame already active.
             _world.GetPool<StartFlameCommand>().Add(_world.NewEntity());
             // Discard a press made during the load. The screen was not running yet.
-            _flameScreen.AdvanceRequested = false;
+            screen.AdvanceRequested = false;
             _TransitionTo(StageState.Ready);
+        }
+
+        /// <summary>
+        /// Resolves the 6 particle sprites and hands them to the view that shows them.
+        /// </summary>
+        /// <remarks>
+        /// The view holds them for as long as it draws with them, which is what a view is for; the
+        /// asset service still OWNS them and destroys them when the atlas is released, and the
+        /// teardown tells the view to let go first. Nothing is resolved into a field here.
+        /// </remarks>
+        private void _HandSpritesToView(PhoenixFlameScreen screen)
+        {
+            var frames = new Sprite[_flameFrameIds.Length];
+
+            for (var index = 0; index < _flameFrameIds.Length; index++)
+                frames[index] = _Sprite(_flameFrameIds[index]);
+
+            screen.FlameColor.SetSprites(frames, _Sprite(_smokeId), _Sprite(_sparkId));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _RunReady()
         {
-            if (Screen.width != _screenWidth || Screen.height != _screenHeight)
-                _RecalculateLayout();
-
-            if (!_flameScreen.AdvanceRequested)
+            if (!_screens.TryGet(out PhoenixFlameScreen screen))
                 return;
 
-            _flameScreen.AdvanceRequested = false;
+            if (Screen.width != _screenWidth || Screen.height != _screenHeight)
+                _RecalculateLayout(screen);
+
+            if (!screen.AdvanceRequested)
+                return;
+
+            screen.AdvanceRequested = false;
             _world.GetPool<AdvanceFlamePhaseCommand>().Add(_world.NewEntity());
         }
 
         /// <summary>Shows the failure label and returns to <c>Idle</c>, which retries while the scene is open.</summary>
-        private void _FailLoad()
+        private void _FailLoad(PhoenixFlameScreen screen)
         {
-            _flameScreen.PhaseLabel.text = FailedLabel;
+            screen.PhaseLabel.text = FailedLabel;
             _Teardown(false);
         }
 
@@ -172,26 +210,26 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 return false;
             }
 
-            _backgroundSprite = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log, out _ownsBackgroundSprite);
+            _backgroundId = StageContent.ResolveBackground(
+                _assets, _backgroundRequestId, DemoName, _log);
 
-            if (_backgroundSprite == null)
+            if (_backgroundId == 0)
                 return false;
 
-            // GetSprite returns a copy this system owns. Teardown destroys all of them.
-            _flameFrames = new Sprite[FlameFrameSpriteNames.Length];
+            // Each cut runs once and the asset service owns the copy from then on; releasing the
+            // atlas destroys all six, which is what _DestroySpriteCopies used to do by hand.
             var hasEveryFrame = true;
 
-            for (var i = 0; i < FlameFrameSpriteNames.Length; i++)
+            for (var index = 0; index < FlameFrameSpriteNames.Length; index++)
             {
-                _flameFrames[i] = atlasAsset.GetSprite(FlameFrameSpriteNames[i]);
-                hasEveryFrame &= _flameFrames[i] != null;
+                _flameFrameIds[index] = _DeriveFromAtlas(FlameFrameSpriteNames[index]);
+                hasEveryFrame &= _flameFrameIds[index] != 0;
             }
 
-            _smokeSprite = atlasAsset.GetSprite(SmokeSpriteName);
-            _sparkSprite = atlasAsset.GetSprite(SparkSpriteName);
+            _smokeId = _DeriveFromAtlas(SmokeSpriteName);
+            _sparkId = _DeriveFromAtlas(SparkSpriteName);
 
-            if (hasEveryFrame && _smokeSprite != null && _sparkSprite != null)
+            if (hasEveryFrame && _smokeId != 0 && _sparkId != 0)
                 return true;
 
             _log.Error("Phoenix Flame atlas is missing one of " +
@@ -199,17 +237,29 @@ namespace Client.Adapters.PhoenixFlame.Systems
             return false;
         }
 
-        private void _RecalculateLayout()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int _DeriveFromAtlas(string spriteName) =>
+            StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteName);
+
+        /// <summary>The sprite an id names, resolved through its owner and kept by nobody here.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Sprite _Sprite(int requestId) =>
+            _assets.TryGetAsset(requestId, out var asset) ? asset as Sprite : null;
+
+        private void _RecalculateLayout(PhoenixFlameScreen screen)
         {
             _screenWidth = Screen.width;
             _screenHeight = Screen.height;
-            _camera = StageContent.FitBackground(_camera, _flameScreen.Background.transform,
-                _backgroundSprite, DemoName, _log, out _);
+
+            _assets.TryGetAsset(_backgroundId, out var background);
+
+            StageContent.FitBackground(screen.StageCamera, screen.Background.transform,
+                background as Sprite, DemoName, _log, out _);
         }
 
         private void _Teardown(bool resetFlame)
         {
-            if (_state == StageState.Idle && _flameScreen == null && _atlasRequestId == 0 &&
+            if (_state == StageState.Idle && _screenInstanceId == 0 && _atlasRequestId == 0 &&
                 _backgroundRequestId == 0)
                 return;
 
@@ -219,41 +269,25 @@ namespace Client.Adapters.PhoenixFlame.Systems
             if (resetFlame)
                 _world.GetPool<ResetFlameCommand>().Add(_world.NewEntity());
 
-            // Keep this order. The view must release its sprite references before you destroy them.
-            if (_flameScreen != null)
+            // Keep this order. The view must release its sprite references before the owner
+            // destroys them, which _ReleaseRequests below does by releasing the atlas.
+            if (_screens.TryGet(out PhoenixFlameScreen screen))
             {
-                _flameScreen.FlameColor.ClearSprites();
-                _flameScreen.AdvanceRequested = false;
-                _flameScreen.Background.sprite = null;
+                screen.FlameColor.ClearSprites();
+                screen.AdvanceRequested = false;
+                screen.Background.sprite = null;
             }
 
-            _DestroySpriteCopies();
-            StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
             _ReleaseRequests();
 
-            _flameScreen = null;
-            _camera = null;
+            _smokeId = 0;
+            _sparkId = 0;
+            _backgroundId = 0;
+            System.Array.Clear(_flameFrameIds, 0, _flameFrameIds.Length);
+            _screenInstanceId = 0;
             _screenWidth = -1;
             _screenHeight = -1;
             _TransitionTo(StageState.Idle);
-        }
-
-        private void _DestroySpriteCopies()
-        {
-            if (_flameFrames != null)
-                foreach (var frame in _flameFrames)
-                    if (frame != null)
-                        Object.Destroy(frame);
-
-            if (_smokeSprite != null)
-                Object.Destroy(_smokeSprite);
-
-            if (_sparkSprite != null)
-                Object.Destroy(_sparkSprite);
-
-            _flameFrames = null;
-            _smokeSprite = null;
-            _sparkSprite = null;
         }
 
         private void _ReleaseRequests()

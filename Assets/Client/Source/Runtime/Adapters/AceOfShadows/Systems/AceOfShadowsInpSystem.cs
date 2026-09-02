@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.AceOfShadows.Components;
@@ -23,20 +24,29 @@ namespace Client.Adapters.AceOfShadows.Systems
 {
     /// <summary>
     /// Runs the card demo's screen lifecycle: loads atlas+background, spawns the card view pool,
-    /// drains the speed button and the finished tweens into commands, tears everything down on close.
+    /// binds a view to every card the simulation dealt, drains the speed button and the finished
+    /// tweens into commands, and tears everything down on close.
     /// </summary>
     /// <remarks>
     /// The demo's drawing lives in <see cref="CardBindingPreSystem"/>, <see cref="DeckHudPreSystem"/>
     /// and <see cref="TweenPlaybackPreSystem"/>: they are the half that reads the world and paints it,
     /// so this system keeps the decisions. What is here is what the Input phase is for — the port
-    /// polling, the recorded press, the tween player's completion queue, the content it owns and
-    /// must destroy, and every write into the world.
+    /// polling, the recorded press, the tween player's completion queue, and every write into the
+    /// world.
+    /// <para>It holds no engine object. The atlas, the background and the 14 sprites cut from the
+    /// atlas belong to <see cref="AddressablesAssetService"/> under ids of their own; the card views
+    /// belong to <see cref="ViewRegistryService"/> under handles; the screen belongs to
+    /// <see cref="ScreenRegistryService"/> and is resolved per call. What stays here is
+    /// <c>int</c>s and a cursor (adr-an-engine-object-has-one-owner-per-kind, DEU0146).</para>
+    /// <para>Binding lives here rather than in <see cref="CardBindingPreSystem"/> because the face
+    /// a card shows is chosen by the BIND ORDER — <c>cursor % faces</c> — and the cursor is this
+    /// system's state. The Present half keeps what it can answer from the world alone: the seating
+    /// and the sorting order.</para>
     /// </remarks>
     internal sealed class AceOfShadowsInpSystem : IEcsInput, IEcsDestroy,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<AddressablesAssetService>,
-        IEcsInject<CardMovePlayerService>, IEcsInject<SharedUiSprites>, IEcsInject<CardViewChannel>,
-        IEcsInject<ScreenRegistryService>
+        IEcsInject<CardMovePlayerService>, IEcsInject<ScreenRegistryService>
     {
         private const string AtlasAddress = "art/ace-of-shadows/atlas";
         private const string BackgroundAddress = "art/ace-of-shadows/background";
@@ -50,8 +60,12 @@ namespace Client.Adapters.AceOfShadows.Systems
         private static readonly float[] SpeedCycle = { 1f, 4f, 8f };
 
         private readonly AceOfShadowsConfig _config;
-        private readonly Sprite[] _atlasSprites = new Sprite[FaceCount + 1];
-        private readonly Sprite[] _faces = new Sprite[FaceCount];
+
+        /// <summary>Face ids in atlas-name order, handed out by the asset service.</summary>
+        private readonly int[] _faceIds = new int[FaceCount];
+
+        /// <summary>Every card view this system spawned, by registry handle and in spawn order.</summary>
+        private readonly List<int> _handles = new();
 
         private EcsWorld _world;
         private ILogService _log;
@@ -59,17 +73,21 @@ namespace Client.Adapters.AceOfShadows.Systems
         private StackSlotLayoutService _layout;
         private AddressablesAssetService _assets;
         private CardMovePlayerService _cardMovePlayer;
-        private SharedUiSprites _uiSprites;
-        private CardViewChannel _channel;
         private ScreenRegistryService _screens;
         private StageState _state;
-        private AceOfShadowsScreen _aosScreen;
-        private Camera _camera;
-        private Sprite _cardBack;
-        private Sprite _backgroundSprite;
-        private bool _ownsBackgroundSprite;
+
+        /// <summary>
+        /// The instance id of the screen this system opened on, so a reopened scene reads as a
+        /// different screen without a reference to the old one being kept.
+        /// </summary>
+        private int _screenInstanceId;
+
+        private int _backId;
+        private int _backgroundId;
         private int _atlasRequestId;
         private int _backgroundRequestId;
+        private int _bindCursor;
+        private bool _warnedOutOfViews;
         private int _screenWidth = -1;
         private int _screenHeight = -1;
         private int _speedIndex;
@@ -86,10 +104,10 @@ namespace Client.Adapters.AceOfShadows.Systems
         {
             _DrainCompletedTweens();
 
-            // Not "_aosScreen != null": what must be torn down is this system's own state — the
-            // requests, the sprites, the view pool — and that is what a non-Idle state says. The
-            // screen is a Unity object that can be destroyed by the scene unload before this phase
-            // runs again, and gating teardown on it leaked every request on the frames where it was.
+            // Not "the screen is gone": what must be torn down is this system's own state — the
+            // requests, the ids, the view pool — and that is what a non-Idle state says. The screen
+            // is a Unity object the scene unload can destroy before this phase runs again, and
+            // gating teardown on it leaked every request on the frames where it did.
             if (_state != StageState.Idle && _state != StageState.Closing &&
                 (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
                  !_screens.TryGet<AceOfShadowsScreen>(out _)))
@@ -154,11 +172,12 @@ namespace Client.Adapters.AceOfShadows.Systems
         {
             ref readonly var screen = ref _world.Get<ScreenStateComp>();
 
-            if (!_screens.TryGet(out AceOfShadowsScreen current) || current == _aosScreen ||
+            if (!_screens.TryGet(out AceOfShadowsScreen current) ||
+                current.GetInstanceID() == _screenInstanceId ||
                 screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != DemoIndex)
                 return;
 
-            _aosScreen = current;
+            _screenInstanceId = current.GetInstanceID();
             _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
             _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
 
@@ -167,6 +186,9 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         private void _ContinueLoading()
         {
+            if (!_screens.TryGet(out AceOfShadowsScreen screen))
+                return;
+
             if (!_contentReady)
             {
                 var atlasStatus = _assets.Poll(_atlasRequestId);
@@ -189,66 +211,136 @@ namespace Client.Adapters.AceOfShadows.Systems
                 }
 
                 _contentReady = true;
-                _channel.SetSprites(_cardBack, _faces);
-                _aosScreen.Background.sprite = _backgroundSprite;
+
+                if (_assets.TryGetAsset(_backgroundId, out var background))
+                    screen.Background.sprite = background as Sprite;
+
                 // The screen is covered now, so the shell can hand over. The cards still arrive
                 // over the next few frames, on top of the background.
                 _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
-                _SkinSpeedButton();
-                _RecalculateLayout();
+                _SkinSpeedButton(screen);
+                _RecalculateLayout(screen);
             }
 
-            var remaining = _config.CardCount - _channel.Views.Count;
+            var remaining = _config.CardCount - _handles.Count;
             var spawnCount = Mathf.Min(SpawnPerFrame, remaining);
 
             for (var index = 0; index < spawnCount; index++)
             {
-                var poolIndex = _channel.Views.Count;
-                var cardView = UnityEngine.Object.Instantiate(_aosScreen.CardPrefab, _aosScreen.CardRoot);
+                var poolIndex = _handles.Count;
+                var cardView = UnityEngine.Object.Instantiate(screen.CardPrefab, screen.CardRoot);
                 cardView.name = $"Card {poolIndex:000}";
-                _channel.Add(cardView, _views.Register(cardView.transform, cardView));
+                _handles.Add(_views.Register(cardView.transform, cardView));
             }
 
-            if (_channel.Views.Count != _config.CardCount)
+            if (_handles.Count != _config.CardCount)
                 return;
 
-            // Rewinding the bindings unseats every card on its own, so no separate layout event.
-            _world.GetPool<ViewsResetEvent>().Add(_world.NewEntity());
             _world.GetPool<DealDeckCommand>().Add(_world.NewEntity());
             _TransitionTo(StageState.Ready);
         }
 
         /// <summary>Skins the speed button with the shell's shared <c>ui-button</c> sprite.</summary>
         /// <remarks>
-        /// The sprite is borrowed, not loaded. A second request on the shared atlas would make a
-        /// second copy of the same pixels. Does nothing if the shell has not loaded yet.
+        /// The sprite is resolved through its owner, not loaded here. A second request on the shared
+        /// atlas would make a second copy of the same pixels, and the shell already derived this one
+        /// under the id <c>ShellSkinComp</c> carries. Does nothing if the shell has not loaded yet.
         /// </remarks>
-        private void _SkinSpeedButton()
+        private void _SkinSpeedButton(AceOfShadowsScreen screen)
         {
-            var image = _aosScreen.SpeedButtonImage;
+            var image = screen.SpeedButtonImage;
 
-            if (image == null || _uiSprites.Button == null)
+            if (image == null)
                 return;
 
-            image.sprite = _uiSprites.Button;
+            var skinId = _world.Get<ShellSkinComp>().Button;
+
+            if (skinId == 0 || !_assets.TryGetAsset(skinId, out var asset) || asset is not Sprite button)
+                return;
+
+            image.sprite = button;
             image.type = Image.Type.Sliced;
         }
 
         private void _RunReady()
         {
-            if (Screen.width != _screenWidth || Screen.height != _screenHeight)
-                _RecalculateLayout();
-
-            if (!_aosScreen.SpeedRequested)
+            if (!_screens.TryGet(out AceOfShadowsScreen screen))
                 return;
 
-            _aosScreen.SpeedRequested = false;
+            if (Screen.width != _screenWidth || Screen.height != _screenHeight)
+                _RecalculateLayout(screen);
+
+            _BindUnboundCards();
+
+            if (!screen.SpeedRequested)
+                return;
+
+            screen.SpeedRequested = false;
             _speedIndex = (_speedIndex + 1) % SpeedCycle.Length;
             var multiplier = SpeedCycle[_speedIndex];
             var commandEntity = _world.NewEntity();
             _world.GetPool<SetDeckSpeedCommand>().Add(commandEntity).Multiplier = multiplier;
         }
 
+        /// <summary>
+        /// Gives every card the simulation dealt one of the pooled views, in spawn order.
+        /// </summary>
+        /// <remarks>
+        /// The face is <c>cursor % FaceCount</c> — a property of the BIND order and never of the
+        /// entity, which is why this belongs to the half that owns the cursor. Both sprites are
+        /// resolved from the asset service on the call that configures the view, and neither is
+        /// kept afterwards.
+        /// </remarks>
+        private void _BindUnboundCards()
+        {
+            foreach (var entityId in _world.Where(out UnboundAspect aspect))
+            {
+                if (_bindCursor >= _handles.Count)
+                {
+                    if (!_warnedOutOfViews)
+                    {
+                        _warnedOutOfViews = true;
+                        _log.Warn($"Ace of Shadows ran out of views after {_bindCursor} binding(s).");
+                    }
+
+                    return;
+                }
+
+                var handleId = _handles[_bindCursor];
+
+                if (!_views.TryResolve(handleId, out var viewTransform, out var cardView) ||
+                    cardView == null)
+                {
+                    _log.Warn($"Card view handle #{handleId} does not resolve. Skipping the bind.");
+                    _bindCursor++;
+                    continue;
+                }
+
+                ref readonly var card = ref aspect.Cards.Read(entityId);
+
+                if (_assets.TryGetAsset(_backId, out var back) &&
+                    _assets.TryGetAsset(_faceIds[_bindCursor % FaceCount], out var face))
+                    cardView.Configure(back as Sprite, face as Sprite);
+
+                cardView.ResetToBack();
+                viewTransform.position = _layout.SlotPosition(card.StackIndex, card.OrderInStack);
+                cardView.SetSortingOrder(card.OrderInStack);
+                aspect.Views.Add(entityId).Id = handleId;
+                aspect.Seated.TryAdd(entityId);
+                _bindCursor++;
+            }
+        }
+
+        /// <summary>
+        /// Resolves the atlas, cuts the 14 card sprites out of it under ids of their own, and
+        /// resolves the background to the id it is served under.
+        /// </summary>
+        /// <remarks>
+        /// The atlas is read ONCE per open, for its NAMES: <c>GetSprites</c> hands back a fresh
+        /// clone per sprite, so those clones are destroyed here and the asset service cuts the
+        /// copies that live. It owns them from then on and destroys them when the atlas request is
+        /// released. Nothing engine-typed survives this method.
+        /// </remarks>
         private bool _ResolveContent()
         {
             var atlas = StageContent.GetAsset<SpriteAtlas>(_assets, _atlasRequestId);
@@ -259,119 +351,115 @@ namespace Client.Adapters.AceOfShadows.Systems
                 return false;
             }
 
-            _backgroundSprite = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log, out _ownsBackgroundSprite);
+            _backgroundId = StageContent.ResolveBackground(
+                _assets, _backgroundRequestId, DemoName, _log);
 
-            if (_backgroundSprite == null)
+            if (_backgroundId == 0)
                 return false;
 
-            if (atlas.spriteCount != _atlasSprites.Length)
+            if (atlas.spriteCount != FaceCount + 1)
             {
-                _log.Error($"Ace of Shadows atlas contains {atlas.spriteCount} sprite(s); expected {_atlasSprites.Length}.");
-                _DestroySpriteCopies();
-                StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
+                _log.Error($"Ace of Shadows atlas contains {atlas.spriteCount} sprite(s); expected {FaceCount + 1}.");
                 return false;
             }
 
-            var spriteCount = atlas.GetSprites(_atlasSprites);
+            var names = StageContent.ReadAtlasNames(atlas, out var readCount);
 
-            if (spriteCount != atlas.spriteCount)
+            if (readCount != atlas.spriteCount)
             {
-                _log.Error($"Ace of Shadows atlas returned {spriteCount} of {atlas.spriteCount} sprite(s).");
-                _DestroySpriteCopies();
-                StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
+                _log.Error($"Ace of Shadows atlas returned {readCount} of {atlas.spriteCount} sprite(s).");
                 return false;
             }
+
+            // Sorted by name, so the faces keep the order the demo has always dealt them in.
+            Array.Sort(names, StringComparer.Ordinal);
 
             var faceIndex = 0;
 
-            foreach (var sprite in _atlasSprites)
+            foreach (var spriteName in names)
             {
-                var spriteName = sprite.name.Replace("(Clone)", string.Empty).Trim();
-
                 if (spriteName == BackSpriteName)
-                    _cardBack = sprite;
-                else if (faceIndex < _faces.Length)
-                    _faces[faceIndex++] = sprite;
+                    _backId = _DeriveFromAtlas(spriteName);
+                else if (faceIndex < _faceIds.Length)
+                    _faceIds[faceIndex++] = _DeriveFromAtlas(spriteName);
             }
 
-            if (_cardBack == null || faceIndex != FaceCount)
+            if (_backId == 0 || faceIndex != FaceCount || Array.IndexOf(_faceIds, 0) >= 0)
             {
                 _log.Error($"Ace of Shadows atlas is missing '{BackSpriteName}' or one of {FaceCount} faces.");
-                _DestroySpriteCopies();
-                StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
                 return false;
             }
 
-            Array.Sort(_faces, (left, right) => string.CompareOrdinal(left.name, right.name));
             return true;
         }
 
-        private void _RecalculateLayout()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int _DeriveFromAtlas(string spriteName) =>
+            StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteName);
+
+        private void _RecalculateLayout(AceOfShadowsScreen screen)
         {
             _screenWidth = Screen.width;
             _screenHeight = Screen.height;
-            _camera = StageContent.FitBackground(_camera, _aosScreen.Background.transform,
-                _backgroundSprite, DemoName, _log, out var orthographicSize);
+
+            _assets.TryGetAsset(_backgroundId, out var background);
+
+            StageContent.FitBackground(screen.StageCamera, screen.Background.transform,
+                background as Sprite, DemoName, _log, out var orthographicSize);
+
             _layout.Recalculate(_screenWidth, _screenHeight, orthographicSize);
             _world.GetPool<LayoutChangedEvent>().Add(_world.NewEntity());
         }
 
         private void _Teardown(bool resetDeck)
         {
-            if (_state == StageState.Idle && _aosScreen == null && _atlasRequestId == 0 &&
-                _backgroundRequestId == 0 && _channel.Views.Count == 0)
+            if (_state == StageState.Idle && _screenInstanceId == 0 && _atlasRequestId == 0 &&
+                _backgroundRequestId == 0 && _handles.Count == 0)
                 return;
 
             foreach (var readyEntity in _world.Where(out SingleTagAspect<DemoReadyTag> _))
                 _world.DelEntity(readyEntity);
 
-            _cardMovePlayer.KillTweensFor(_channel.Handles);
+            _cardMovePlayer.KillTweensFor(_handles);
 
             if (resetDeck)
                 _world.GetPool<ResetDeckCommand>().Add(_world.NewEntity());
 
-            foreach (var handle in _channel.Handles)
-                _views.Unregister(handle);
-
-            foreach (var cardView in _channel.Views)
-                if (cardView != null)
+            foreach (var handle in _handles)
+            {
+                if (_views.TryResolve(handle, out _, out var cardView) && cardView != null)
                     UnityEngine.Object.Destroy(cardView.gameObject);
 
-            _channel.Clear();
-            _DestroySpriteCopies();
-            StageContent.DestroyOwnedSprite(ref _backgroundSprite, ref _ownsBackgroundSprite);
+                _views.Unregister(handle);
+            }
 
-            if (_aosScreen != null)
+            _handles.Clear();
+
+            if (_screens.TryGet(out AceOfShadowsScreen screen))
             {
-                _aosScreen.SpeedRequested = false;
-                _aosScreen.Background.sprite = null;
-                var speedButtonImage = _aosScreen.SpeedButtonImage;
+                screen.SpeedRequested = false;
+                screen.Background.sprite = null;
+                var speedButtonImage = screen.SpeedButtonImage;
 
                 if (speedButtonImage != null)
                     speedButtonImage.sprite = null;
             }
 
+            // Releasing the atlas takes every sprite derived from it, so the ids are dropped rather
+            // than freed one by one — the whole of what used to be _DestroySpriteCopies.
             _ReleaseRequests();
 
-            _aosScreen = null;
-            _camera = null;
+            _backId = 0;
+            _backgroundId = 0;
+            Array.Clear(_faceIds, 0, _faceIds.Length);
+            _screenInstanceId = 0;
+            _bindCursor = 0;
+            _warnedOutOfViews = false;
             _contentReady = false;
             _speedIndex = 0;
             _screenWidth = -1;
             _screenHeight = -1;
             _TransitionTo(StageState.Idle);
-        }
-
-        private void _DestroySpriteCopies()
-        {
-            foreach (var sprite in _atlasSprites)
-                if (sprite != null)
-                    UnityEngine.Object.Destroy(sprite);
-
-            Array.Clear(_atlasSprites, 0, _atlasSprites.Length);
-            Array.Clear(_faces, 0, _faces.Length);
-            _cardBack = null;
         }
 
         private void _ReleaseRequests()
@@ -395,9 +483,13 @@ namespace Client.Adapters.AceOfShadows.Systems
         public void Inject(StackSlotLayoutService obj) => _layout = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(CardMovePlayerService obj) => _cardMovePlayer = obj;
-        public void Inject(SharedUiSprites obj) => _uiSprites = obj;
-        public void Inject(CardViewChannel obj) => _channel = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;
 
+        private sealed class UnboundAspect : EcsAspect
+        {
+            public readonly EcsPool<CardComp> Cards = Inc;
+            public readonly EcsPool<ViewHandleComp> Views = Exc;
+            public readonly EcsTagPool<CardSeatedTag> Seated = Opt;
+        }
     }
 }

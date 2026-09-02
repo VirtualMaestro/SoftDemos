@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
@@ -13,10 +13,13 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// <summary>Mirrors <see cref="FlameStateComp"/> onto the Animator, the phase label and the button.</summary>
     /// <remarks>
     /// The drawing half of the flame stage. It writes nothing to the world and holds no state but
-    /// what it last rendered, so the fields below are a repaint cache, not a channel.
+    /// what it last rendered, so the fields below are a repaint cache.
     /// <para>It needs no readiness flag of its own: <see cref="FlameStateComp.IsActive"/> already
     /// says whether the demo is running, and the button stays off until it is — a tap during the
     /// load must not queue an advance.</para>
+    /// <para>The screen is resolved through its registry per call and never kept: a system holds no
+    /// engine object (DEU0146). Its INSTANCE ID is kept instead, which is the one question the old
+    /// reference answered — is this the screen the repaint cache belongs to.</para>
     /// </remarks>
     internal sealed class PhoenixFlamePreSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<ILogService>, IEcsInject<ScreenRegistryService>
@@ -44,7 +47,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private EcsWorld _world;
         private ILogService _log;
         private ScreenRegistryService _screens;
-        private PhoenixFlameScreen _screen;
+        private int _screenInstanceId;
         private FlamePhase _shownPhase;
         private FlamePhase _shownLabelPhase = (FlamePhase)(-1);
         // Nullable so the first write always reaches the button. The scene starts it interactable.
@@ -64,42 +67,43 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         public void Present()
         {
-            if (!_screens.TryGet(out PhoenixFlameScreen current))
+            if (!_screens.TryGet(out PhoenixFlameScreen screen))
             {
-                _ResetPhaseTriggers();
-                _ResetFor(null);
+                // No screen means no Animator to clear: the scene that owned it is gone, and the
+                // repaint cache is all that is left to forget.
+                _Forget();
                 return;
             }
 
-            if (_screen != current)
-                _ResetFor(current);
+            if (_screenInstanceId != screen.GetInstanceID())
+                _ResetFor(screen);
 
             ref readonly var flame = ref _world.Get<FlameStateComp>();
 
             if (!flame.IsActive)
             {
-                _EndRun();
+                _EndRun(screen);
                 return;
             }
 
             if (_hasSnapped)
-                _DriveAnimator(in flame);
+                _DriveAnimator(screen, in flame);
             else
-                _Snap(in flame);
+                _Snap(screen, in flame);
 
-            _ApplyInteractable(!flame.IsTransitioning);
-            _ApplyLabel(flame.CurrentPhase);
+            _ApplyInteractable(screen, !flame.IsTransitioning);
+            _ApplyLabel(screen, flame.CurrentPhase);
         }
 
         /// <summary>Puts the Animator on the phase the demo starts in, without a blend.</summary>
-        private void _Snap(in FlameStateComp flame)
+        private void _Snap(PhoenixFlameScreen screen, in FlameStateComp flame)
         {
             _hasSnapped = true;
             // Play the configured phase. The controller default state does not matter.
             _shownPhase = flame.CurrentPhase;
             // Use Play, not a trigger. The start phase must snap, and a trigger would blend.
-            _ResetPhaseTriggers();
-            _screen.FlameAnimator.Play(PhaseHashes[(int)flame.CurrentPhase], 0, 0f);
+            _ResetPhaseTriggers(screen);
+            screen.FlameAnimator.Play(PhaseHashes[(int)flame.CurrentPhase], 0, 0f);
 
             if (Mathf.Approximately(flame.TransitionDurationSeconds, AuthoredTransitionSeconds))
                 return;
@@ -110,45 +114,45 @@ namespace Client.Adapters.PhoenixFlame.Systems
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _DriveAnimator(in FlameStateComp flame)
+        private void _DriveAnimator(PhoenixFlameScreen screen, in FlameStateComp flame)
         {
             if (!flame.IsTransitioning || _shownPhase == flame.NextPhase)
                 return;
 
             _shownPhase = flame.NextPhase;
             // Triggers latch. Clear the other two before you set the one you want.
-            _ResetPhaseTriggers();
-            _screen.FlameAnimator.SetTrigger(PhaseTriggers[(int)flame.NextPhase]);
+            _ResetPhaseTriggers(screen);
+            screen.FlameAnimator.SetTrigger(PhaseTriggers[(int)flame.NextPhase]);
         }
 
-        private void _ResetPhaseTriggers()
+        private static void _ResetPhaseTriggers(PhoenixFlameScreen screen)
         {
-            // `?.` skips Unity's null overload. Teardown runs while the scene closes.
-            if (_screen == null || _screen.FlameAnimator == null)
+            // Teardown runs while the scene closes, so the Animator can already be destroyed.
+            if (screen.FlameAnimator == null)
                 return;
 
             foreach (var trigger in PhaseTriggers)
-                _screen.FlameAnimator.ResetTrigger(trigger);
+                screen.FlameAnimator.ResetTrigger(trigger);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _ApplyInteractable(bool interactable)
+        private void _ApplyInteractable(PhoenixFlameScreen screen, bool interactable)
         {
             if (_shownInteractable == interactable)
                 return;
 
             _shownInteractable = interactable;
-            _screen.AdvanceButton.interactable = interactable;
+            screen.AdvanceButton.interactable = interactable;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _ApplyLabel(FlamePhase phase)
+        private void _ApplyLabel(PhoenixFlameScreen screen, FlamePhase phase)
         {
             if (_shownLabelPhase == phase)
                 return;
 
             _shownLabelPhase = phase;
-            _screen.PhaseLabel.text = _GetPhaseLabel(phase);
+            screen.PhaseLabel.text = _GetPhaseLabel(phase);
         }
 
         private static string _GetPhaseLabel(FlamePhase phase)
@@ -167,15 +171,15 @@ namespace Client.Adapters.PhoenixFlame.Systems
         /// Clearing the triggers here is what makes a reopen start clean. The Animator survives one,
         /// and a latched trigger fires again the moment the graph evaluates.
         /// </remarks>
-        private void _EndRun()
+        private void _EndRun(PhoenixFlameScreen screen)
         {
             // Disable the button for the whole load. A tap must not queue an advance.
-            _ApplyInteractable(false);
+            _ApplyInteractable(screen, false);
 
             if (!_hasSnapped)
                 return;
 
-            _ResetPhaseTriggers();
+            _ResetPhaseTriggers(screen);
             _hasSnapped = false;
             _shownPhase = FlamePhase.Orange;
             _shownLabelPhase = (FlamePhase)(-1);
@@ -183,7 +187,16 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         private void _ResetFor(PhoenixFlameScreen screen)
         {
-            _screen = screen;
+            _screenInstanceId = screen.GetInstanceID();
+            _shownPhase = FlamePhase.Orange;
+            _shownLabelPhase = (FlamePhase)(-1);
+            _shownInteractable = null;
+            _hasSnapped = false;
+        }
+
+        private void _Forget()
+        {
+            _screenInstanceId = 0;
             _shownPhase = FlamePhase.Orange;
             _shownLabelPhase = (FlamePhase)(-1);
             _shownInteractable = null;
