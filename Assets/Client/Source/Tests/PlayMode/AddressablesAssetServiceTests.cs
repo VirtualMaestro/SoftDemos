@@ -81,6 +81,63 @@ namespace Client.Adapters.Tests
         }
 
         [UnityTest]
+        public IEnumerator DerivedSprite_IsServedByItsOwnId_AndDiesWithItsParent()
+        {
+            var atlasId = _source.Request(new AssetLoadRequest(KnownAddress));
+            yield return _PollUntilSettled(atlasId);
+
+            Assert.That(_source.Poll(atlasId), Is.EqualTo(AsyncOpStatus.Done),
+                $"Loading '{KnownAddress}' should reach Done before anything is cut from it.");
+
+            var derivedId = _source.Derive(atlasId, parent =>
+            {
+                var sprite = Sprite.Create(
+                    new Texture2D(2, 2), new Rect(0f, 0f, 2f, 2f), new Vector2(0.5f, 0.5f));
+
+                sprite.name = $"cut-from-{parent.name}";
+                return sprite;
+            });
+
+            Assert.That(derivedId, Is.Not.Zero, "A derived entry must get an id of its own.");
+            Assert.That(derivedId, Is.Not.EqualTo(atlasId), "The copy is not the parent.");
+
+            Assert.That(_source.Poll(derivedId), Is.EqualTo(AsyncOpStatus.Done),
+                "A derived entry is Done the moment it is cut — nothing loads.");
+
+            Assert.That(_source.TryGetAsset(derivedId, out var copy), Is.True,
+                "A derived entry is served through the same TryGetAsset as a loaded one.");
+            Assert.That(copy, Is.Not.Null, "The copy must resolve to a live object.");
+
+            Assert.That(_source.HeldAssetCount, Is.EqualTo(2),
+                "The parent and the copy are two held rows, and the leak floor counts both.");
+
+            // The whole point of the ownership: the caller releases the PARENT and never the copy.
+            _source.Release(atlasId);
+
+            Assert.That(_source.TryGetAsset(derivedId, out _), Is.False,
+                "Releasing the parent must take its derived entries with it.");
+            Assert.That(_source.OpenRequestCount, Is.Zero,
+                "Releasing the parent must empty the request table, children included.");
+            Assert.That(_source.HeldAssetCount, Is.Zero,
+                "Releasing the parent must empty the asset table, children included.");
+        }
+
+        [UnityTest]
+        public IEnumerator Derive_FromAParentThatIsNotDone_ReportsAndHandsBackNoId()
+        {
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Assets\].*Derive from #9999"));
+
+            var derivedId = _source.Derive(9999, _ => new Texture2D(2, 2));
+
+            Assert.That(derivedId, Is.Zero,
+                "A parent that never reached Done hands back the no-request sentinel.");
+            Assert.That(_source.OpenRequestCount, Is.Zero,
+                "A rejected Derive must file nothing.");
+
+            yield break;
+        }
+
+        [UnityTest]
         public IEnumerator Poll_OnUnknownOrReleasedId_IsPendingAndNeverThrows()
         {
             Assert.That(_source.Poll(9999), Is.EqualTo(AsyncOpStatus.Pending),

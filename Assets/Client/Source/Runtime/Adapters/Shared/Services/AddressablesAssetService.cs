@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Client.Adapters.Shared.Async;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.Core.Ports.Requests;
@@ -17,6 +18,13 @@ namespace Client.Adapters.Shared.Services
     /// under the request id, and <see cref="TryGetAsset"/> — a signature the port is not allowed to
     /// carry — is the only way back to it. That is what lets a system decide *which* asset a view
     /// shows without <c>Client.Simulation</c> knowing that <c>UnityEngine.Object</c> exists.
+    ///
+    /// This is also the owner of every object DERIVED from a loaded asset — a sprite cut from an
+    /// atlas, a sprite created from a texture — because a copy lives no longer than the handle its
+    /// parent was loaded under. <see cref="Derive"/> cuts it once, keys it by an id of its own, and
+    /// serves it through the same <see cref="TryGetAsset"/>; releasing the parent destroys it. The
+    /// alternative is what this project used to do: every system that cut a copy kept it and
+    /// destroyed it, and the same bookkeeping stood in four places.
     /// </summary>
     public sealed class AddressablesAssetService : IAssetService, IDisposable
     {
@@ -30,16 +38,41 @@ namespace Client.Adapters.Shared.Services
             _log = log ?? throw new ArgumentNullException(nameof(log));
         }
 
-        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
-        public int OpenRequestCount => _requests.Count;
+        /// <summary>
+        /// Loads started but not yet released. Must reach 0 on a clean shutdown.
+        /// </summary>
+        /// <remarks>
+        /// Derived entries are deliberately not counted: <see cref="Derive"/> starts nothing, it
+        /// cuts a copy out of something already loaded, and a caller checking that every REQUEST it
+        /// made came back is asking about loads. <see cref="HeldAssetCount"/> is the count that
+        /// includes them.
+        /// </remarks>
+        public int OpenRequestCount
+        {
+            get
+            {
+                var count = 0;
 
-        /// <summary>Assets currently held. Must reach 0 on a clean shutdown.</summary>
+                foreach (var entry in _requests.Values)
+                {
+                    if (entry.ParentId == 0)
+                        count++;
+                }
+
+                return count;
+            }
+        }
+
+        /// <summary>
+        /// Assets currently held, loaded and derived alike — a sprite cut from an atlas counts as
+        /// its own row. Must reach 0 on a clean shutdown.
+        /// </summary>
         public int HeldAssetCount => _assets.Count;
 
         public int Request(in AssetLoadRequest request)
         {
-            var entry = new Entry(request.Address);
-            var requestId = _requests.Add(entry);
+            var entry = new Entry(request.Address, parentId: 0);
+            var requestId = _Add(entry);
 
             if (_isDisposed)
             {
@@ -94,13 +127,58 @@ namespace Client.Adapters.Shared.Services
         /// </summary>
         public bool TryGetAsset(int requestId, out Object asset) => _assets.TryGetValue(requestId, out asset);
 
+        /// <summary>
+        /// Cuts one object out of a loaded one and keeps it under an id of its own — a sprite from
+        /// an atlas, a sprite from a texture. Adapter-side only, like <see cref="TryGetAsset"/>.
+        ///
+        /// <paramref name="cut"/> is the caller's factory, so this service holds no atlas- and no
+        /// texture-specific code and grows no second loading pipeline: it takes a parent id and a
+        /// way to make the copy, runs it ONCE, and owns the result from then on. Returns 0 — the
+        /// "no request" sentinel every id carries — when the parent is not Done or the factory
+        /// produced nothing.
+        /// </summary>
+        public int Derive(int parentId, Func<Object, Object> cut)
+        {
+            if (cut is null)
+                throw new ArgumentNullException(nameof(cut));
+
+            if (!TryGetAsset(parentId, out var parent))
+            {
+                _log.Error($"Derive from #{parentId} rejected: the parent is not Done.");
+                return 0;
+            }
+
+            var derived = cut(parent);
+
+            if (derived == null)
+            {
+                _log.Error($"Derive from #{parentId} produced nothing.");
+                return 0;
+            }
+
+            var entry = new Entry($"derived from #{parentId}", parentId)
+            {
+                Status = AsyncOpStatus.Done
+            };
+
+            var requestId = _Add(entry);
+            _assets.Add(requestId, derived);
+            return requestId;
+        }
+
+        /// <summary>
+        /// Releases the request, and every object derived from it first — a copy cut from an asset
+        /// cannot outlive the handle that asset was loaded under.
+        /// </summary>
         public void Release(int requestId)
         {
             if (!_requests.Remove(requestId, out var entry))
                 return;
 
-            _assets.Remove(requestId);
-            _ReleaseHandleQuietly(entry);
+            // The parent leaves the table before the walk, so a child never finds it and the
+            // recursion is one level deep whatever the caller passes.
+            _ReleaseDerivedChildrenOf(requestId);
+            _ReleaseOwn(requestId, entry);
         }
 
         /// <summary>
@@ -114,11 +192,81 @@ namespace Client.Adapters.Shared.Services
 
             _isDisposed = true;
 
+            // Derived copies first: each one is a live object cut from an asset whose handle the
+            // next loop releases, and the engine destroys a copy on its own for nobody.
             foreach (var entry in _requests.Values)
-                _ReleaseHandleQuietly(entry);
+            {
+                if (entry.ParentId != 0)
+                    _DestroyDerived(entry.Id);
+            }
+
+            foreach (var entry in _requests.Values)
+            {
+                if (entry.ParentId == 0)
+                    _ReleaseHandleQuietly(entry);
+            }
 
             _requests.Clear();
             _assets.Clear();
+        }
+
+        /// <summary>Files the entry and stamps it with the id the table minted for it.</summary>
+        private int _Add(Entry entry)
+        {
+            var requestId = _requests.Add(entry);
+            entry.Id = requestId;
+            return requestId;
+        }
+
+        /// <summary>
+        /// Releases every entry derived from <paramref name="parentId"/>. The ids are collected
+        /// first: <see cref="RequestTable{TRequest}.Values"/> is the dictionary's own live
+        /// collection, and releasing while enumerating it throws.
+        /// </summary>
+        private void _ReleaseDerivedChildrenOf(int parentId)
+        {
+            List<int> children = null;
+
+            foreach (var candidate in _requests.Values)
+            {
+                if (candidate.ParentId != parentId)
+                    continue;
+
+                children ??= new List<int>();
+                children.Add(candidate.Id);
+            }
+
+            if (children is null)
+                return;
+
+            foreach (var childId in children)
+                Release(childId);
+        }
+
+        /// <summary>
+        /// Frees what one entry held: a derived entry owns a copy this service cut and destroys it,
+        /// a loaded entry owns an Addressables handle and releases it. A derived entry has no
+        /// handle, so <see cref="_ReleaseHandleQuietly"/> is not a path it can take.
+        /// </summary>
+        private void _ReleaseOwn(int requestId, Entry entry)
+        {
+            if (entry.ParentId != 0)
+            {
+                _DestroyDerived(requestId);
+                return;
+            }
+
+            _assets.Remove(requestId);
+            _ReleaseHandleQuietly(entry);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void _DestroyDerived(int requestId)
+        {
+            if (_assets.TryGetValue(requestId, out var derived) && derived != null)
+                Object.Destroy(derived);
+
+            _assets.Remove(requestId);
         }
 
         private static AsyncOpStatus _Classify(Entry entry, out string failureDetail)
@@ -166,10 +314,22 @@ namespace Client.Adapters.Shared.Services
         {
             public readonly string Address;
 
+            /// <summary>The entry this one was cut from, or 0 when Addressables loaded it. A
+            /// derived entry carries no handle and its object is destroyed rather than
+            /// released.</summary>
+            public readonly int ParentId;
+
+            /// <summary>The id the table minted, so a parent can find its children by it.</summary>
+            public int Id;
+
             public AsyncOperationHandle<Object> Handle;
             public AsyncOpStatus Status = AsyncOpStatus.Pending;
 
-            public Entry(string address) => Address = address;
+            public Entry(string address, int parentId)
+            {
+                Address = address;
+                ParentId = parentId;
+            }
         }
     }
 }
