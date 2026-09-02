@@ -1,4 +1,5 @@
-﻿using Client.Simulation.Core.Phases;
+using Client.Simulation.Core.Phases;
+using Client.Adapters.Shared.Services;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.Core.Navigation.Components;
 using DCFApixels.DragonECS;
@@ -15,34 +16,31 @@ namespace Client.Adapters.Shell.Systems
     /// <para>It also removes a hazard the callback carried: a click could arrive between
     /// <c>MenuScreen.SetDemos</c> enabling the buttons and <c>BuildAndInit</c> injecting the world.
     /// A recorded press just waits for the first tick.</para>
+    /// <para>The two views come from <see cref="ScreenRegistryService"/> per call rather than from
+    /// the constructor: a system holds no engine object (DEU0146), and the registry already scans
+    /// the Boot scene it was built in.</para>
     /// </remarks>
-    internal sealed class ShellInpSystem : IEcsInput, IEcsInject<EcsWorld>
+    internal sealed class ShellInpSystem : IEcsInput, IEcsInject<EcsWorld>,
+        IEcsInject<ScreenRegistryService>
     {
-        private readonly MenuScreen _menu;
-        private readonly DemoHudView _demoHud;
-
         private EcsWorld _world;
+        private ScreenRegistryService _screens;
         private EcsPool<OpenDemoCommand> _openDemo;
         private EcsPool<CloseDemoCommand> _closeDemo;
 
-        public ShellInpSystem(MenuScreen menu, DemoHudView demoHud)
-        {
-            _menu = menu;
-            _demoHud = demoHud;
-        }
-
         public void Input()
         {
-            if (_menu.RequestedDemoIndex != MenuScreen.NoDemoRequested)
+            if (_screens.TryGet(out MenuScreen menu) &&
+                menu.RequestedDemoIndex != MenuScreen.NoDemoRequested)
             {
-                _openDemo.Add(_world.NewEntity()).DemoIndex = _menu.RequestedDemoIndex;
-                _menu.RequestedDemoIndex = MenuScreen.NoDemoRequested;
+                _openDemo.Add(_world.NewEntity()).DemoIndex = menu.RequestedDemoIndex;
+                menu.RequestedDemoIndex = MenuScreen.NoDemoRequested;
             }
 
-            if (!_demoHud.CloseRequested)
+            if (!_screens.TryGet(out DemoHudView demoHud) || !demoHud.CloseRequested)
                 return;
 
-            _demoHud.CloseRequested = false;
+            demoHud.CloseRequested = false;
             _closeDemo.Add(_world.NewEntity());
         }
 
@@ -52,5 +50,7 @@ namespace Client.Adapters.Shell.Systems
             _openDemo = obj.GetPool<OpenDemoCommand>();
             _closeDemo = obj.GetPool<CloseDemoCommand>();
         }
+
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
     }
 }

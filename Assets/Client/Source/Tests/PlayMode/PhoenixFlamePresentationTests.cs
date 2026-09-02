@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Text.RegularExpressions;
 using Client.Adapters.PhoenixFlame.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
 using Client.Simulation.Core.Navigation;
@@ -49,6 +50,14 @@ namespace Client.Adapters.Tests
             Assert.That(boot.World, Is.Not.Null, "Boot.Start must create its world.");
             // Boot's shell skin holds three requests for the whole session; that is the floor.
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+
+            // The shell keeps its 3 loads for the whole session, and the sprites it CUT from
+            // those atlases are rows of their own in the same table (DEU0146: the asset service
+            // owns every copy). So the leak floor is measured once the shell is up rather than
+            // spelled as a constant — the cut count follows the demo catalog.
+            yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
+                "The shell skin never finished loading.", 10f);
+            var heldFloor = boot.Assets.HeldAssetCount;
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
             var world = boot.World;
 
@@ -181,7 +190,7 @@ namespace Client.Adapters.Tests
             Assert.That(UnityEngine.Object.FindObjectsByType<PhoenixFlameScreen>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
             var closedState = world.Get<FlameStateComp>();
             Assert.That(closedState.IsActive, Is.False);
             Assert.That(closedState.IsTransitioning, Is.False);

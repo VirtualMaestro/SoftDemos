@@ -21,6 +21,24 @@ namespace Client.Adapters.Shell.Views
         /// </remarks>
         public bool CloseRequested { get; set; }
 
+        /// <summary>
+        /// The group the shell fades this HUD in with. It sits on this object, so the view resolves
+        /// it once and the system that fades reads it here — a system holds no engine object of its
+        /// own (DEU0146).
+        /// </summary>
+        public CanvasGroup Group
+        {
+            get
+            {
+                if (_group == null)
+                    _group = GetComponent<CanvasGroup>();
+
+                return _group;
+            }
+        }
+
+        private CanvasGroup _group;
+
         public void SetDemos(IReadOnlyList<DemoEntry> demos)
         {
             _demos = demos;

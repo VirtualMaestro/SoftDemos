@@ -78,11 +78,10 @@ namespace Client.Simulation.Tests
             "Client.Adapters.AceOfShadows.Services.CardMovePlayerService",
             "Client.Adapters.AceOfShadows.Services.StackSlotLayoutService",
 
-            // Shared adapter state. Data the systems pass to each other, not behaviour.
-            "Client.Adapters.Shared.Stage.SharedUiSprites",
-            "Client.Adapters.AceOfShadows.CardViewChannel",
+            // The registry of live screen views. What the systems pass to each other is ints on
+            // adapter-owned components now: the three lent-content objects that used to sit here
+            // went with adr-an-engine-object-has-one-owner-per-kind.
             "Client.Adapters.Shared.Services.ScreenRegistryService",
-            "Client.Adapters.MagicWords.DialogueLogChannel",
         };
 
         /// <summary>

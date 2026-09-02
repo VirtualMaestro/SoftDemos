@@ -2,6 +2,7 @@
 using System.Collections;
 using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
 using Client.Simulation.MagicWords;
@@ -41,6 +42,14 @@ namespace Client.Adapters.Tests
             // Boot's shell skin holds three requests for the whole session; that is the floor.
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
             Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
+
+            // The shell keeps its 3 loads for the whole session, and the sprites it CUT from
+            // those atlases are rows of their own in the same table (DEU0146: the asset service
+            // owns every copy). So the leak floor is measured once the shell is up rather than
+            // spelled as a constant — the cut count follows the demo catalog.
+            yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
+                "The shell skin never finished loading.", 10f);
+            var heldFloor = boot.Assets.HeldAssetCount;
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
 
             yield return _Open(boot.World);
@@ -130,7 +139,7 @@ namespace Client.Adapters.Tests
             Assert.That(Object.FindObjectsByType<DialogueLineView>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
             Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
             Assert.That(boot.Avatars.Local.OpenRequestCount, Is.Zero);
             Assert.That(boot.Avatars.Local.HeldSpriteCount, Is.Zero);

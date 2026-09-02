@@ -1,46 +1,31 @@
-﻿using Client.Adapters.Shell.Systems;
-using Client.Adapters.Shell.Views;
+using Client.Adapters.Shell.Systems;
 using DCFApixels.DragonECS;
-using UnityEngine;
 
 namespace Client.Adapters.Shell
 {
     public sealed class ShellModule : IEcsModule
     {
-        private readonly MenuScreen _menu;
-        private readonly DemoHudView _demoHud;
-        private readonly GameObject _loadingIndicator;
-        private readonly ShellSkinView _skin;
         private readonly DemoEntry[] _demos;
 
-        public ShellModule(
-            MenuScreen menu,
-            DemoHudView demoHud,
-            GameObject loadingIndicator,
-            ShellSkinView skin,
-            DemoEntry[] demos)
+        public ShellModule(DemoEntry[] demos)
         {
-            _menu = menu;
-            _demoHud = demoHud;
-            _loadingIndicator = loadingIndicator;
-            _skin = skin;
             _demos = demos;
         }
 
         /// <summary>Adds the shell: the menu, the demo HUD and the screen it fades between.</summary>
         /// <remarks>
-        /// Five scene references against nought or one for the demo features, and that is the shape
-        /// of the shell rather than a smell: every one of them stays a serialized field on the
-        /// composition root, which needs them for <c>SetDemos</c> and for its inspector checks, so
-        /// this constructor relays what the root already holds instead of taking ownership of it.
-        /// Construction happens inside <c>Import</c>, which runs during <c>BuildAndInit</c>, so the
-        /// scene objects the presentation system reads in its own constructor are already live.
+        /// It used to relay five scene references from the composition root, which was the one
+        /// feature whose systems held scene objects. They come from <c>ScreenRegistryService</c>
+        /// now — it already scans the Boot scene it is built in — so the only thing that crosses
+        /// here is the demo catalog, which is plain data
+        /// (adr-an-engine-object-has-one-owner-per-kind, DEU0146). <c>Boot</c> keeps its serialized
+        /// fields for <c>SetDemos</c> and its inspector checks.
         /// </remarks>
         public void Import(EcsPipeline.Builder builder)
         {
-            builder.Add(new ShellStageInpSystem(_skin, _demos));
-            builder.Add(new ShellInpSystem(_menu, _demoHud));
-            builder.Add(new ScreenPreSystem(_menu, _demoHud, _loadingIndicator, _skin));
+            builder.Add(new ShellStageInpSystem(_demos));
+            builder.Add(new ShellInpSystem());
+            builder.Add(new ScreenPreSystem());
         }
     }
 }

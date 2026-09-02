@@ -25,6 +25,24 @@ namespace Client.Adapters.Shell.Views
         /// <summary>How many entries this screen can show. <c>Boot</c> checks it against the catalog.</summary>
         public int ButtonCount => demoButtons?.Length ?? 0;
 
+        /// <summary>
+        /// The group the shell fades this screen in with. It sits on this object, so the view
+        /// resolves it once and the system that fades reads it here — a system holds no engine
+        /// object of its own (DEU0146).
+        /// </summary>
+        public CanvasGroup Group
+        {
+            get
+            {
+                if (_group == null)
+                    _group = GetComponent<CanvasGroup>();
+
+                return _group;
+            }
+        }
+
+        private CanvasGroup _group;
+
         public void SetDemos(IReadOnlyList<DemoEntry> demos)
         {
             for (var i = 0; i < demoButtons.Length; i++)

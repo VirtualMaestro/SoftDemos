@@ -6,7 +6,6 @@ using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
-using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.AceOfShadows;
@@ -63,7 +62,8 @@ namespace Client.Bootstrap
             _assetSourceService = new AddressablesAssetService(new UnityLogService("Assets"));
             _dialogueSourceService = new HttpDialogueService(new UnityLogService("Dialogue"));
             _webImagesService = new WebImageLoaderService(new UnityLogService("Avatars.Remote"));
-            _atlasImagesService = new AtlasImageLoaderService(new UnityLogService("Avatars.Local"));
+            _atlasImagesService = new AtlasImageLoaderService(
+                new UnityLogService("Avatars.Local"), _assetSourceService);
             _avatarImagesService = new AvatarImageRouterService(_atlasImagesService, _webImagesService);
             _viewRegistryService = new ViewRegistryService();
 
@@ -72,8 +72,12 @@ namespace Client.Bootstrap
             // Shared state and behaviour. Systems reach through these instead of holding each other.
             _fadePlayerService = new FadePlayerService();
             _cardMovePlayerService = new CardMovePlayerService(_viewRegistryService);
+            // The shell's own views are tracked types too, so its systems resolve them per call
+            // instead of taking them through a constructor (DEU0146). The registry scans every
+            // scene already open when it is built, and Boot is one of them.
             _screens = new ScreenRegistryService(
-                typeof(AceOfShadowsScreen), typeof(MagicWordsScreen), typeof(PhoenixFlameScreen));
+                typeof(AceOfShadowsScreen), typeof(MagicWordsScreen), typeof(PhoenixFlameScreen),
+                typeof(MenuScreen), typeof(DemoHudView), typeof(ShellSkinView));
 
             var aceConfig = new AceOfShadowsConfig();
 
@@ -92,10 +96,7 @@ namespace Client.Bootstrap
                 .Inject(_fadePlayerService)
                 .Inject(_cardMovePlayerService)
                 .Inject(new StackSlotLayoutService())
-                .Inject(new SharedUiSprites())
                 .Inject(_screens)
-                .Inject(new CardViewChannel())
-                .Inject(new DialogueLogChannel())
 
                 // A feature ships as a module on both halves, and one line imports each. The order
                 // of the Add calls inside an Import is that feature's own decision and lives there,
@@ -111,11 +112,11 @@ namespace Client.Bootstrap
                 .AddModule(new PhoenixFlameAdapterModule())
 
                 // Shell has no simulation half - its counterpart is NavigationModule, put in the
-                // shared kernel on purpose - and it is the one feature whose systems hold scene
-                // references. Both facts describe the shell rather than disqualify it as a feature:
-                // the references below stay fields of this component either way, because SetDemos
-                // and OnValidate need them, so the module relays them and owns nothing extra.
-                .AddModule(new ShellModule(menuScreen, demoHud, loadingIndicator, shellSkin, demos))
+                // shared kernel on purpose. Its systems used to be the one place that held scene
+                // references; they resolve them through the screen registry now, so the module
+                // carries the demo catalog and nothing else. The serialized fields stay here for
+                // SetDemos and OnValidate.
+                .AddModule(new ShellModule(demos))
                 .BuildAndInit();
         }
 

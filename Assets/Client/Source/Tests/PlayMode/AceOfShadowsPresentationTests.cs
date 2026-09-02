@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.Shared.Components;
 using Client.Adapters.Shell.Systems;
 using Client.Bootstrap;
 using Client.Simulation.AceOfShadows.Components;
@@ -80,6 +81,14 @@ namespace Client.Adapters.Tests
             Assert.That(boot.Assets.OpenRequestCount,
                 Is.EqualTo(ShellStageInpSystem.AddressCount), "Boot must not preload card art.");
 
+            // The shell keeps its 3 loads for the whole session, and the sprites it CUT from
+            // those atlases are rows of their own in the same table (DEU0146: the asset service
+            // owns every copy). So the leak floor is measured once the shell is up rather than
+            // spelled as a constant — the cut count follows the demo catalog.
+            yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
+                "The shell skin never finished loading.", 10f);
+            var heldFloor = boot.Assets.HeldAssetCount;
+
             yield return _Open(boot.World);
             yield return _WaitUntil(
                 () => _Screen() != null &&
@@ -143,7 +152,7 @@ namespace Client.Adapters.Tests
             yield return null;
             Assert.That(boot.Views.Count, Is.Zero);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
+            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
 
             foreach (var sprite in ownedSprites)
                 Assert.That(sprite == null, Is.True, "Closing the demo must destroy every owned sprite copy.");

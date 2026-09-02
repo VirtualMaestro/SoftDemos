@@ -1,4 +1,4 @@
-﻿using Client.Simulation.Core.Phases;
+using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shell.Views;
@@ -17,23 +17,19 @@ namespace Client.Adapters.Shell.Systems
     /// Drawing only: it reads the world and writes the screen, and the presses its two views
     /// record are drained by <see cref="ShellInpSystem"/>. The <c>_last*</c> fields are a repaint
     /// cache — what is on screen right now — not state passed between systems.
+    /// <para>The three views come from <see cref="ScreenRegistryService"/> per call, and each
+    /// <see cref="CanvasGroup"/> comes off the view it sits on: a system holds no engine object
+    /// (DEU0146). The backdrop and the loading indicator are the skin view's, which is where the
+    /// scene already puts them.</para>
     /// </remarks>
     internal sealed class ScreenPreSystem : IEcsPresent, IEcsDestroy, IEcsInject<EcsWorld>,
-        IEcsInject<FadePlayerService>
+        IEcsInject<FadePlayerService>, IEcsInject<ScreenRegistryService>
     {
         private const float FadeSeconds = 0.18f;
 
-        private readonly MenuScreen _menu;
-        private readonly DemoHudView _demoHud;
-        private readonly GameObject _loadingIndicator;
-        /// <summary>The shell backdrop. It sits outside SafeArea, so it belongs to no screen.</summary>
-        private readonly GameObject _menuBackground;
-        private readonly CanvasGroup _menuGroup;
-        private readonly CanvasGroup _demoHudGroup;
-        private readonly CanvasGroup _loadingGroup;
-
         private EcsWorld _world;
         private FadePlayerService _tweens;
+        private ScreenRegistryService _screens;
         private EcsTagPool<DemoReadyTag> _demoReady;
         private EcsTagPool<ShellReadyTag> _shellReady;
         private ScreenId _lastScreen;
@@ -45,23 +41,6 @@ namespace Client.Adapters.Shell.Systems
         private bool _demoWasVisible;
         private bool _loadingWasVisible;
 
-        public ScreenPreSystem(
-            MenuScreen menu,
-            DemoHudView demoHud,
-            GameObject loadingIndicator,
-            ShellSkinView shellSkin)
-        {
-            _menu = menu;
-            _demoHud = demoHud;
-            _loadingIndicator = loadingIndicator;
-            _menuBackground = shellSkin.Background.gameObject;
-
-            // Resolve once. The screen never changes, and LateRun runs on every frame.
-            _menuGroup = menu.GetComponent<CanvasGroup>();
-            _demoHudGroup = demoHud.GetComponent<CanvasGroup>();
-            _loadingGroup = loadingIndicator.GetComponent<CanvasGroup>();
-        }
-
         void IEcsDestroy.Destroy()
         {
             // The fade half of the safety net the old TweenPlayerService.KillAll carried: a fade
@@ -71,6 +50,11 @@ namespace Client.Adapters.Shell.Systems
 
         public void Present()
         {
+            if (!_screens.TryGet(out MenuScreen menu) ||
+                !_screens.TryGet(out DemoHudView demoHud) ||
+                !_screens.TryGet(out ShellSkinView skin))
+                return;
+
             ref readonly var state = ref _world.Get<ScreenStateComp>();
             var demoReady = _demoReady.Count > 0;
             var shellReady = _shellReady.Count > 0;
@@ -93,14 +77,17 @@ namespace Client.Adapters.Shell.Systems
                  state.Current == ScreenId.Unloading ||
                  (demoActive && !demoReady));
 
-            _demoHud.SetDemoIndex(state.ActiveDemoIndex);
+            demoHud.SetDemoIndex(state.ActiveDemoIndex);
             // Keep the backdrop through the load, so the change is not a black flash. Remove it
-            // for the demo, which brings its own by then.
-            _menuBackground.SetActive(!demoVisible);
+            // for the demo, which brings its own by then. It sits outside SafeArea, so it belongs
+            // to no screen.
+            skin.Background.gameObject.SetActive(!demoVisible);
 
-            _ApplyVisibility(_menu.gameObject, _menuGroup, menuVisible, ref _menuWasVisible);
-            _ApplyVisibility(_demoHud.gameObject, _demoHudGroup, demoVisible, ref _demoWasVisible);
-            _ApplyVisibility(_loadingIndicator, _loadingGroup, loadingVisible, ref _loadingWasVisible);
+            _ApplyVisibility(menu.gameObject, menu.Group, menuVisible, ref _menuWasVisible);
+            _ApplyVisibility(demoHud.gameObject, demoHud.Group, demoVisible, ref _demoWasVisible);
+
+            _ApplyVisibility(
+                skin.LoadingIndicator, skin.LoadingGroup, loadingVisible, ref _loadingWasVisible);
 
             _lastScreen = state.Current;
             _lastDemoIndex = state.ActiveDemoIndex;
@@ -113,6 +100,9 @@ namespace Client.Adapters.Shell.Systems
         private void _ApplyVisibility(
             GameObject target, CanvasGroup group, bool isVisible, ref bool wasVisible)
         {
+            if (target == null)
+                return;
+
             target.SetActive(isVisible);
             var isRisingEdge = isVisible && !wasVisible;
             wasVisible = isVisible;
@@ -131,5 +121,6 @@ namespace Client.Adapters.Shell.Systems
         }
 
         public void Inject(FadePlayerService obj) => _tweens = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
     }
 }

@@ -836,6 +836,8 @@ MonoBehaviour:
   - {fileID: 1655156182}
   backIcon: {fileID: 933051090}
   spinner: {fileID: 1042248217}
+  loadingIndicator: {fileID: 1334372830}
+  loadingGroup: {fileID: 1334372834}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0

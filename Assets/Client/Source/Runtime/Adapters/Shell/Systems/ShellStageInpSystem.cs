@@ -1,4 +1,3 @@
-﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Components;
@@ -18,16 +17,23 @@ namespace Client.Adapters.Shell.Systems
     /// <remarks>
     /// The lifecycle is <c>Idle -> Loading -> Ready</c>. There is no <c>Closing</c>, because
     /// <c>Boot</c> stays loaded. <c>Ready</c> is terminal: a failed load is reported once and
-    /// not retried. Every sprite from <see cref="SpriteAtlas.GetSprite"/> is a copy this system
-    /// owns and must destroy in <see cref="Destroy"/>.
+    /// not retried.
+    /// <para>Every sprite it paints with is cut out of an atlas by
+    /// <see cref="AddressablesAssetService"/> and owned by it, under an id of its own: releasing
+    /// the atlas at <see cref="Destroy"/> destroys them all, which is what the hand-written list of
+    /// owned copies used to do. The skin view comes from the screen registry per call, and the one
+    /// id a demo may draw with crosses to it as <see cref="ShellSkinComp"/>
+    /// (adr-an-engine-object-has-one-owner-per-kind, DEU0146).</para>
     /// </remarks>
     internal sealed class ShellStageInpSystem : IEcsInput, IEcsDestroy, IEcsInject<EcsWorld>,
-        IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>, IEcsInject<SharedUiSprites>
+        IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
+        IEcsInject<ScreenRegistryService>
     {
         /// <summary>How many Addressables requests the shell keeps open for the whole session.</summary>
         /// <remarks>
-        /// The sprite copies are backed by the atlas texture. Releasing the handles would unload it.
-        /// This count is the floor a leak check returns to, not zero.
+        /// The sprites cut from those atlases are backed by their textures. Releasing the handles
+        /// would unload them. This count is the floor a leak check on OPEN REQUESTS returns to, not
+        /// zero; the held-asset count sits above it by the number of cuts still live.
         /// </remarks>
         public const int AddressCount = 3;
 
@@ -38,23 +44,21 @@ namespace Client.Adapters.Shell.Systems
         private const string ButtonSpriteName = "ui-button";
         private const string BackIconSpriteName = "ui-icon-back";
         private const string SpinnerSpriteName = "ui-loading-spinner";
+        private const string DemoName = "Shell";
 
-        private readonly ShellSkinView _skin;
         private readonly DemoEntry[] _demos;
-        private readonly List<Sprite> _ownedSprites = new();
 
         private EcsWorld _world;
         private ILogService _log;
         private AddressablesAssetService _assets;
-        private SharedUiSprites _uiSprites;
+        private ScreenRegistryService _screens;
         private StageState _state;
         private int _backgroundRequestId;
         private int _menuAtlasRequestId;
         private int _sharedAtlasRequestId;
 
-        public ShellStageInpSystem(ShellSkinView skin, DemoEntry[] demos)
+        public ShellStageInpSystem(DemoEntry[] demos)
         {
-            _skin = skin;
             _demos = demos;
         }
 
@@ -74,7 +78,8 @@ namespace Client.Adapters.Shell.Systems
         public void Destroy()
         {
             _ClearSpriteTargets();
-            _DestroySpriteCopies();
+            // Releasing the atlases destroys every sprite cut from them: the asset service owns
+            // each cut and takes it with the parent.
             _ReleaseRequests();
             _TransitionTo(StageState.Idle);
         }
@@ -119,28 +124,43 @@ namespace Client.Adapters.Shell.Systems
 
         private void _TryApplySkin()
         {
-            if (!_TryResolveAtlas(_menuAtlasRequestId, MenuAtlasAddress, out var menuAtlas) ||
-                !_TryResolveAtlas(_sharedAtlasRequestId, SharedAtlasAddress, out var sharedAtlas))
+            if (!_screens.TryGet(out ShellSkinView skin))
+            {
+                _log.Error("The shell skin view is not in the Boot scene; the menu stays unskinned.");
+                return;
+            }
+
+            if (!_TryResolveAtlas(_menuAtlasRequestId, MenuAtlasAddress) ||
+                !_TryResolveAtlas(_sharedAtlasRequestId, SharedAtlasAddress))
                 return;
 
-            _ApplyHiddenUntilLoaded(_skin.Background, _CreateBackgroundSprite());
-            _skin.Panel.sprite = _TakeSprite(sharedAtlas, PanelSpriteName);
-            _ApplyHiddenUntilLoaded(_skin.BackIcon, _TakeSprite(sharedAtlas, BackIconSpriteName));
-            _ApplyHiddenUntilLoaded(_skin.Spinner, _TakeSprite(sharedAtlas, SpinnerSpriteName));
+            var backgroundId = StageContent.ResolveBackground(
+                _assets, _backgroundRequestId, DemoName, _log);
 
-            // Share one copy across all buttons. GetSprite allocates a new Sprite on each call.
-            // SharedUiSprites lends this copy out. This system stays the owner.
-            var buttonSprite = _TakeSprite(sharedAtlas, ButtonSpriteName);
+            _ApplyHiddenUntilLoaded(skin.Background, _Sprite(backgroundId));
+            skin.Panel.sprite = _Sprite(_TakeSpriteId(_sharedAtlasRequestId, PanelSpriteName));
 
-            foreach (var button in _skin.Buttons)
+            _ApplyHiddenUntilLoaded(
+                skin.BackIcon, _Sprite(_TakeSpriteId(_sharedAtlasRequestId, BackIconSpriteName)));
+
+            _ApplyHiddenUntilLoaded(
+                skin.Spinner, _Sprite(_TakeSpriteId(_sharedAtlasRequestId, SpinnerSpriteName)));
+
+            // One cut across all buttons, and across every demo that wants the same look: the id
+            // goes into the world and a demo resolves it through the same owner.
+            var buttonId = _TakeSpriteId(_sharedAtlasRequestId, ButtonSpriteName);
+            var buttonSprite = _Sprite(buttonId);
+
+            foreach (var button in skin.Buttons)
                 button.sprite = buttonSprite;
 
-            _uiSprites.Button = buttonSprite;
+            _world.Get<ShellSkinComp>().Button = buttonId;
 
-            var iconCount = Mathf.Min(_skin.DemoIconCount, _demos.Length);
+            var iconCount = Mathf.Min(skin.DemoIconCount, _demos.Length);
 
             for (var i = 0; i < iconCount; i++)
-                _ApplyHiddenUntilLoaded(_skin.DemoIcons[i], _TakeSprite(menuAtlas, _demos[i].IconName));
+                _ApplyHiddenUntilLoaded(
+                    skin.DemoIcons[i], _Sprite(_TakeSpriteId(_menuAtlasRequestId, _demos[i].IconName)));
         }
 
         /// <summary>Assigns a sprite to an <see cref="Image"/> that starts disabled.</summary>
@@ -163,91 +183,53 @@ namespace Client.Adapters.Shell.Systems
             fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         }
 
-        private bool _TryResolveAtlas(int requestId, string address, out SpriteAtlas atlas)
+        private bool _TryResolveAtlas(int requestId, string address)
         {
-            atlas = null;
+            if (_assets.TryGetAsset(requestId, out var asset) && asset is SpriteAtlas)
+                return true;
 
-            if (!_assets.TryGetAsset(requestId, out var asset) || asset is not SpriteAtlas resolved)
-            {
-                _log.Error($"Address '{address}' did not resolve to a {nameof(SpriteAtlas)}.");
-                return false;
-            }
-
-            atlas = resolved;
-            return true;
+            _log.Error($"Address '{address}' did not resolve to a {nameof(SpriteAtlas)}.");
+            return false;
         }
 
-        private Sprite _TakeSprite(SpriteAtlas atlas, string spriteName)
+        /// <summary>
+        /// Cuts one sprite out of an atlas under an id of its own, which the asset service owns.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int _TakeSpriteId(int atlasRequestId, string spriteName)
         {
-            var sprite = atlas.GetSprite(spriteName);
+            var derivedId = StageContent.DeriveFromAtlas(_assets, atlasRequestId, spriteName);
 
-            if (sprite == null)
-            {
-                _log.Error($"Atlas '{atlas.name}' is missing sprite '{spriteName}'.");
-                return null;
-            }
+            if (derivedId == 0)
+                _log.Error($"The shell atlas is missing sprite '{spriteName}'.");
 
-            // GetSprite returns a copy named "<name>(Clone)". The atlas does not keep it.
-            sprite.name = spriteName;
-            _ownedSprites.Add(sprite);
-            return sprite;
+            return derivedId;
         }
 
-        /// <summary>Resolves the menu backdrop, which can load as a <see cref="Sprite"/> or a <see cref="Texture2D"/>.</summary>
-        /// <remarks>The backdrop is a standalone image, not an atlas entry. Its importer decides the type.</remarks>
-        private Sprite _CreateBackgroundSprite()
-        {
-            if (!_assets.TryGetAsset(_backgroundRequestId, out var asset))
-            {
-                _log.Error($"Address '{BackgroundAddress}' did not resolve.");
-                return null;
-            }
-
-            if (asset is Sprite sprite)
-                return sprite;
-
-            if (asset is not Texture2D texture)
-            {
-                _log.Error($"Address '{BackgroundAddress}' resolved as {asset.GetType().Name}, " +
-                    "expected Sprite or Texture2D.");
-                return null;
-            }
-
-            var created = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f), 100f);
-            created.name = texture.name;
-            _ownedSprites.Add(created);
-            return created;
-        }
+        /// <summary>The sprite an id names, resolved through its owner and kept by nobody here.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Sprite _Sprite(int requestId) =>
+            _assets.TryGetAsset(requestId, out var asset) ? asset as Sprite : null;
 
         private void _ClearSpriteTargets()
         {
-            _uiSprites.Button = null;
+            _world.Get<ShellSkinComp>().Button = 0;
 
-            if (_skin == null)
+            if (!_screens.TryGet(out ShellSkinView skin))
                 return;
 
-            _ClearSprite(_skin.Background, true);
-            _ClearSprite(_skin.Panel, false);
-            _ClearSprite(_skin.BackIcon, true);
-            _ClearSprite(_skin.Spinner, true);
+            _ClearSprite(skin.Background, true);
+            _ClearSprite(skin.Panel, false);
+            _ClearSprite(skin.BackIcon, true);
+            _ClearSprite(skin.Spinner, true);
 
-            if (_skin.Buttons != null)
-                foreach (var button in _skin.Buttons)
+            if (skin.Buttons != null)
+                foreach (var button in skin.Buttons)
                     _ClearSprite(button, false);
 
-            if (_skin.DemoIcons != null)
-                foreach (var icon in _skin.DemoIcons)
+            if (skin.DemoIcons != null)
+                foreach (var icon in skin.DemoIcons)
                     _ClearSprite(icon, true);
-        }
-
-        private void _DestroySpriteCopies()
-        {
-            foreach (var sprite in _ownedSprites)
-                if (sprite != null)
-                    Object.Destroy(sprite);
-
-            _ownedSprites.Clear();
         }
 
         private void _ReleaseRequests()
@@ -274,6 +256,6 @@ namespace Client.Adapters.Shell.Systems
         public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
-        public void Inject(SharedUiSprites obj) => _uiSprites = obj;
+        public void Inject(ScreenRegistryService obj) => _screens = obj;
     }
 }
