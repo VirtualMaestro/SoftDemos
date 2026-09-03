@@ -6,6 +6,7 @@ using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Ports.Requests;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Client.Adapters.MagicWords.Services
 {
@@ -29,9 +30,6 @@ namespace Client.Adapters.MagicWords.Services
         /// <summary>Request id -> the derived sprite's id, which the asset service owns.</summary>
         private readonly Dictionary<int, int> _resolved = new();
 
-        /// <summary>The names the atlas carries, read once when it is handed over.</summary>
-        private readonly HashSet<string> _names = new(StringComparer.Ordinal);
-
         private readonly ILogService _log;
         private readonly AddressablesAssetService _assets;
 
@@ -45,23 +43,23 @@ namespace Client.Adapters.MagicWords.Services
         }
 
         /// <summary>Hands over the atlas the avatars are cut from, by the id it loaded under.</summary>
+        /// <remarks>
+        /// It does not read what the atlas carries. There is no runtime way to list an atlas that
+        /// does not mint a clone per sprite, and this service asks about ONE name at a time — so
+        /// <c>Poll</c> asks by cutting, and the cut it keeps is the only one it ever makes.
+        /// </remarks>
         public void SetAtlas(int atlasRequestId)
         {
-            _atlasRequestId = atlasRequestId;
             _resolved.Clear();
-            _names.Clear();
 
-            var names = _assets.ReadAtlasNames(atlasRequestId);
-
-            if (names == null)
+            if (!_assets.TryGetAsset(atlasRequestId, out var asset) || asset is not SpriteAtlas)
             {
-                // The owner logged which request it was and why it is not an atlas.
+                _log.Error($"Request #{atlasRequestId} is not a SpriteAtlas; no avatars from it.");
                 _atlasRequestId = 0;
                 return;
             }
 
-            foreach (var name in names)
-                _names.Add(name);
+            _atlasRequestId = atlasRequestId;
         }
 
         /// <summary>
@@ -72,7 +70,6 @@ namespace Client.Adapters.MagicWords.Services
         {
             _atlasRequestId = 0;
             _resolved.Clear();
-            _names.Clear();
         }
 
         public int Request(in ImageLoadRequest request)
@@ -97,26 +94,18 @@ namespace Client.Adapters.MagicWords.Services
             if (_atlasRequestId == 0)
                 return AsyncOpStatus.Pending;
 
-            var spriteKey = entry.SpriteKey;
+            // Asking by cutting: a speaker with no avatar of their own is the ordinary case, not a
+            // fault, which is why this is the quiet cut and not DeriveSprite.
+            var derivedId = _assets.DeriveSpriteIfPresent(_atlasRequestId, entry.SpriteKey);
 
-            if (!_names.Contains(spriteKey))
-            {
-                spriteKey = PlaceholderKey;
-
-                if (!_names.Contains(spriteKey))
-                {
-                    entry.Status = AsyncOpStatus.Failed;
-                    _log.Error(
-                        $"Avatar atlas has no '{PlaceholderKey}' sprite for '{entry.SpeakerName}'.");
-                    return entry.Status;
-                }
-            }
-
-            var derivedId = _assets.DeriveSprite(_atlasRequestId, spriteKey);
+            if (derivedId == 0)
+                derivedId = _assets.DeriveSpriteIfPresent(_atlasRequestId, PlaceholderKey);
 
             if (derivedId == 0)
             {
                 entry.Status = AsyncOpStatus.Failed;
+                _log.Error(
+                    $"Avatar atlas has no '{PlaceholderKey}' sprite for '{entry.SpeakerName}'.");
                 return entry.Status;
             }
 

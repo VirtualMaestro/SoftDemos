@@ -204,6 +204,38 @@ namespace Client.Adapters.Tests
                 "Releasing the atlas must empty the asset table, the cut included.");
         }
 
+        /// <summary>
+        /// The quiet cut is what lets a caller ASK whether an atlas carries a name without reading
+        /// the whole atlas to find out — so a miss has to answer 0, hold nothing, and stay off the
+        /// log, since an unexpected error fails the test that asks.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator DeriveSpriteIfPresent_AnswersZeroInSilence_ForANameTheAtlasDoesNotCarry()
+        {
+            var atlasId = _source.Request(new AssetLoadRequest(KnownAtlasAddress));
+            yield return _PollUntilSettled(atlasId);
+
+            Assert.That(_source.Poll(atlasId), Is.EqualTo(AsyncOpStatus.Done),
+                $"Loading '{KnownAtlasAddress}' should reach Done before anything is cut from it.");
+
+            var heldBefore = _source.HeldAssetCount;
+
+            Assert.That(_source.DeriveSpriteIfPresent(atlasId, "card-does-not-exist"), Is.Zero,
+                "A name the atlas does not carry is an answer, and the answer is 0.");
+            Assert.That(_source.HeldAssetCount, Is.EqualTo(heldBefore),
+                "A miss must file nothing.");
+
+            var spriteId = _source.DeriveSpriteIfPresent(atlasId, KnownAtlasSpriteName);
+
+            Assert.That(spriteId, Is.Not.Zero, "A hit cuts the sprite like DeriveSprite does.");
+            Assert.That(_source.TryGetAsset(spriteId, out var asset), Is.True,
+                "A quiet cut is served through the same TryGetAsset as a loud one.");
+            Assert.That(asset.name, Is.EqualTo(KnownAtlasSpriteName),
+                "The cut carries the name it was asked for.");
+
+            _source.Release(atlasId);
+        }
+
         [UnityTest]
         public IEnumerator ReleaseByRef_ZeroesTheCallersId_AndIsANoOpTheSecondTime()
         {

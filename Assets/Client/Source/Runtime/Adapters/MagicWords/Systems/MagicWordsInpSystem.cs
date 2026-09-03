@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
@@ -188,23 +187,10 @@ namespace Client.Adapters.MagicWords.Systems
                 return false;
             }
 
-            var names = _assets.ReadAtlasNames(_atlasRequestId);
-
-            if (names == null)
-                return false;
-
             _backgroundId = _assets.ResolveSprite(_backgroundRequestId);
 
             if (_backgroundId == 0)
                 return false;
-
-            if (Array.IndexOf(names, BubbleSpriteName) < 0 ||
-                Array.IndexOf(names, FrameSpriteName) < 0 ||
-                Array.IndexOf(names, PlaceholderSpriteName) < 0)
-            {
-                _log.Error("Magic Words atlas is missing a required dialogue UI sprite.");
-                return false;
-            }
 
             ref var art = ref _world.Get<DialogueLogArtComp>();
             art.Emoji = _emojiRequestId;

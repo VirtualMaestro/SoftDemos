@@ -30,8 +30,11 @@ namespace Client.Adapters.Shared.Services
     /// </summary>
     public sealed class AddressablesAssetService : IAssetService, IDisposable
     {
+        /// <summary>What the engine appends to the name of every copy it mints out of an atlas.
+        /// <c>GetSprite</c> and <c>GetSprites</c> both do it, and no caller wants to read it.</summary>
+        private const string CloneSuffix = "(Clone)";
+
         private readonly RequestTable<Entry> _requests = new();
-        private readonly Dictionary<int, Object> _assets = new();
         private readonly ILogService _log;
         private bool _isDisposed;
 
@@ -87,7 +90,7 @@ namespace Client.Adapters.Shared.Services
                 return status;
             }
 
-            _assets.Add(requestId, entry.Handle.Result);
+            entry.Asset = entry.Handle.Result;
             return status;
         }
 
@@ -96,7 +99,23 @@ namespace Client.Adapters.Shared.Services
         /// exactly what the port is not allowed to expose. False until the request is Done, and
         /// false again the moment it is released.
         /// </summary>
-        public bool TryGetAsset(int requestId, out Object asset) => _assets.TryGetValue(requestId, out asset);
+        /// <remarks>
+        /// The entry IS the row: the object sits on it rather than in a second dictionary under the
+        /// same key, so this costs one lookup. The null test is the reference one on purpose — an
+        /// entry either carries what this service filed or carries nothing, and whether a live
+        /// object is still alive is the caller's own <c>as Sprite</c> to ask.
+        /// </remarks>
+        public bool TryGetAsset(int requestId, out Object asset)
+        {
+            if (_requests.TryGet(requestId, out var entry) && entry.Asset is not null)
+            {
+                asset = entry.Asset;
+                return true;
+            }
+
+            asset = null;
+            return false;
+        }
 
         /// <summary>
         /// Cuts one object out of a loaded one and keeps it under an id of its own — a sprite from
@@ -134,47 +153,38 @@ namespace Client.Adapters.Shared.Services
                 return 0;
             }
 
-            var entry = new Entry($"derived from #{parentId}", parentId)
-            {
-                Status = AsyncOpStatus.Done
-            };
-
-            var requestId = _Add(entry);
-            _assets.Add(requestId, derived);
-            return requestId;
+            return _AddDerived(parentId, derived);
         }
 
         /// <summary>
         /// Cuts one named sprite out of an atlas under an id of its own, which this service owns.
-        /// 0 when the request is not an atlas, or the atlas carries no such name.
+        /// 0 when the request is not an atlas, or the atlas carries no such name — and a missing
+        /// name is reported, because a caller naming a constant is asking for content that is
+        /// supposed to be there.
         /// </summary>
         /// <remarks>
-        /// The rename is the reason this is one method instead of a copy of the same lambda per
+        /// The rename is the reason this is one method instead of a copy of the same cut per
         /// caller: <c>GetSprite</c> names its copy <c>&lt;name&gt;(Clone)</c>, and every caller
         /// wants the name it asked for — the shell asserts on it, and a reader looking at the
         /// hierarchy reads it.
         /// </remarks>
-        public int DeriveSprite(int atlasRequestId, string spriteName)
-        {
-            // Checked here rather than in the factory: a cast that throws inside `cut` would take
-            // the caller down for what is a content error the service can report.
-            if (TryGetAsset(atlasRequestId, out var parent) && parent is not SpriteAtlas)
-            {
-                _log.Error(
-                    $"Request #{atlasRequestId} is not a SpriteAtlas; cannot cut '{spriteName}'.");
-                return 0;
-            }
+        public int DeriveSprite(int atlasRequestId, string spriteName) =>
+            _DeriveSprite(atlasRequestId, spriteName, reportMiss: true);
 
-            return Derive(atlasRequestId, asset =>
-            {
-                var sprite = ((SpriteAtlas)asset).GetSprite(spriteName);
-
-                if (sprite != null)
-                    sprite.name = spriteName;
-
-                return sprite;
-            });
-        }
+        /// <summary>
+        /// <see cref="DeriveSprite"/> for a name the caller is ASKING about rather than asserting:
+        /// a name the atlas does not carry answers 0 in silence, because "no avatar for that
+        /// speaker" is an answer and not a fault. Still an error when the request is not a loaded
+        /// atlas, which is a wiring mistake either way.
+        /// </summary>
+        /// <remarks>
+        /// This is what lets a caller probe by cutting instead of enumerating. An atlas has no
+        /// runtime way to list its names that does not mint a clone per sprite — see
+        /// <see cref="ReadAtlasNames"/> — so one cut that either lands or answers 0 costs a caller
+        /// after ONE name strictly less than reading the whole atlas to look that name up.
+        /// </remarks>
+        public int DeriveSpriteIfPresent(int atlasRequestId, string spriteName) =>
+            _DeriveSprite(atlasRequestId, spriteName, reportMiss: false);
 
         /// <summary>
         /// Resolves a request that can have loaded as a <see cref="Sprite"/> or a
@@ -195,23 +205,24 @@ namespace Client.Adapters.Shared.Services
             if (asset is Sprite)
                 return requestId;
 
-            if (asset is not Texture2D)
+            if (asset is not Texture2D texture)
             {
                 _log.Error($"Request #{requestId} resolved as {asset.GetType().Name}, " +
                     "expected Sprite or Texture2D.");
                 return 0;
             }
 
-            return Derive(requestId, parent =>
+            var created = Sprite.Create(texture,
+                new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 150f);
+
+            if (created == null)
             {
-                var texture = (Texture2D)parent;
+                _log.Error($"Request #{requestId} would not cut a sprite from its texture.");
+                return 0;
+            }
 
-                var created = Sprite.Create(texture,
-                    new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 150f);
-
-                created.name = texture.name;
-                return created;
-            });
+            created.name = texture.name;
+            return _AddDerived(requestId, created);
         }
 
         /// <summary>
@@ -226,6 +237,9 @@ namespace Client.Adapters.Shared.Services
         /// owns; the sprites that LIVE are cut one at a time through <see cref="DeriveSprite"/>,
         /// which this service owns. Names are what cross from here, which is why this returns
         /// strings and not sprites.
+        /// <para>This is the price of ENUMERATING, and only a caller that does not KNOW the names
+        /// should pay it. One that is checking for a name it already names should cut it with
+        /// <see cref="DeriveSpriteIfPresent"/> and read the answer off the id.</para>
         /// </remarks>
         public string[] ReadAtlasNames(int atlasRequestId)
         {
@@ -250,8 +264,7 @@ namespace Client.Adapters.Shared.Services
                 }
 
                 if (index < readCount)
-                    // GetSprites names each clone "<name>(Clone)".
-                    names[index] = clones[index].name.Replace("(Clone)", string.Empty).Trim();
+                    names[index] = _WithoutCloneSuffix(clones[index].name);
 
                 Object.Destroy(clones[index]);
             }
@@ -284,7 +297,7 @@ namespace Client.Adapters.Shared.Services
             // The parent leaves the table before the walk, so a child never finds it and the
             // recursion is one level deep whatever the caller passes.
             _ReleaseDerivedChildrenOf(requestId);
-            _ReleaseOwn(requestId, entry);
+            _ReleaseOwn(entry);
         }
 
         /// <summary>
@@ -301,19 +314,19 @@ namespace Client.Adapters.Shared.Services
             // Derived copies first: each one is a live object cut from an asset whose handle the
             // next loop releases, and the engine destroys a copy on its own for nobody.
             foreach (var entry in _requests.Values)
-            {
                 if (entry.ParentId != 0)
-                    _DestroyDerived(entry.Id);
-            }
+                    _DestroyDerived(entry);
 
             foreach (var entry in _requests.Values)
             {
-                if (entry.ParentId == 0)
-                    _ReleaseHandleQuietly(entry);
+                if (entry.ParentId != 0)
+                    continue;
+
+                entry.Asset = null;
+                _ReleaseHandleQuietly(entry);
             }
 
             _requests.Clear();
-            _assets.Clear();
         }
 
         /// <summary>Files the entry and stamps it with the id the table minted for it.</summary>
@@ -322,6 +335,55 @@ namespace Client.Adapters.Shared.Services
             var requestId = _requests.Add(entry);
             entry.Id = requestId;
             return requestId;
+        }
+
+        /// <summary>
+        /// Files an object this service just cut out of <paramref name="parentId"/> under an id of
+        /// its own. The one place a derived entry is born, so every cut — the general one and the
+        /// sprite-shaped ones alike — is owned and released the same way.
+        /// </summary>
+        private int _AddDerived(int parentId, Object derived) =>
+            _Add(new Entry($"derived from #{parentId}", parentId)
+            {
+                Status = AsyncOpStatus.Done,
+                Asset = derived
+            });
+
+        /// <summary>
+        /// The cut behind <see cref="DeriveSprite"/> and <see cref="DeriveSpriteIfPresent"/>, which
+        /// differ only in whether a name the atlas does not carry is an error or an answer.
+        /// </summary>
+        private int _DeriveSprite(int atlasRequestId, string spriteName, bool reportMiss)
+        {
+            if (!TryGetAsset(atlasRequestId, out var parent))
+            {
+                _log.Error($"Derive from #{atlasRequestId} rejected: the parent is not Done.");
+                return 0;
+            }
+
+            // Checked before the cut rather than after: a cast that threw would take the caller
+            // down for what is a content error the service can report.
+            if (parent is not SpriteAtlas atlas)
+            {
+                _log.Error(
+                    $"Request #{atlasRequestId} is not a SpriteAtlas; cannot cut '{spriteName}'.");
+                return 0;
+            }
+
+            var sprite = atlas.GetSprite(spriteName);
+
+            if (sprite == null)
+            {
+                if (reportMiss)
+                    _log.Error($"Atlas #{atlasRequestId} carries no sprite named '{spriteName}'.");
+
+                return 0;
+            }
+
+            // Otherwise it reads as the name plus CloneSuffix, and every caller wants the name
+            // it asked for: the shell asserts on it, and the hierarchy shows it.
+            sprite.name = spriteName;
+            return _AddDerived(atlasRequestId, sprite);
         }
 
         /// <summary>
@@ -354,26 +416,40 @@ namespace Client.Adapters.Shared.Services
         /// a loaded entry owns an Addressables handle and releases it. A derived entry has no
         /// handle, so <see cref="_ReleaseHandleQuietly"/> is not a path it can take.
         /// </summary>
-        private void _ReleaseOwn(int requestId, Entry entry)
+        private void _ReleaseOwn(Entry entry)
         {
             if (entry.ParentId != 0)
             {
-                _DestroyDerived(requestId);
+                _DestroyDerived(entry);
                 return;
             }
 
-            _assets.Remove(requestId);
+            entry.Asset = null;
             _ReleaseHandleQuietly(entry);
         }
 
+        /// <summary>
+        /// Destroys the copy a derived entry holds and forgets it, so a second pass over the table
+        /// — the two loops in <see cref="Dispose"/> — cannot destroy the same object twice.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _DestroyDerived(int requestId)
+        private static void _DestroyDerived(Entry entry)
         {
-            if (_assets.TryGetValue(requestId, out var derived) && derived != null)
-                Object.Destroy(derived);
+            if (entry.Asset != null)
+                Object.Destroy(entry.Asset);
 
-            _assets.Remove(requestId);
+            entry.Asset = null;
         }
+
+        /// <summary>
+        /// The name a clone was given, without the <see cref="CloneSuffix"/> the engine appended.
+        /// One substring is cheaper than a replace and a trim.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string _WithoutCloneSuffix(string cloneName) =>
+            cloneName.EndsWith(CloneSuffix, StringComparison.Ordinal)
+                ? cloneName[..^CloneSuffix.Length]
+                : cloneName;
 
         private static AsyncOpStatus _Classify(Entry entry, out string failureDetail)
         {
@@ -444,7 +520,19 @@ namespace Client.Adapters.Shared.Services
         /// Assets currently held, loaded and derived alike — a sprite cut from an atlas counts as
         /// its own row. Must reach 0 on a clean shutdown.
         /// </summary>
-        internal int HeldAssetCount => _assets.Count;
+        internal int HeldAssetCount
+        {
+            get
+            {
+                var count = 0;
+
+                foreach (var entry in _requests.Values)
+                    if (entry.Asset is not null)
+                        count++;
+
+                return count;
+            }
+        }
 
         private sealed class Entry
         {
@@ -457,6 +545,11 @@ namespace Client.Adapters.Shared.Services
 
             /// <summary>The id the table minted, so a parent can find its children by it.</summary>
             public int Id;
+
+            /// <summary>What this entry serves: the asset Addressables loaded, or the copy this
+            /// service cut. Null until the load is Done and null again once it is released, which
+            /// is what makes the entry itself the answer to <see cref="TryGetAsset"/>.</summary>
+            public Object Asset;
 
             public AsyncOperationHandle<Object> Handle;
             public AsyncOpStatus Status = AsyncOpStatus.Pending;
