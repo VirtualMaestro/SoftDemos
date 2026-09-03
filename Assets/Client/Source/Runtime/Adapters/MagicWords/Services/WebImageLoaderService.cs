@@ -31,15 +31,6 @@ namespace Client.Adapters.MagicWords.Services
                     nameof(timeoutSeconds), timeoutSeconds, "Timeout must be positive.");
         }
 
-        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
-        public int OpenRequestCount => _requests.Count;
-
-        /// <summary>Downloaded textures currently owned by this adapter.</summary>
-        public int HeldTextureCount => _textures.Count;
-
-        /// <summary>Sprites created from downloaded textures and owned by this adapter.</summary>
-        public int HeldSpriteCount => _sprites.Count;
-
         public int Request(in ImageLoadRequest request)
         {
             var entry = new Entry(request.SpeakerName, request.Url);
@@ -100,10 +91,6 @@ namespace Client.Adapters.MagicWords.Services
             _textures.Add(requestId, texture);
             return status;
         }
-
-        /// <summary>Turns a request id back into its texture, without exposing Unity through the port.</summary>
-        public bool TryGetTexture(int requestId, out Texture2D texture) =>
-            _textures.TryGetValue(requestId, out texture);
 
         /// <summary>
         /// Turns a request id back into a sprite, creating it on the first ask. Adapter-side only —
@@ -247,6 +234,20 @@ namespace Client.Adapters.MagicWords.Services
             _log.Error($"Request #{requestId} avatar '{entry.SpeakerName}' GET '{entry.Url}' " +
                        $"failed in {branch}; HTTP {entry.Transport?.responseCode ?? 0L}: {detail}");
         }
+
+        // Members are used only for tests
+        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
+        internal int OpenRequestCount => _requests.Count;
+
+        /// <summary>Downloaded textures currently owned by this adapter.</summary>
+        internal int HeldTextureCount => _textures.Count;
+
+        /// <summary>Sprites created from downloaded textures and owned by this adapter.</summary>
+        internal int HeldSpriteCount => _sprites.Count;
+
+        /// <summary>Turns a request id back into its texture, without exposing Unity through the port.</summary>
+        internal bool TryGetTexture(int requestId, out Texture2D texture) =>
+            _textures.TryGetValue(requestId, out texture);
 
         private sealed class Entry
         {

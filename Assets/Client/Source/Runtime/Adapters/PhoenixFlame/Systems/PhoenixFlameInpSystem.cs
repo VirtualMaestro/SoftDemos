@@ -11,7 +11,6 @@ using Client.Simulation.Core.Ports;
 using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace Client.Adapters.PhoenixFlame.Systems
 {
@@ -49,7 +48,6 @@ namespace Client.Adapters.PhoenixFlame.Systems
         /// <see cref="PhoenixFlamePreSystem"/>, which owns the label otherwise, writes nothing.
         /// </remarks>
         private const string FailedLabel = "Load failed";
-        private const string DemoName = "Phoenix Flame";
         private const int DemoIndex = 2;
 
         /// <summary>Ids of the four flame frames, handed out by the asset service.</summary>
@@ -202,20 +200,16 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         private bool _ResolveContent()
         {
-            var atlasAsset = StageContent.GetAsset<SpriteAtlas>(_assets, _atlasRequestId);
-
-            if (atlasAsset == null)
-            {
-                _log.Error("Phoenix Flame atlas address did not resolve to a SpriteAtlas.");
-                return false;
-            }
-
-            _backgroundId = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log);
+            _backgroundId = _assets.ResolveSprite(_backgroundRequestId);
 
             if (_backgroundId == 0)
                 return false;
 
+            // This system never reads the atlas' names, so it never asks whether the address is
+            // one: a request that is not an atlas makes every cut below hand back 0, the service
+            // names that cause in the log, and the guard at the end turns it into the one error
+            // line this demo has always reported.
+            //
             // Each cut runs once and the asset service owns the copy from then on; releasing the
             // atlas destroys all six, which is what _DestroySpriteCopies used to do by hand.
             var hasEveryFrame = true;
@@ -239,7 +233,7 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int _DeriveFromAtlas(string spriteName) =>
-            StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteName);
+            _assets.DeriveSprite(_atlasRequestId, spriteName);
 
         /// <summary>The sprite an id names, resolved through its owner and kept by nobody here.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -253,8 +247,8 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
             _assets.TryGetAsset(_backgroundId, out var background);
 
-            StageContent.FitBackground(screen.StageCamera, screen.Background.transform,
-                background as Sprite, DemoName, _log, out _);
+            BackgroundFitter.CoverFit(screen.Background.transform, background as Sprite,
+                screen.StageCamera, _screenWidth, _screenHeight);
         }
 
         private void _Teardown(bool resetFlame)
@@ -292,8 +286,8 @@ namespace Client.Adapters.PhoenixFlame.Systems
 
         private void _ReleaseRequests()
         {
-            _atlasRequestId = StageContent.Release(_assets, _atlasRequestId);
-            _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
+            _assets.Release(ref _atlasRequestId);
+            _assets.Release(ref _backgroundRequestId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

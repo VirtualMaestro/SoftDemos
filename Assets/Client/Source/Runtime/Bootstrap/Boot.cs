@@ -1,7 +1,5 @@
-using Client.Adapters.AceOfShadows;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
-using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.PhoenixFlame.Views;
@@ -9,15 +7,14 @@ using Client.Adapters.Shared.Services;
 using Client.Adapters.Shell;
 using Client.Adapters.Shell.Views;
 using Client.Simulation.AceOfShadows;
-using Client.Simulation.Core.Ports;
-using Client.Simulation.MagicWords.Ports;
-using Client.Simulation.MagicWords;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Phases;
+using Client.Simulation.Core.Ports;
+using Client.Simulation.MagicWords;
+using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.PhoenixFlame;
 using DCFApixels.DragonECS;
 using UnityEngine;
-
 // Both halves of a feature declare a module and the two share the feature's name, so every one of
 // them is aliased by half. Aliasing rather than qualifying at the call keeps the import list below
 // one line per feature-half, and the composition root is the one place that knows every feature by

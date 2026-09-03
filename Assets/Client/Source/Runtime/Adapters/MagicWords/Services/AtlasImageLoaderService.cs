@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using Client.Adapters.Shared.Async;
 using Client.Adapters.Shared.Services;
-using Client.Adapters.Shared.Stage;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Ports.Requests;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace Client.Adapters.MagicWords.Services
 {
@@ -46,11 +44,6 @@ namespace Client.Adapters.MagicWords.Services
             _assets = assets ?? throw new ArgumentNullException(nameof(assets));
         }
 
-        public int OpenRequestCount => _requests.Count;
-
-        /// <summary>Derived sprite ids currently held. Each one is a row in the asset service.</summary>
-        public int HeldSpriteCount => _resolved.Count;
-
         /// <summary>Hands over the atlas the avatars are cut from, by the id it loaded under.</summary>
         public void SetAtlas(int atlasRequestId)
         {
@@ -58,14 +51,16 @@ namespace Client.Adapters.MagicWords.Services
             _resolved.Clear();
             _names.Clear();
 
-            if (!_assets.TryGetAsset(atlasRequestId, out var asset) || asset is not SpriteAtlas atlas)
+            var names = _assets.ReadAtlasNames(atlasRequestId);
+
+            if (names == null)
             {
-                _log.Error($"Avatar atlas #{atlasRequestId} did not resolve to a SpriteAtlas.");
+                // The owner logged which request it was and why it is not an atlas.
                 _atlasRequestId = 0;
                 return;
             }
 
-            foreach (var name in StageContent.ReadAtlasNames(atlas, out _))
+            foreach (var name in names)
                 _names.Add(name);
         }
 
@@ -117,7 +112,7 @@ namespace Client.Adapters.MagicWords.Services
                 }
             }
 
-            var derivedId = StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteKey);
+            var derivedId = _assets.DeriveSprite(_atlasRequestId, spriteKey);
 
             if (derivedId == 0)
             {
@@ -170,6 +165,12 @@ namespace Client.Adapters.MagicWords.Services
             _requests.Clear();
             ClearAtlas();
         }
+
+        // Properties are used only for tests
+        internal int OpenRequestCount => _requests.Count;
+
+        /// <summary>Derived sprite ids currently held. Each one is a row in the asset service.</summary>
+        internal int HeldSpriteCount => _resolved.Count;
 
         private sealed class Entry
         {

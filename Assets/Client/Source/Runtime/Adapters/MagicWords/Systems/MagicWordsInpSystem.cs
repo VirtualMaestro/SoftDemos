@@ -15,7 +15,6 @@ using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using TMPro;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace Client.Adapters.MagicWords.Systems
 {
@@ -43,7 +42,6 @@ namespace Client.Adapters.MagicWords.Systems
         private const string BubbleSpriteName = "mw-bubble";
         private const string FrameSpriteName = "mw-avatar-frame";
         private const string PlaceholderSpriteName = "mw-avatar-placeholder";
-        private const string DemoName = "Magic Words";
         private const int DemoIndex = 1;
 
         private EcsWorld _world;
@@ -184,28 +182,21 @@ namespace Client.Adapters.MagicWords.Systems
         /// </remarks>
         private bool _ResolveContent()
         {
-            var atlasAsset = StageContent.GetAsset<SpriteAtlas>(_assets, _atlasRequestId);
-            var emojiAsset = StageContent.GetAsset<TMP_SpriteAsset>(_assets, _emojiRequestId);
-
-            if (atlasAsset == null || emojiAsset == null)
+            if (!_assets.TryGetAsset(_emojiRequestId, out var emoji) || emoji is not TMP_SpriteAsset)
             {
-                _log.Error("Magic Words addresses did not resolve to a SpriteAtlas and TMP sprite asset.");
+                _log.Error("Magic Words emoji address did not resolve to a TMP sprite asset.");
                 return false;
             }
 
-            _backgroundId = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log);
+            var names = _assets.ReadAtlasNames(_atlasRequestId);
+
+            if (names == null)
+                return false;
+
+            _backgroundId = _assets.ResolveSprite(_backgroundRequestId);
 
             if (_backgroundId == 0)
                 return false;
-
-            var names = StageContent.ReadAtlasNames(atlasAsset, out var readCount);
-
-            if (readCount != atlasAsset.spriteCount)
-            {
-                _log.Error($"Magic Words atlas returned {readCount} of {atlasAsset.spriteCount} sprite(s).");
-                return false;
-            }
 
             if (Array.IndexOf(names, BubbleSpriteName) < 0 ||
                 Array.IndexOf(names, FrameSpriteName) < 0 ||
@@ -217,9 +208,9 @@ namespace Client.Adapters.MagicWords.Systems
 
             ref var art = ref _world.Get<DialogueLogArtComp>();
             art.Emoji = _emojiRequestId;
-            art.Bubble = _DeriveFromAtlas(BubbleSpriteName);
-            art.Frame = _DeriveFromAtlas(FrameSpriteName);
-            art.Placeholder = _DeriveFromAtlas(PlaceholderSpriteName);
+            art.Bubble = _assets.DeriveSprite(_atlasRequestId, BubbleSpriteName);
+            art.Frame = _assets.DeriveSprite(_atlasRequestId, FrameSpriteName);
+            art.Placeholder = _assets.DeriveSprite(_atlasRequestId, PlaceholderSpriteName);
 
             if (art.Bubble != 0 && art.Frame != 0 && art.Placeholder != 0)
                 return true;
@@ -228,9 +219,6 @@ namespace Client.Adapters.MagicWords.Systems
             return false;
         }
 
-        private int _DeriveFromAtlas(string spriteName) =>
-            StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteName);
-
         private void _RecalculateLayout(MagicWordsScreen screen)
         {
             _screenWidth = Screen.width;
@@ -238,8 +226,8 @@ namespace Client.Adapters.MagicWords.Systems
 
             _assets.TryGetAsset(_backgroundId, out var background);
 
-            StageContent.FitBackground(screen.StageCamera, screen.Background.transform,
-                background as Sprite, DemoName, _log, out _);
+            BackgroundFitter.CoverFit(screen.Background.transform, background as Sprite,
+                screen.StageCamera, _screenWidth, _screenHeight);
         }
 
         private void _Teardown(bool resetDialogue)
@@ -282,9 +270,9 @@ namespace Client.Adapters.MagicWords.Systems
 
         private void _ReleaseRequests()
         {
-            _atlasRequestId = StageContent.Release(_assets, _atlasRequestId);
-            _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
-            _emojiRequestId = StageContent.Release(_assets, _emojiRequestId);
+            _assets.Release(ref _atlasRequestId);
+            _assets.Release(ref _backgroundRequestId);
+            _assets.Release(ref _emojiRequestId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

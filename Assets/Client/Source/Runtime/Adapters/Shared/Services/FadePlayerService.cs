@@ -15,8 +15,6 @@ namespace Client.Adapters.Shared.Services
     {
         private readonly List<CanvasGroup> _fading = new();
 
-        public int ActiveFadeCount => _fading.Count;
-
         public void FadeIn(CanvasGroup group, float duration)
         {
             group.alpha = 0f;
@@ -35,5 +33,8 @@ namespace Client.Adapters.Shared.Services
 
             _fading.Clear();
         }
+
+        // Properties are used only for tests
+        internal int ActiveFadeCount => _fading.Count;
     }
 }

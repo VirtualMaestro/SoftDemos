@@ -28,9 +28,6 @@ namespace Client.Adapters.Shared.Services
             _log = log ?? throw new ArgumentNullException(nameof(log));
         }
 
-        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
-        public int OpenRequestCount => _requests.Count;
-
         public int Request(in SceneLoadRequest request) => _Begin(request.SceneId, isLoad: true);
 
         public int Request(in SceneUnloadRequest request) => _Begin(request.SceneId, isLoad: false);
@@ -180,6 +177,10 @@ namespace Client.Adapters.Shared.Services
                 // Already disposed. Nothing to cancel.
             }
         }
+
+        // Properties are used only for tests
+        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
+        internal int OpenRequestCount => _requests.Count;
 
         private sealed class Entry
         {

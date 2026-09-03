@@ -22,9 +22,6 @@ namespace Client.Adapters.MagicWords.Services
         }
 
         public AvatarMode Mode { get; private set; } = AvatarMode.Local;
-        public int OpenRequestCount => _routes.Count;
-        public AtlasImageLoaderService Local => _local;
-        public WebImageLoaderService Remote => _remote;
 
         /// <summary>Hands the local loader the atlas it cuts avatars out of, by request id.</summary>
         /// <remarks>
@@ -106,6 +103,9 @@ namespace Client.Adapters.MagicWords.Services
                 ? _local.Poll(route.InnerRequestId)
                 : _remote.Poll(route.InnerRequestId);
         }
+
+        // Properties are used only for tests
+        internal int OpenRequestCount => _routes.Count;
 
         private readonly struct Route
         {

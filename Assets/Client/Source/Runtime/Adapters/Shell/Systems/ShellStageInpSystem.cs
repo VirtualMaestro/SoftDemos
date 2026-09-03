@@ -8,7 +8,6 @@ using Client.Simulation.Core.Ports;
 using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using UnityEngine;
-using UnityEngine.U2D;
 using UnityEngine.UI;
 
 namespace Client.Adapters.Shell.Systems
@@ -44,7 +43,6 @@ namespace Client.Adapters.Shell.Systems
         private const string ButtonSpriteName = "ui-button";
         private const string BackIconSpriteName = "ui-icon-back";
         private const string SpinnerSpriteName = "ui-loading-spinner";
-        private const string DemoName = "Shell";
 
         private readonly DemoEntry[] _demos;
 
@@ -130,12 +128,7 @@ namespace Client.Adapters.Shell.Systems
                 return;
             }
 
-            if (!_TryResolveAtlas(_menuAtlasRequestId, MenuAtlasAddress) ||
-                !_TryResolveAtlas(_sharedAtlasRequestId, SharedAtlasAddress))
-                return;
-
-            var backgroundId = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log);
+            var backgroundId = _assets.ResolveSprite(_backgroundRequestId);
 
             _ApplyHiddenUntilLoaded(skin.Background, _Sprite(backgroundId));
             skin.Panel.sprite = _Sprite(_TakeSpriteId(_sharedAtlasRequestId, PanelSpriteName));
@@ -183,22 +176,18 @@ namespace Client.Adapters.Shell.Systems
             fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         }
 
-        private bool _TryResolveAtlas(int requestId, string address)
-        {
-            if (_assets.TryGetAsset(requestId, out var asset) && asset is SpriteAtlas)
-                return true;
-
-            _log.Error($"Address '{address}' did not resolve to a {nameof(SpriteAtlas)}.");
-            return false;
-        }
-
         /// <summary>
         /// Cuts one sprite out of an atlas under an id of its own, which the asset service owns.
         /// </summary>
+        /// <remarks>
+        /// There is no separate "is this address an atlas" check any more: a request that is not
+        /// one hands back 0 here with the cause in the log, and this is where the shell says which
+        /// sprite it could not get.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int _TakeSpriteId(int atlasRequestId, string spriteName)
         {
-            var derivedId = StageContent.DeriveFromAtlas(_assets, atlasRequestId, spriteName);
+            var derivedId = _assets.DeriveSprite(atlasRequestId, spriteName);
 
             if (derivedId == 0)
                 _log.Error($"The shell atlas is missing sprite '{spriteName}'.");
@@ -234,9 +223,9 @@ namespace Client.Adapters.Shell.Systems
 
         private void _ReleaseRequests()
         {
-            _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
-            _menuAtlasRequestId = StageContent.Release(_assets, _menuAtlasRequestId);
-            _sharedAtlasRequestId = StageContent.Release(_assets, _sharedAtlasRequestId);
+            _assets.Release(ref _backgroundRequestId);
+            _assets.Release(ref _menuAtlasRequestId);
+            _assets.Release(ref _sharedAtlasRequestId);
         }
 
         private void _TransitionTo(StageState next) => _state = next;

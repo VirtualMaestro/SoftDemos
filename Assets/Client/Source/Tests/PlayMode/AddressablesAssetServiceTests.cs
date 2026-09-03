@@ -18,6 +18,11 @@ namespace Client.Adapters.Tests
         /// <summary>Shipped six-token TMP sprite asset used to verify real content loading.</summary>
         private const string KnownAddress = "art/magic-words/emoji";
 
+        /// <summary>Shipped atlas with a sprite whose name the content tests already pin.</summary>
+        private const string KnownAtlasAddress = "art/ace-of-shadows/atlas";
+
+        private const string KnownAtlasSpriteName = "card-back";
+
         private const string MissingAddress = "dev/missing/does-not-exist";
         private const float TimeoutSeconds = 15f;
 
@@ -135,6 +140,88 @@ namespace Client.Adapters.Tests
                 "A rejected Derive must file nothing.");
 
             yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator ReadAtlasNames_AnswersTheAtlasNames_AndNullForAnIdThatIsNotOne()
+        {
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Client\]\[Test\.Assets\].*Request #9999"));
+
+            var atlasId = _source.Request(new AssetLoadRequest(KnownAtlasAddress));
+            yield return _PollUntilSettled(atlasId);
+
+            Assert.That(_source.Poll(atlasId), Is.EqualTo(AsyncOpStatus.Done),
+                $"Loading '{KnownAtlasAddress}' should reach Done before it is enumerated.");
+
+            var names = _source.ReadAtlasNames(atlasId);
+
+            Assert.That(names, Is.Not.Null.And.Not.Empty, "A loaded atlas must answer its names.");
+            Assert.That(names, Has.Member(KnownAtlasSpriteName),
+                $"The atlas must carry '{KnownAtlasSpriteName}'.");
+
+            foreach (var name in names)
+                Assert.That(name, Does.Not.Contain("(Clone)"),
+                    "The clones GetSprites minted are an implementation detail; their suffix must not cross.");
+
+            var heldBefore = _source.HeldAssetCount;
+
+            Assert.That(_source.ReadAtlasNames(9999), Is.Null,
+                "An id the source never handed out is not an atlas.");
+            Assert.That(_source.HeldAssetCount, Is.EqualTo(heldBefore),
+                "A rejected read must hold nothing.");
+
+            _source.Release(atlasId);
+        }
+
+        [UnityTest]
+        public IEnumerator DeriveSprite_CutsOneNamedSprite_AndDiesWithItsAtlas()
+        {
+            var atlasId = _source.Request(new AssetLoadRequest(KnownAtlasAddress));
+            yield return _PollUntilSettled(atlasId);
+
+            Assert.That(_source.Poll(atlasId), Is.EqualTo(AsyncOpStatus.Done),
+                $"Loading '{KnownAtlasAddress}' should reach Done before anything is cut from it.");
+
+            var spriteId = _source.DeriveSprite(atlasId, KnownAtlasSpriteName);
+
+            Assert.That(spriteId, Is.Not.Zero, "A cut sprite must get an id of its own.");
+            Assert.That(_source.TryGetAsset(spriteId, out var asset), Is.True,
+                "A cut sprite is served through the same TryGetAsset as a loaded asset.");
+            Assert.That(asset, Is.TypeOf<Sprite>(), "DeriveSprite must hand back a Sprite.");
+            Assert.That(asset.name, Is.EqualTo(KnownAtlasSpriteName),
+                "The cut carries the name it was asked for, not GetSprite's '(Clone)' copy name.");
+
+            Assert.That(_source.HeldAssetCount, Is.EqualTo(2),
+                "The atlas and the cut are two held rows.");
+
+            _source.Release(atlasId);
+
+            Assert.That(_source.TryGetAsset(spriteId, out _), Is.False,
+                "Releasing the atlas must take the sprite cut from it.");
+            Assert.That(_source.OpenRequestCount, Is.Zero,
+                "Releasing the atlas must empty the request table, the cut included.");
+            Assert.That(_source.HeldAssetCount, Is.Zero,
+                "Releasing the atlas must empty the asset table, the cut included.");
+        }
+
+        [UnityTest]
+        public IEnumerator ReleaseByRef_ZeroesTheCallersId_AndIsANoOpTheSecondTime()
+        {
+            var requestId = _source.Request(new AssetLoadRequest(KnownAddress));
+            yield return _PollUntilSettled(requestId);
+
+            Assert.That(_source.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done),
+                $"Loading '{KnownAddress}' should reach Done before it is released.");
+
+            _source.Release(ref requestId);
+
+            Assert.That(requestId, Is.Zero, "Release and forget: the caller's id is cleared.");
+            Assert.That(_source.OpenRequestCount, Is.Zero, "Release must empty the request table.");
+            Assert.That(_source.HeldAssetCount, Is.Zero, "Release must empty the asset table.");
+
+            Assert.DoesNotThrow(() => _source.Release(ref requestId),
+                "Releasing the cleared id must be a no-op, not a throw.");
+            Assert.That(requestId, Is.Zero, "The cleared id stays cleared.");
         }
 
         [UnityTest]

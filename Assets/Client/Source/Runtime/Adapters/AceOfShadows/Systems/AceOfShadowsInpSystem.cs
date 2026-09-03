@@ -17,7 +17,6 @@ using Client.Simulation.Core.Ports;
 using Client.Simulation.Core.Ports.Requests;
 using DCFApixels.DragonECS;
 using UnityEngine;
-using UnityEngine.U2D;
 using UnityEngine.UI;
 
 namespace Client.Adapters.AceOfShadows.Systems
@@ -51,7 +50,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         private const string AtlasAddress = "art/ace-of-shadows/atlas";
         private const string BackgroundAddress = "art/ace-of-shadows/background";
         private const string BackSpriteName = "card-back";
-        private const string DemoName = "Ace of Shadows";
         private const int DemoIndex = 0;
         private const int FaceCount = 13;
         private const int SpawnPerFrame = 24;
@@ -336,38 +334,26 @@ namespace Client.Adapters.AceOfShadows.Systems
         /// resolves the background to the id it is served under.
         /// </summary>
         /// <remarks>
-        /// The atlas is read ONCE per open, for its NAMES: <c>GetSprites</c> hands back a fresh
-        /// clone per sprite, so those clones are destroyed here and the asset service cuts the
-        /// copies that live. It owns them from then on and destroys them when the atlas request is
-        /// released. Nothing engine-typed survives this method.
+        /// The atlas is read ONCE per open, for its NAMES — the asset service enumerates it and
+        /// destroys the clones the engine minted to answer — and the copies that LIVE are cut one
+        /// at a time through the same owner. It destroys them when the atlas request is released.
+        /// Nothing engine-typed survives this method.
         /// </remarks>
         private bool _ResolveContent()
         {
-            var atlas = StageContent.GetAsset<SpriteAtlas>(_assets, _atlasRequestId);
+            var names = _assets.ReadAtlasNames(_atlasRequestId);
 
-            if (atlas == null)
-            {
-                _log.Error("Ace of Shadows atlas address did not resolve to a SpriteAtlas.");
+            if (names == null)
                 return false;
-            }
 
-            _backgroundId = StageContent.ResolveBackground(
-                _assets, _backgroundRequestId, DemoName, _log);
+            _backgroundId = _assets.ResolveSprite(_backgroundRequestId);
 
             if (_backgroundId == 0)
                 return false;
 
-            if (atlas.spriteCount != FaceCount + 1)
+            if (names.Length != FaceCount + 1)
             {
-                _log.Error($"Ace of Shadows atlas contains {atlas.spriteCount} sprite(s); expected {FaceCount + 1}.");
-                return false;
-            }
-
-            var names = StageContent.ReadAtlasNames(atlas, out var readCount);
-
-            if (readCount != atlas.spriteCount)
-            {
-                _log.Error($"Ace of Shadows atlas returned {readCount} of {atlas.spriteCount} sprite(s).");
+                _log.Error($"Ace of Shadows atlas has {names.Length} sprite(s); expected {FaceCount + 1}.");
                 return false;
             }
 
@@ -377,12 +363,10 @@ namespace Client.Adapters.AceOfShadows.Systems
             var faceIndex = 0;
 
             foreach (var spriteName in names)
-            {
                 if (spriteName == BackSpriteName)
-                    _backId = _DeriveFromAtlas(spriteName);
+                    _backId = _assets.DeriveSprite(_atlasRequestId, spriteName);
                 else if (faceIndex < _faceIds.Length)
-                    _faceIds[faceIndex++] = _DeriveFromAtlas(spriteName);
-            }
+                    _faceIds[faceIndex++] = _assets.DeriveSprite(_atlasRequestId, spriteName);
 
             if (_backId == 0 || faceIndex != FaceCount || Array.IndexOf(_faceIds, 0) >= 0)
             {
@@ -393,10 +377,6 @@ namespace Client.Adapters.AceOfShadows.Systems
             return true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int _DeriveFromAtlas(string spriteName) =>
-            StageContent.DeriveFromAtlas(_assets, _atlasRequestId, spriteName);
-
         private void _RecalculateLayout(AceOfShadowsScreen screen)
         {
             _screenWidth = Screen.width;
@@ -404,8 +384,8 @@ namespace Client.Adapters.AceOfShadows.Systems
 
             _assets.TryGetAsset(_backgroundId, out var background);
 
-            StageContent.FitBackground(screen.StageCamera, screen.Background.transform,
-                background as Sprite, DemoName, _log, out var orthographicSize);
+            var orthographicSize = BackgroundFitter.CoverFit(screen.Background.transform,
+                background as Sprite, screen.StageCamera, _screenWidth, _screenHeight);
 
             _layout.Recalculate(_screenWidth, _screenHeight, orthographicSize);
             _world.GetPool<LayoutChangedEvent>().Add(_world.NewEntity());
@@ -464,8 +444,8 @@ namespace Client.Adapters.AceOfShadows.Systems
 
         private void _ReleaseRequests()
         {
-            _atlasRequestId = StageContent.Release(_assets, _atlasRequestId);
-            _backgroundRequestId = StageContent.Release(_assets, _backgroundRequestId);
+            _assets.Release(ref _atlasRequestId);
+            _assets.Release(ref _backgroundRequestId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

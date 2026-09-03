@@ -94,7 +94,7 @@ namespace Client.Adapters.Tests
             _local.Release(requestId);
             Assert.That(_local.HeldSpriteCount, Is.Zero,
                 "Releasing the request must release the sprite the service cut for it.");
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace Client.Adapters.Tests
             Assert.That(_local.Poll(requestId), Is.EqualTo(AsyncOpStatus.Done));
 
             _local.Release(requestId);
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
         }
 
         [Test]
@@ -119,7 +119,7 @@ namespace Client.Adapters.Tests
             Assert.That(_assets.TryGetAsset(_atlasRequestId, out var atlas), Is.True,
                 "The loader borrows the atlas; releasing it is the asset service's business.");
             Assert.That(atlas, Is.Not.Null);
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
         }
 
         [UnityTest]
@@ -136,7 +136,7 @@ namespace Client.Adapters.Tests
             _router.Release(requestId);
             Assert.That(_remote.HeldTextureCount, Is.Zero);
             Assert.That(_remote.HeldSpriteCount, Is.Zero);
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
             yield return null;
             Assert.That(sprite == null, Is.True);
         }
@@ -159,7 +159,7 @@ namespace Client.Adapters.Tests
 
             _router.Release(localId);
             _router.Release(remoteId);
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
         }
 
         [Test]
@@ -177,7 +177,7 @@ namespace Client.Adapters.Tests
             Assert.That(sprite.name, Does.StartWith("avatar-sheldon"));
 
             _router.Release(requestId);
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
         }
 
         [Test]
@@ -189,12 +189,12 @@ namespace Client.Adapters.Tests
 
             _router.Dispose();
             _router.Dispose();
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
             var requestId = _router.Request(new ImageLoadRequest("Disposed", "ignored"));
 
             Assert.That(_router.Poll(requestId), Is.EqualTo(AsyncOpStatus.Failed));
             _router.Release(requestId);
-            _AssertNoOpenRequests();
+            _AssertNoLeaks();
         }
 
         private IEnumerator _WaitUntilSettled(int requestId)
@@ -220,10 +220,18 @@ namespace Client.Adapters.Tests
             _pngUrl = new Uri(_pngPath).AbsoluteUri;
         }
 
-        private void _AssertNoOpenRequests()
+        /// <summary>
+        /// Both leaves are empty — requests AND the engine objects they held. The router forwards
+        /// Release to whichever loader owns the id, so this is the claim that forwarding actually
+        /// frees, and it is why no test needs to reach the leaves through the router.
+        /// </summary>
+        private void _AssertNoLeaks()
         {
             Assert.That(_local.OpenRequestCount, Is.Zero);
+            Assert.That(_local.HeldSpriteCount, Is.Zero);
             Assert.That(_remote.OpenRequestCount, Is.Zero);
+            Assert.That(_remote.HeldTextureCount, Is.Zero);
+            Assert.That(_remote.HeldSpriteCount, Is.Zero);
         }
     }
 }

@@ -140,12 +140,10 @@ namespace Client.Adapters.Tests
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
             Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
+            // The leaves are not reached through the router: AvatarImageRouterServiceTests owns
+            // the two loaders directly and asserts both are empty after a Release, so an empty
+            // route table here is the whole claim this test can add.
             Assert.That(boot.Avatars.OpenRequestCount, Is.Zero);
-            Assert.That(boot.Avatars.Local.OpenRequestCount, Is.Zero);
-            Assert.That(boot.Avatars.Local.HeldSpriteCount, Is.Zero);
-            Assert.That(boot.Avatars.Remote.OpenRequestCount, Is.Zero);
-            Assert.That(boot.Avatars.Remote.HeldTextureCount, Is.Zero);
-            Assert.That(boot.Avatars.Remote.HeldSpriteCount, Is.Zero);
             // Returning to the menu starts the shell's own screen fade, so this cannot be sampled
             // the instant the demo closes — the claim is that every fade finishes and unregisters,
             // not that none was ever running.

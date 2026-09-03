@@ -36,9 +36,6 @@ namespace Client.Adapters.MagicWords.Services
                     nameof(timeoutSeconds), timeoutSeconds, "Timeout must be positive.");
         }
 
-        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
-        public int OpenRequestCount => _requests.Count;
-
         /// <remarks>
         /// <paramref name="request"/> carries nothing: the endpoint is this adapter's own
         /// configuration, so there is nothing for the simulation to say. The type exists so the
@@ -206,6 +203,10 @@ namespace Client.Adapters.MagicWords.Services
             _log.Error($"Request #{requestId} GET '{_url}' failed in {branch}; " +
                        $"HTTP {entry.Transport?.responseCode ?? 0L}: {detail}");
         }
+
+        // Properties are used only for tests
+        /// <summary>Requests started but not yet released. Must reach 0 on a clean shutdown.</summary>
+        internal int OpenRequestCount => _requests.Count;
 
         private sealed class Entry
         {
