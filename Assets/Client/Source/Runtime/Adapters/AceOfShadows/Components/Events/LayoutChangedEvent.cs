@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Adapters.AceOfShadows.Components
+namespace Client.Adapters.AceOfShadows.Components.Events
 {
     /// <summary>Says the slot positions were recalculated, so anything placed by them is stale.</summary>
     /// <remarks>

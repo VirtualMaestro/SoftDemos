@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.PhoenixFlame.Components
+namespace Client.Simulation.PhoenixFlame.Components.Commands
 {
     /// <summary>Asks for a transition to the next colour in the cycle.</summary>
     /// <remarks>

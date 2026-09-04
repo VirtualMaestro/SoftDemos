@@ -6,7 +6,7 @@ using Client.Adapters.AceOfShadows.Systems;
 using Client.Adapters.Shared.Services;
 using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Components;
+using Client.Simulation.Core.Components.Commands;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using DCFApixels.DragonECS;

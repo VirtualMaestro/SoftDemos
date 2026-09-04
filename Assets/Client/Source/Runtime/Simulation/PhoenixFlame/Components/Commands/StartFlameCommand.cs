@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.PhoenixFlame.Components
+namespace Client.Simulation.PhoenixFlame.Components.Commands
 {
     /// <summary>Asks for the flame to be brought up from config. Until one arrives the flame is
     /// inactive and every press is ignored.</summary>

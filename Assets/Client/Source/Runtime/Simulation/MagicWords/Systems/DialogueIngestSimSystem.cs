@@ -2,6 +2,7 @@
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Components;
+using Client.Simulation.MagicWords.Components.Events;
 using Client.Simulation.MagicWords.Payload;
 using DCFApixels.DragonECS;
 

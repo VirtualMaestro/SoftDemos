@@ -1,7 +1,7 @@
 using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shell.Views;
-using Client.Simulation.Core.Navigation.Components;
+using Client.Simulation.Core.Navigation.Components.Commands;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.Shell.Systems

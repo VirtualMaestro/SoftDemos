@@ -1,5 +1,5 @@
 ﻿using Client.Simulation.AceOfShadows;
-using Client.Simulation.AceOfShadows.Components;
+using Client.Simulation.AceOfShadows.Components.Commands;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.Tests.Fakes.Services;
 using Client.Simulation.Tests.Fakes.Systems;

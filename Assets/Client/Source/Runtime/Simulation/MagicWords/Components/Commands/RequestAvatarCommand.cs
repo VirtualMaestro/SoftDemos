@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords.Components
+namespace Client.Simulation.MagicWords.Components.Commands
 {
     /// <summary>
     /// Asks for this speaker's avatar download to start. Unlike the other commands it sits on the

@@ -4,7 +4,7 @@ using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
-using Client.Simulation.PhoenixFlame.Components;
+using Client.Simulation.PhoenixFlame.Components.Commands;
 using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Ports;

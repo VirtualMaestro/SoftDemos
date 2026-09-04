@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Adapters.MagicWords.Components
+namespace Client.Adapters.MagicWords.Components.Events
 {
     /// <summary>Says the dialogue log content is gone, so the list must drop its rows.</summary>
     /// <remarks>

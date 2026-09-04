@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.AceOfShadows.Components
+namespace Client.Simulation.AceOfShadows.Components.Commands
 {
     /// <summary>Carries a requested speed multiplier from the stage slider into the simulation.</summary>
     /// <remarks>

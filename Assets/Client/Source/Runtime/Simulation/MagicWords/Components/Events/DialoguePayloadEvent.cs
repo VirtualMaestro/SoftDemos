@@ -1,7 +1,7 @@
 ﻿using Client.Simulation.MagicWords.Payload;
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords.Components
+namespace Client.Simulation.MagicWords.Components.Events
 {
     /// <summary>
     /// The raw JSON payload, handed from the fetch that received it to the ingest that turns it into

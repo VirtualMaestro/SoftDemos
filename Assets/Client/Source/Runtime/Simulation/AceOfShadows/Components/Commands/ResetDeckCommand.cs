@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.AceOfShadows.Components
+namespace Client.Simulation.AceOfShadows.Components.Commands
 {
     /// <summary>Asks for every card and stack entity to be deleted and the deck state wiped.</summary>
     /// <remarks>

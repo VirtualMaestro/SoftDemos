@@ -2,6 +2,7 @@
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
+using Client.Simulation.MagicWords.Components.Commands;
 using Client.Simulation.MagicWords.Payload;
 using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;

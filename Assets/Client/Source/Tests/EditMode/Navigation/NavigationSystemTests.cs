@@ -1,5 +1,6 @@
 ﻿using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
+using Client.Simulation.Core.Navigation.Components.Commands;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;

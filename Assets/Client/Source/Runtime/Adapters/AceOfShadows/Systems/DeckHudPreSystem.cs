@@ -1,5 +1,5 @@
 ﻿using Client.Simulation.Core.Phases;
-using Client.Adapters.AceOfShadows.Components;
+using Client.Adapters.AceOfShadows.Components.Events;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
 using Client.Adapters.Shared.Services;

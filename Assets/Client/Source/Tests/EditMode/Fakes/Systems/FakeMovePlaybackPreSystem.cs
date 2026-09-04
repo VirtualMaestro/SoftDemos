@@ -1,5 +1,5 @@
 ﻿using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Components;
+using Client.Simulation.Core.Components.Commands;
 using Client.Simulation.Core.Phases;
 using Client.Simulation.Tests.Fakes.Services;
 using DCFApixels.DragonECS;

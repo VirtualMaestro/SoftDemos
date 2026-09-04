@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.PhoenixFlame.Components
+namespace Client.Simulation.PhoenixFlame.Components.Commands
 {
     /// <summary>Asks for the flame state to be wiped back to inactive.</summary>
     /// <remarks>

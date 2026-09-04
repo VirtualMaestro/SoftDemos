@@ -2,6 +2,8 @@
 using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords.Components;
+using Client.Simulation.MagicWords.Components.Commands;
+using Client.Simulation.MagicWords.Components.Events;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords.Systems

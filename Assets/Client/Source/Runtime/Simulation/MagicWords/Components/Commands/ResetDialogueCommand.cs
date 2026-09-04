@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords.Components
+namespace Client.Simulation.MagicWords.Components.Commands
 {
     /// <summary>Asks for the whole dialogue to be torn down: open requests released, speaker and line
     /// entities deleted, state zeroed.</summary>

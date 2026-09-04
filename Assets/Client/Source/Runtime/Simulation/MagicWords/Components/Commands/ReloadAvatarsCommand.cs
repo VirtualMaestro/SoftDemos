@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords.Components
+namespace Client.Simulation.MagicWords.Components.Commands
 {
     /// <summary>Asks for every avatar image to be released and downloaded again.</summary>
     /// <remarks>

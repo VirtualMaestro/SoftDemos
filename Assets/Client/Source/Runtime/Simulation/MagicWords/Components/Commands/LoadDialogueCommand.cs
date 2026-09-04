@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords.Components
+namespace Client.Simulation.MagicWords.Components.Commands
 {
     /// <summary>Asks for the dialogue payload to be fetched. Nothing is downloaded until one arrives.</summary>
     /// <remarks>

@@ -7,6 +7,7 @@ using Client.Simulation.Core.Ports;
 using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.MagicWords;
 using Client.Simulation.MagicWords.Components;
+using Client.Simulation.MagicWords.Components.Commands;
 using DCFApixels.DragonECS;
 using NUnit.Framework;
 using UnityEngine;

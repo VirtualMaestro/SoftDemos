@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.AceOfShadows.Components
+namespace Client.Simulation.AceOfShadows.Components.Commands
 {
     /// <summary>Asks for the card and stack entities to be created from config. Until one arrives the
     /// deck does not exist.</summary>

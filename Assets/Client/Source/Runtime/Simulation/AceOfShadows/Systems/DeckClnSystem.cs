@@ -1,6 +1,6 @@
 ﻿using Client.Simulation.Core.Phases;
-using Client.Simulation.AceOfShadows.Components;
-using Client.Simulation.Core.Components;
+using Client.Simulation.AceOfShadows.Components.Commands;
+using Client.Simulation.Core.Components.Commands;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows.Systems

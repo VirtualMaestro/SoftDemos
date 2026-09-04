@@ -1,6 +1,6 @@
 using DCFApixels.DragonECS;
 
-namespace Client.Simulation.Core.Components
+namespace Client.Simulation.Core.Components.Commands
 {
     /// <summary>Tells the simulation that the flight it started has ended.</summary>
     /// <remarks>

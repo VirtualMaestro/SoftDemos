@@ -1,6 +1,6 @@
 ﻿using DCFApixels.DragonECS;
 
-namespace Client.Simulation.MagicWords.Components
+namespace Client.Simulation.MagicWords.Components.Commands
 {
     /// <summary>Asks for the rest of the lines to be revealed at once instead of on the timer.</summary>
     /// <remarks>

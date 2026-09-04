@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.MagicWords.Components;
+using Client.Adapters.MagicWords.Components.Events;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Components;

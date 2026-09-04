@@ -1,5 +1,5 @@
 ﻿using Client.Simulation.Core.Phases;
-using Client.Adapters.MagicWords.Components;
+using Client.Adapters.MagicWords.Components.Events;
 using DCFApixels.DragonECS;
 
 namespace Client.Adapters.MagicWords.Systems
