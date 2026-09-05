@@ -79,14 +79,6 @@ namespace Client.Adapters.AceOfShadows.Systems
         private int _screenWidth = -1;
         private int _screenHeight = -1;
 
-        /// <summary>
-        /// Log-once latch for the out-of-views warning. A remembered value and not an owned one:
-        /// a fresh instance mid-frame would log the line once more, which is all that is lost.
-        /// <c>UnityLogService</c> passes straight through to <c>Debug.Log*</c> and deduplicates
-        /// nothing, so the latch is what keeps one bad bind from filling the console.
-        /// </summary>
-        private bool _warnedOutOfViews;
-
         private EcsTagPool<MoveCompletedCommand> _completedMoves;
         private EcsTagPool<TweenRunningTag> _runningTweens;
         private EcsPool<ResetDeckCommand> _resetCommands;
@@ -346,13 +338,9 @@ namespace Client.Adapters.AceOfShadows.Systems
 
                 if (comp.BoundCount >= comp.SpawnedCount)
                 {
-                    if (!_warnedOutOfViews)
-                    {
-                        _warnedOutOfViews = true;
-                        _log.Warn(
-                            $"Ace of Shadows ran out of views after {comp.BoundCount} binding(s).");
-                    }
-
+                    // Once per count: the logger drops a line it has already written.
+                    _log.Warn(
+                        $"Ace of Shadows ran out of views after {comp.BoundCount} binding(s).");
                     return;
                 }
 
@@ -492,7 +480,6 @@ namespace Client.Adapters.AceOfShadows.Systems
             }
 
             _world.Get<CardArtComp>() = default;
-            _warnedOutOfViews = false;
             _screenWidth = -1;
             _screenHeight = -1;
 
