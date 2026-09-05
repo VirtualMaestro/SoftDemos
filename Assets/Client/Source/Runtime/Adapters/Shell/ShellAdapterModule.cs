@@ -3,11 +3,11 @@ using DCFApixels.DragonECS;
 
 namespace Client.Adapters.Shell
 {
-    public sealed class ShellModule : IEcsModule
+    public sealed class ShellAdapterModule : IEcsModule
     {
         private readonly DemoEntry[] _demos;
 
-        public ShellModule(DemoEntry[] demos)
+        public ShellAdapterModule(DemoEntry[] demos)
         {
             _demos = demos;
         }

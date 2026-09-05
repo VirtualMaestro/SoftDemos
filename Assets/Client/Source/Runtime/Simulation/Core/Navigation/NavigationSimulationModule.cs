@@ -1,13 +1,13 @@
-﻿using Client.Simulation.Core.Navigation.Systems;
+using Client.Simulation.Core.Navigation.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.Core.Navigation
 {
-    public sealed class NavigationModule : IEcsModule
+    public sealed class NavigationSimulationModule : IEcsModule
     {
         private readonly DemoCatalog _catalog;
 
-        public NavigationModule(DemoCatalog catalog)
+        public NavigationSimulationModule(DemoCatalog catalog)
         {
             _catalog = catalog;
         }

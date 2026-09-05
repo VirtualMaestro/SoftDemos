@@ -1,13 +1,13 @@
-﻿using Client.Simulation.PhoenixFlame.Systems;
+using Client.Simulation.PhoenixFlame.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.PhoenixFlame
 {
-    public sealed class PhoenixFlameModule : IEcsModule
+    public sealed class PhoenixFlameSimulationModule : IEcsModule
     {
         private readonly PhoenixFlameConfig _config;
 
-        public PhoenixFlameModule(PhoenixFlameConfig config)
+        public PhoenixFlameSimulationModule(PhoenixFlameConfig config)
         {
             _config = config;
         }

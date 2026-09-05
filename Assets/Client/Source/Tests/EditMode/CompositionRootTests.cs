@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -17,7 +17,7 @@ namespace Client.Simulation.Tests
     /// system instance: a config, a catalog, a Boot-scene view. The same instance must never
     /// arrive through both routes, which is what this fixture proves.</para>
     ///
-    /// <para>Injection is what keeps a module free of ports. <c>AceOfShadowsModule</c> builds four
+    /// <para>Injection is what keeps a module free of ports. <c>AceOfShadowsSimulationModule</c> builds four
     /// systems that need <c>ITimeService</c>, <c>ILogService</c> and the world; were those constructor
     /// parameters, every module would have to accept and forward every port. That is the whole
     /// reason the injectable list below exists — see CLAUDE.md, "Composition root".</para>

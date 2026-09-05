@@ -1,7 +1,10 @@
+using Client.Adapters.AceOfShadows;
 using Client.Adapters.AceOfShadows.Services;
 using Client.Adapters.AceOfShadows.Views;
+using Client.Adapters.MagicWords;
 using Client.Adapters.MagicWords.Services;
 using Client.Adapters.MagicWords.Views;
+using Client.Adapters.PhoenixFlame;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shell;
@@ -15,16 +18,6 @@ using Client.Simulation.MagicWords.Ports;
 using Client.Simulation.PhoenixFlame;
 using DCFApixels.DragonECS;
 using UnityEngine;
-// Both halves of a feature declare a module and the two share the feature's name, so every one of
-// them is aliased by half. Aliasing rather than qualifying at the call keeps the import list below
-// one line per feature-half, and the composition root is the one place that knows every feature by
-// name — the ambiguity belongs here and nowhere else.
-using AceOfShadowsSimulationModule = Client.Simulation.AceOfShadows.AceOfShadowsModule;
-using MagicWordsSimulationModule = Client.Simulation.MagicWords.MagicWordsModule;
-using PhoenixFlameSimulationModule = Client.Simulation.PhoenixFlame.PhoenixFlameModule;
-using AceOfShadowsAdapterModule = Client.Adapters.AceOfShadows.AceOfShadowsModule;
-using MagicWordsAdapterModule = Client.Adapters.MagicWords.MagicWordsModule;
-using PhoenixFlameAdapterModule = Client.Adapters.PhoenixFlame.PhoenixFlameModule;
 
 namespace Client.Bootstrap
 {
@@ -99,7 +92,7 @@ namespace Client.Bootstrap
                 // of the Add calls inside an Import is that feature's own decision and lives there,
                 // where DEU0136 can read it; the order BETWEEN modules is free, because each system
                 // names its phase on its own class line and a runner collects one interface.
-                .AddModule(new NavigationModule(new DemoCatalog(_GetDemoAddresses(demos))))
+                .AddModule(new NavigationSimulationModule(new DemoCatalog(_GetDemoAddresses(demos))))
                 .AddModule(new AceOfShadowsSimulationModule(aceConfig))
                 .AddModule(new MagicWordsSimulationModule(new MagicWordsConfig()))
                 .AddModule(new PhoenixFlameSimulationModule(new PhoenixFlameConfig()))
@@ -108,12 +101,12 @@ namespace Client.Bootstrap
                 .AddModule(new MagicWordsAdapterModule())
                 .AddModule(new PhoenixFlameAdapterModule())
 
-                // Shell has no simulation half - its counterpart is NavigationModule, put in the
+                // Shell has no simulation half - its counterpart is NavigationSimulationModule, put in the
                 // shared kernel on purpose. Its systems used to be the one place that held scene
                 // references; they resolve them through the screen registry now, so the module
                 // carries the demo catalog and nothing else. The serialized fields stay here for
                 // SetDemos and OnValidate.
-                .AddModule(new ShellModule(demos))
+                .AddModule(new ShellAdapterModule(demos))
                 .BuildAndInit();
         }
 

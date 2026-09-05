@@ -1,4 +1,4 @@
-﻿using Client.Simulation.AceOfShadows;
+using Client.Simulation.AceOfShadows;
 using Client.Simulation.AceOfShadows.Components.Commands;
 using Client.Simulation.Core.Ports;
 using Client.Simulation.Tests.Fakes.Services;
@@ -28,7 +28,7 @@ namespace Client.Simulation.Tests.AceOfShadows
                 .Inject<ITimeService>(Time)
                 .Inject<ILogService>(Log)
                 .Inject(Playback)
-                .AddModule(new AceOfShadowsModule(new AceOfShadowsConfig()))
+                .AddModule(new AceOfShadowsSimulationModule(new AceOfShadowsConfig()))
                 // The two halves the real adapter has: one starts flights in Present, one drains
                 // the finished ones in Input. Both are needed for a tick to look like a frame.
                 .Add(new FakeMoveCompletionInpSystem())

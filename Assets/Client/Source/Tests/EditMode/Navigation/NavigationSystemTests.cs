@@ -1,4 +1,4 @@
-﻿using Client.Simulation.Core.Navigation;
+using Client.Simulation.Core.Navigation;
 using Client.Simulation.Core.Navigation.Components;
 using Client.Simulation.Core.Navigation.Components.Commands;
 using Client.Simulation.Core.Ports;
@@ -32,7 +32,7 @@ namespace Client.Simulation.Tests.Navigation
                 .Inject(_world)
                 .Inject<ISceneService>(_scenes)
                 .Inject<ILogService>(_log)
-                .AddModule(new NavigationModule(new DemoCatalog(Addresses)))
+                .AddModule(new NavigationSimulationModule(new DemoCatalog(Addresses)))
                 .BuildAndInit();
         }
 

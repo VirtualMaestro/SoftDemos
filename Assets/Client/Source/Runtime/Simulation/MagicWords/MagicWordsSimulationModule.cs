@@ -1,13 +1,13 @@
-﻿using Client.Simulation.MagicWords.Systems;
+using Client.Simulation.MagicWords.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.MagicWords
 {
-    public sealed class MagicWordsModule : IEcsModule
+    public sealed class MagicWordsSimulationModule : IEcsModule
     {
         private readonly MagicWordsConfig _config;
 
-        public MagicWordsModule(MagicWordsConfig config)
+        public MagicWordsSimulationModule(MagicWordsConfig config)
         {
             _config = config;
         }

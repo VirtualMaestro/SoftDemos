@@ -73,7 +73,7 @@ namespace Client.Simulation.Tests.PhoenixFlame
                 .Inject(World)
                 .Inject<ITimeService>(Time)
                 .Inject<ILogService>(Log)
-                .AddModule(new PhoenixFlameModule(config))
+                .AddModule(new PhoenixFlameSimulationModule(config))
                 .BuildAndInit();
         }
 

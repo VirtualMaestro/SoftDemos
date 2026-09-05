@@ -1,13 +1,13 @@
-﻿using Client.Simulation.AceOfShadows.Systems;
+using Client.Simulation.AceOfShadows.Systems;
 using DCFApixels.DragonECS;
 
 namespace Client.Simulation.AceOfShadows
 {
-    public sealed class AceOfShadowsModule : IEcsModule
+    public sealed class AceOfShadowsSimulationModule : IEcsModule
     {
         private readonly AceOfShadowsConfig _config;
 
-        public AceOfShadowsModule(AceOfShadowsConfig config)
+        public AceOfShadowsSimulationModule(AceOfShadowsConfig config)
         {
             _config = config;
         }

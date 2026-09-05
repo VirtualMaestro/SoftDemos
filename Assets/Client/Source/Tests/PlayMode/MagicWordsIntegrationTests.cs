@@ -36,7 +36,7 @@ namespace Client.Adapters.Tests
                 .Inject<IDialogueService>(_dialogueSource)
                 .Inject<IImageLoadService>(_imageSource)
                 .Inject<ITimeService>(new UnityTimeService())
-                .AddModule(new MagicWordsModule(new MagicWordsConfig()))
+                .AddModule(new MagicWordsSimulationModule(new MagicWordsConfig()))
                 .BuildAndInit();
         }
 
