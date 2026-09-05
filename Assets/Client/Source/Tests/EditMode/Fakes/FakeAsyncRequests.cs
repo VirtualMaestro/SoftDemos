@@ -55,6 +55,9 @@ namespace Client.Simulation.Tests.Fakes
 
         public bool Release(int requestId) => _pollsLeft.Remove(requestId);
 
+        /// <summary>Releases every open request, the way a port's <c>Dispose</c> does.</summary>
+        public void ReleaseAll() => _pollsLeft.Clear();
+
         public override string ToString() =>
             $"completeAfterPolls={CompleteAfterPolls}, terminal={TerminalStatus}, " +
             $"openRequests={OpenRequestCount}";

@@ -84,14 +84,23 @@ namespace Client.Simulation.Tests.MagicWords
             Assert.That(ImageSource.LoadCalls, Has.Count.EqualTo(2));
         }
 
+        /// <summary>Shutting the app down leaves no image request open.</summary>
+        /// <remarks>
+        /// The actor is the PORT, not the pipeline. This used to assert on
+        /// <c>DialogueResetSimSystem.Destroy</c>; the fact did not change, only where it lives — a
+        /// release right sits with its owner, which the composition root disposes
+        /// (adr-data-placement-is-decided-on-three-axes rule 8). In `Boot` that call is
+        /// `_avatarImagesService?.Dispose()`.
+        /// </remarks>
         [Test]
-        public void PipelineDestroy_ReleasesReadyAndInflightRequests()
+        public void DisposingTheImagePort_ReleasesReadyAndInflightRequests()
         {
             var speakers = _LoadRealPayload();
             _OpenReadyAndInflightRequests(speakers);
 
             Assert.That(ImageSource.OpenRequestCount, Is.EqualTo(2));
             _DestroyPipeline();
+            ImageSource.Dispose();
 
             Assert.That(ImageSource.OpenRequestCount, Is.Zero);
         }
@@ -110,8 +119,14 @@ namespace Client.Simulation.Tests.MagicWords
             Assert.That(World.Get<DialogueStateComp>(), Is.EqualTo(default(DialogueStateComp)));
         }
 
+        /// <summary>Shutting the app down mid-fetch leaves no dialogue request open.</summary>
+        /// <remarks>
+        /// The actor is the PORT: `HttpDialogueService.Dispose` releases every entry it still
+        /// holds, and `Boot` calls it. The reset path is the sibling claim, and it is still the
+        /// system's — see <c>Reset_ReleasesAnInflightDialogueRequest</c>.
+        /// </remarks>
         [Test]
-        public void PipelineDestroy_ReleasesAnInflightDialogueRequest()
+        public void DisposingTheDialoguePort_ReleasesAnInflightRequest()
         {
             DialogueSource.CompleteAfterPolls = 3;
             DialogueSource.Payload = LoadPayload();
@@ -119,6 +134,7 @@ namespace Client.Simulation.Tests.MagicWords
             Assert.That(DialogueSource.OpenRequestCount, Is.EqualTo(1));
 
             _DestroyPipeline();
+            DialogueSource.Dispose();
 
             Assert.That(DialogueSource.OpenRequestCount, Is.Zero);
         }

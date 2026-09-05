@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Client.Adapters.AceOfShadows.Views;
 using UnityEngine;
@@ -5,8 +6,12 @@ using UnityEngine;
 namespace Client.Adapters.AceOfShadows.Services
 {
     /// <summary>Resolves a <c>ViewHandleComp.Id</c> to a <see cref="Transform"/>.</summary>
-    /// <remarks>This is the only place that knows both a handle number and a scene object.</remarks>
-    public sealed class ViewRegistryService
+    /// <remarks>
+    /// This is the only place that knows both a handle number and a scene object, so it is also
+    /// the only place that may destroy one. An owner disposes what it hands out: the composition
+    /// root disposes this service, and no system destroys a view on destroy.
+    /// </remarks>
+    public sealed class ViewRegistryService : IDisposable
     {
         private readonly Dictionary<int, Transform> _views = new();
         private readonly Dictionary<int, CardView> _cards = new();
@@ -54,5 +59,20 @@ namespace Client.Adapters.AceOfShadows.Services
 
         /// <summary>Every live view. Use it to kill tweens that would outlive the world.</summary>
         public IEnumerable<Transform> Views => _views.Values;
+
+        /// <summary>Destroys every view this registry handed out and forgets all of them.</summary>
+        /// <remarks>
+        /// The null guard is not defensive noise: at application quit the scene may already have
+        /// destroyed the object, and Unity's fake-null comparison is the only sign of it.
+        /// </remarks>
+        public void Dispose()
+        {
+            foreach (var view in _views.Values)
+                if (view != null)
+                    UnityEngine.Object.Destroy(view.gameObject);
+
+            _views.Clear();
+            _cards.Clear();
+        }
     }
 }

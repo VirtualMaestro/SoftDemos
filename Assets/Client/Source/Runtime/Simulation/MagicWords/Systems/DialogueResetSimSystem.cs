@@ -11,9 +11,13 @@ namespace Client.Simulation.MagicWords.Systems
     /// Consumes the reset command: releases open dialogue/image requests, deletes all speaker and
     /// line entities, and zeroes the dialogue state.
     /// </summary>
+    /// <remarks>
+    /// It releases on the command and never on destroy. Both ports it talks to are disposed by the
+    /// composition root, which is where a release right sits
+    /// (adr-data-placement-is-decided-on-three-axes rule 8).
+    /// </remarks>
     internal sealed class DialogueResetSimSystem :
         IEcsSim,
-        IEcsDestroy,
         IEcsInject<EcsWorld>,
         IEcsInject<IDialogueService>,
         IEcsInject<IImageLoadService>
@@ -44,12 +48,6 @@ namespace Client.Simulation.MagicWords.Systems
             state = default;
             // The payload event needs no wipe here: it lives one frame and cleanup ends it, so a
             // reset cannot leave a stale payload behind for anyone to ingest.
-        }
-
-        void IEcsDestroy.Destroy()
-        {
-            _ReleaseDialogueRequest();
-            _ReleaseOpenRequests();
         }
 
         /// <summary>

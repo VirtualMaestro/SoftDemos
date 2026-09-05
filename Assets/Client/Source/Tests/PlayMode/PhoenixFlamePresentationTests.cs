@@ -229,6 +229,59 @@ namespace Client.Adapters.Tests
         /// keeps it off while the content loads and while the flame is starting, and a press taken
         /// in that window is dropped rather than queued.
         /// </summary>
+        /// <summary>A reopen loads the same content once, and never twice.</summary>
+        /// <remarks>
+        /// Rule 4 of adr-data-placement-is-decided-on-three-axes measured directly. The stage's
+        /// request ids used to be private fields, so "is anything live" was a hand-written test on
+        /// four of them being zero; the open-request count is the same claim made from outside.
+        /// </remarks>
+        [UnityTest]
+        [Timeout(120000)]
+        public IEnumerator ReopeningTheDemo_LoadsOnce()
+        {
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var boot = UnityEngine.Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
+            yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
+                "The shell skin never finished loading.", 10f);
+
+            // The counter skips derived rows (ParentId == 0 only), so the demo's two are the atlas
+            // and the background — not the six particle sprites cut out of the atlas.
+            const int demoRequests = 2;
+            var closedFloor = ShellStageInpSystem.AddressCount;
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(closedFloor));
+
+            var firstOpen = 0;
+
+            for (var pass = 1; pass <= 2; pass++)
+            {
+                yield return _Open(boot.World);
+                yield return _WaitUntil(() => boot.World.GetPool<DemoReadyTag>().Count > 0,
+                    $"Phoenix Flame never became ready on open {pass}.", LoadTimeoutSeconds);
+
+                var open = boot.Assets.OpenRequestCount;
+                Assert.That(open, Is.EqualTo(closedFloor + demoRequests),
+                    $"Open {pass} must hold the shell's requests plus this demo's two.");
+
+                if (pass == 1)
+                    firstOpen = open;
+                else
+                    Assert.That(open, Is.EqualTo(firstOpen),
+                        "A reopen must load once: the second open costs what the first did.");
+
+                yield return _Close(boot.World);
+                yield return null;
+
+                Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(closedFloor),
+                    $"Close {pass} must release every request the demo opened.");
+            }
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+            yield return null;
+        }
+
         private static IEnumerator _Press(PhoenixFlameScreen scene)
         {
             yield return _WaitUntil(() => scene.AdvanceButton.interactable,

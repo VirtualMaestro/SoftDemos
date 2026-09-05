@@ -159,10 +159,11 @@ namespace Client.Bootstrap
 
         /// <summary>Tears down in this order: pipeline, then ports, then world.</summary>
         /// <remarks>
-        /// <c>IEcsDestroy</c> handlers run inside <see cref="EcsPipeline.Destroy"/> and one of
-        /// them can still call a port, so the systems must stop before the ports do. The world
-        /// goes last, because DragonECS registers worlds globally and a world that outlives its
-        /// owner keeps its id and its pools.
+        /// No system implements <c>IEcsDestroy</c> any more, so the pipeline goes first only to
+        /// stop the phases running; every release right sits with an owner disposed here. The
+        /// world goes last, because DragonECS registers worlds globally and a world that outlives
+        /// its owner keeps its id and its pools. An owner disposes what it hands out; a system
+        /// releases nothing on destroy (adr-data-placement-is-decided-on-three-axes rule 8).
         /// </remarks>
         private void OnDestroy()
         {
@@ -183,9 +184,16 @@ namespace Client.Bootstrap
             _atlasImagesService = null;
             _webImagesService = null;
 
-            _viewRegistryService = null;
-            _fadePlayerService = null;
+            // Reverse construction order: the card mover reads the registry's views to kill their
+            // tweens, so it has to go before the registry destroys them.
+            _cardMovePlayerService?.Dispose();
             _cardMovePlayerService = null;
+
+            _fadePlayerService?.Dispose();
+            _fadePlayerService = null;
+
+            _viewRegistryService?.Dispose();
+            _viewRegistryService = null;
 
             _screens?.Dispose();
             _screens = null;

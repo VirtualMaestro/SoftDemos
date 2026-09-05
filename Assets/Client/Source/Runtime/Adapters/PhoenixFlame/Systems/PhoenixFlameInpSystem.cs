@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
+using Client.Adapters.PhoenixFlame.Components;
 using Client.Adapters.PhoenixFlame.Views;
 using Client.Adapters.Shared.Components;
 using Client.Adapters.Shared.Services;
@@ -28,8 +29,14 @@ namespace Client.Adapters.PhoenixFlame.Systems
     /// belongs to <see cref="ScreenRegistryService"/> and is resolved per call. The sprites are
     /// resolved once, at the hand-over to the view that shows them
     /// (adr-an-engine-object-has-one-owner-per-kind, DEU0146).</para>
+    /// <para>It owns nothing either. The stage's state and the two ids it holds open live in
+    /// <see cref="PhoenixFlameStageComp"/>; the six sprite ids are locals of the hand-over, because
+    /// nothing reads them afterwards; the last-drawn screen size is remembered and derived again
+    /// (adr-data-placement-is-decided-on-three-axes rules 4 and 5). There is no
+    /// <c>IEcsDestroy</c>: the asset service releases what it owns when the composition root
+    /// disposes it.</para>
     /// </remarks>
-    internal sealed class PhoenixFlameInpSystem : IEcsInput, IEcsDestroy,
+    internal sealed class PhoenixFlameInpSystem : IEcsInput,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
     {
@@ -50,139 +57,151 @@ namespace Client.Adapters.PhoenixFlame.Systems
         private const string FailedLabel = "Load failed";
         private const int DemoIndex = 2;
 
-        /// <summary>Ids of the four flame frames, handed out by the asset service.</summary>
-        private readonly int[] _flameFrameIds = new int[FlameFrameSpriteNames.Length];
+        /// <summary>No stage entity. <c>Idle</c> is recorded as the absence of one.</summary>
+        private const int NoStage = 0;
 
         private EcsWorld _world;
         private ILogService _log;
         private AddressablesAssetService _assets;
         private ScreenRegistryService _screens;
-        private StageState _state;
 
-        /// <summary>
-        /// The instance id of the screen this system opened on, so a reopened scene reads as a
-        /// different screen without a reference to the old one being kept.
-        /// </summary>
-        private int _screenInstanceId;
-
-        private int _smokeId;
-        private int _sparkId;
-        private int _backgroundId;
-        private int _atlasRequestId;
-        private int _backgroundRequestId;
         private int _screenWidth = -1;
         private int _screenHeight = -1;
 
+        private EcsPool<ResetFlameCommand> _resetCommands;
+
         public void Input()
         {
-            // Not "the screen is gone": what must be torn down is this system's own state, and
-            // that is what a non-Idle state says. The screen is a Unity object the scene unload can
-            // destroy before this phase runs again — see AceOfShadowsInpSystem for the leak that
-            // gating on it caused.
-            if (_state != StageState.Idle && _state != StageState.Closing &&
-                (_world.Get<ScreenStateComp>().Current == ScreenId.Unloading ||
-                 !_screens.TryGet<PhoenixFlameScreen>(out _)))
-                _TransitionTo(StageState.Closing);
+            var stage = _world.Where(out SingleAspect<PhoenixFlameStageComp> stageAspect);
+            var stageEntity = stage.Count > 0 ? stage[0] : NoStage;
 
-            switch (_state)
+            ref readonly var nav = ref _world.Get<ScreenStateComp>();
+            var unloading = nav.Current == ScreenId.Unloading;
+            var hasScreen = _screens.TryGet(out PhoenixFlameScreen screen);
+
+            // Not "the screen is gone": what has to come down is the stage, and the navigation
+            // state says whether this demo is still the one selected. The screen itself is a Unity
+            // object the scene unload can destroy before this phase runs again — see
+            // AceOfShadowsInpSystem for the leak that gating on it alone caused.
+            var screenPresent = hasScreen && nav.Current == ScreenId.Demo &&
+                                nav.ActiveDemoIndex == DemoIndex;
+
+            if (stageEntity == NoStage)
             {
-                case StageState.Idle:
-                    _BeginLoadingIfNeeded();
-                    break;
-                case StageState.Loading:
-                    _ContinueLoading();
-                    break;
-                case StageState.Ready:
-                    _RunReady();
-                    break;
-                case StageState.Closing:
-                    _Teardown(true);
-                    break;
+                // Idle has no component to read a state off, and no screen it has opened on yet.
+                if (StageTransitions.Next(StageState.Idle, screenPresent, true, unloading,
+                        AsyncOpStatus.Pending) == StageState.Loading)
+                    _BeginLoading(screen);
+
+                return;
+            }
+
+            var pool = stageAspect.pool;
+
+            // Closing is never seen at the end of a frame: the exit and the teardown are one step,
+            // exactly as they were when the guard at the top of this method wrote them by hand.
+            while (true)
+            {
+                var comp = pool.Get(stageEntity);
+                var screenChanged = hasScreen && screen.GetInstanceID() != comp.ScreenInstanceId;
+                var next = StageTransitions.Next(comp.State, screenPresent, screenChanged,
+                    unloading, _Poll(comp));
+
+                if (next == comp.State)
+                {
+                    if (comp.State == StageState.Ready)
+                        _RunReady(stageEntity, pool, screen);
+
+                    return;
+                }
+
+                pool.Get(stageEntity).State = next;
+
+                if (next == StageState.Closing)
+                {
+                    _resetCommands.Add(_world.NewEntity());
+                    continue;
+                }
+
+                if (next == StageState.Ready && _HandOver(stageEntity, pool, screen))
+                    return;
+
+                // Only a load that failed lands here from Loading: the poll said Failed, or the
+                // resolve did. Both show the label; only the first has a line of its own.
+                if (comp.State == StageState.Loading)
+                {
+                    if (next == StageState.Idle)
+                        _log.Error(
+                            "Phoenix Flame content load failed; retrying while the scene remains active.");
+
+                    if (screen != null)
+                        screen.PhaseLabel.text = FailedLabel;
+                }
+
+                _Teardown(stageEntity, pool);
+                return;
             }
         }
 
-        public void Destroy() => _Teardown(false);
-
-        private void _BeginLoadingIfNeeded()
+        /// <summary>The worst of the two content requests: a failure first, then a wait.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private AsyncOpStatus _Poll(PhoenixFlameStageComp comp)
         {
-            ref readonly var screen = ref _world.Get<ScreenStateComp>();
+            var atlas = _assets.Poll(comp.AtlasRequestId);
+            var background = _assets.Poll(comp.BackgroundRequestId);
 
-            if (!_screens.TryGet(out PhoenixFlameScreen current) ||
-                current.GetInstanceID() == _screenInstanceId ||
-                screen.Current != ScreenId.Demo || screen.ActiveDemoIndex != DemoIndex)
-                return;
+            if (atlas == AsyncOpStatus.Failed || background == AsyncOpStatus.Failed)
+                return AsyncOpStatus.Failed;
 
-            _screenInstanceId = current.GetInstanceID();
-            _atlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
-            _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
-            _TransitionTo(StageState.Loading);
+            return atlas == AsyncOpStatus.Done && background == AsyncOpStatus.Done
+                ? AsyncOpStatus.Done
+                : AsyncOpStatus.Pending;
         }
 
-        private void _ContinueLoading()
+        /// <summary>The <c>Idle -&gt; Loading</c> edge: the stage is born holding its requests.</summary>
+        private void _BeginLoading(PhoenixFlameScreen screen)
         {
-            if (!_screens.TryGet(out PhoenixFlameScreen screen))
-                return;
+            var entity = _world.NewEntity();
+            ref var comp = ref _world.GetPool<PhoenixFlameStageComp>().Add(entity);
 
-            var atlasStatus = _assets.Poll(_atlasRequestId);
-            var backgroundStatus = _assets.Poll(_backgroundRequestId);
+            comp.State = StageState.Loading;
+            comp.ScreenInstanceId = screen.GetInstanceID();
+            comp.AtlasRequestId = _assets.Request(new AssetLoadRequest(AtlasAddress));
+            comp.BackgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
+        }
 
-            if (atlasStatus == AsyncOpStatus.Failed || backgroundStatus == AsyncOpStatus.Failed)
-            {
-                _log.Error("Phoenix Flame content load failed; retrying while the scene remains active.");
-                _FailLoad(screen);
-                return;
-            }
+        /// <summary>
+        /// The <c>Loading -&gt; Ready</c> edge: resolve the content, dress the screen, hand the
+        /// particle sprites over and start the flame. Reports whether the content resolved.
+        /// </summary>
+        private bool _HandOver(int stageEntity, EcsPool<PhoenixFlameStageComp> pool,
+            PhoenixFlameScreen screen)
+        {
+            if (screen == null || !_ResolveContent(stageEntity, pool, screen))
+                return false;
 
-            if (atlasStatus != AsyncOpStatus.Done || backgroundStatus != AsyncOpStatus.Done)
-                return;
-
-            if (!_ResolveContent())
-            {
-                _FailLoad(screen);
-                return;
-            }
-
-            if (_assets.TryGetAsset(_backgroundId, out var background))
+            if (_assets.TryGetAsset(pool.Get(stageEntity).BackgroundId, out var background))
                 screen.Background.sprite = background as Sprite;
 
             // The screen is covered now, so the shell can hand over.
             _world.GetPool<DemoReadyTag>().Add(_world.NewEntity());
-            _HandSpritesToView(screen);
-            _RecalculateLayout(screen);
+            _RecalculateLayout(stageEntity, pool, screen);
             // FlameSetupSimSystem takes this in the Sim phase, which is why there is no longer a
             // Starting state to wait in: the view half finds the flame already active.
             _world.GetPool<StartFlameCommand>().Add(_world.NewEntity());
             // Discard a press made during the load. The screen was not running yet.
             screen.AdvanceRequested = false;
-            _TransitionTo(StageState.Ready);
+            return true;
         }
 
-        /// <summary>
-        /// Resolves the 6 particle sprites and hands them to the view that shows them.
-        /// </summary>
-        /// <remarks>
-        /// The view holds them for as long as it draws with them, which is what a view is for; the
-        /// asset service still OWNS them and destroys them when the atlas is released, and the
-        /// teardown tells the view to let go first. Nothing is resolved into a field here.
-        /// </remarks>
-        private void _HandSpritesToView(PhoenixFlameScreen screen)
+        private void _RunReady(int stageEntity, EcsPool<PhoenixFlameStageComp> pool,
+            PhoenixFlameScreen screen)
         {
-            var frames = new Sprite[_flameFrameIds.Length];
-
-            for (var index = 0; index < _flameFrameIds.Length; index++)
-                frames[index] = _Sprite(_flameFrameIds[index]);
-
-            screen.FlameColor.SetSprites(frames, _Sprite(_smokeId), _Sprite(_sparkId));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _RunReady()
-        {
-            if (!_screens.TryGet(out PhoenixFlameScreen screen))
+            if (screen == null)
                 return;
 
             if (Screen.width != _screenWidth || Screen.height != _screenHeight)
-                _RecalculateLayout(screen);
+                _RecalculateLayout(stageEntity, pool, screen);
 
             if (!screen.AdvanceRequested)
                 return;
@@ -191,18 +210,24 @@ namespace Client.Adapters.PhoenixFlame.Systems
             _world.GetPool<AdvanceFlamePhaseCommand>().Add(_world.NewEntity());
         }
 
-        /// <summary>Shows the failure label and returns to <c>Idle</c>, which retries while the scene is open.</summary>
-        private void _FailLoad(PhoenixFlameScreen screen)
+        /// <summary>
+        /// Resolves the background and the 6 particle sprites, and hands the particles to the view
+        /// that shows them.
+        /// </summary>
+        /// <remarks>
+        /// The view holds them for as long as it draws with them, which is what a view is for; the
+        /// asset service still OWNS them and destroys them when the atlas is released, and the
+        /// teardown tells the view to let go first. Nothing is resolved into a field here — the six
+        /// ids are locals, because the hand-over is the only thing that ever reads them.
+        /// </remarks>
+        private bool _ResolveContent(int stageEntity, EcsPool<PhoenixFlameStageComp> pool,
+            PhoenixFlameScreen screen)
         {
-            screen.PhaseLabel.text = FailedLabel;
-            _Teardown(false);
-        }
+            var atlasRequestId = pool.Get(stageEntity).AtlasRequestId;
+            ref var comp = ref pool.Get(stageEntity);
+            comp.BackgroundId = _assets.ResolveSprite(comp.BackgroundRequestId);
 
-        private bool _ResolveContent()
-        {
-            _backgroundId = _assets.ResolveSprite(_backgroundRequestId);
-
-            if (_backgroundId == 0)
+            if (comp.BackgroundId == 0)
                 return false;
 
             // This system never reads the atlas' names, so it never asks whether the address is
@@ -212,59 +237,67 @@ namespace Client.Adapters.PhoenixFlame.Systems
             //
             // Each cut runs once and the asset service owns the copy from then on; releasing the
             // atlas destroys all six, which is what _DestroySpriteCopies used to do by hand.
+            var frameIds = new int[FlameFrameSpriteNames.Length];
             var hasEveryFrame = true;
 
             for (var index = 0; index < FlameFrameSpriteNames.Length; index++)
             {
-                _flameFrameIds[index] = _DeriveFromAtlas(FlameFrameSpriteNames[index]);
-                hasEveryFrame &= _flameFrameIds[index] != 0;
+                frameIds[index] = _assets.DeriveSprite(atlasRequestId, FlameFrameSpriteNames[index]);
+                hasEveryFrame &= frameIds[index] != 0;
             }
 
-            _smokeId = _DeriveFromAtlas(SmokeSpriteName);
-            _sparkId = _DeriveFromAtlas(SparkSpriteName);
+            var smokeId = _assets.DeriveSprite(atlasRequestId, SmokeSpriteName);
+            var sparkId = _assets.DeriveSprite(atlasRequestId, SparkSpriteName);
 
-            if (hasEveryFrame && _smokeId != 0 && _sparkId != 0)
-                return true;
+            if (!hasEveryFrame || smokeId == 0 || sparkId == 0)
+            {
+                _log.Error("Phoenix Flame atlas is missing one of " +
+                    $"'{string.Join("', '", FlameFrameSpriteNames)}', '{SmokeSpriteName}' or '{SparkSpriteName}'.");
+                return false;
+            }
 
-            _log.Error("Phoenix Flame atlas is missing one of " +
-                $"'{string.Join("', '", FlameFrameSpriteNames)}', '{SmokeSpriteName}' or '{SparkSpriteName}'.");
-            return false;
+            var frames = new Sprite[frameIds.Length];
+
+            for (var index = 0; index < frameIds.Length; index++)
+                frames[index] = _Sprite(frameIds[index]);
+
+            screen.FlameColor.SetSprites(frames, _Sprite(smokeId), _Sprite(sparkId));
+            return true;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int _DeriveFromAtlas(string spriteName) =>
-            _assets.DeriveSprite(_atlasRequestId, spriteName);
 
         /// <summary>The sprite an id names, resolved through its owner and kept by nobody here.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Sprite _Sprite(int requestId) =>
             _assets.TryGetAsset(requestId, out var asset) ? asset as Sprite : null;
 
-        private void _RecalculateLayout(PhoenixFlameScreen screen)
+        private void _RecalculateLayout(int stageEntity, EcsPool<PhoenixFlameStageComp> pool,
+            PhoenixFlameScreen screen)
         {
             _screenWidth = Screen.width;
             _screenHeight = Screen.height;
 
-            _assets.TryGetAsset(_backgroundId, out var background);
+            _assets.TryGetAsset(pool.Get(stageEntity).BackgroundId, out var background);
 
             BackgroundFitter.CoverFit(screen.Background.transform, background as Sprite,
                 screen.StageCamera, _screenWidth, _screenHeight);
         }
 
-        private void _Teardown(bool resetFlame)
+        /// <summary>
+        /// The edge back to <c>Idle</c>: hand everything back to its owner, then delete the stage.
+        /// </summary>
+        /// <remarks>
+        /// No guard on "is there anything to tear down": there is a stage entity or there is not,
+        /// which is the fact the four zeroed fields used to spell out. The entity goes LAST, after
+        /// the ids it carries have been released — reading them off a deleted entity is what rule 7
+        /// of adr-data-placement-is-decided-on-three-axes forbids.
+        /// </remarks>
+        private void _Teardown(int stageEntity, EcsPool<PhoenixFlameStageComp> pool)
         {
-            if (_state == StageState.Idle && _screenInstanceId == 0 && _atlasRequestId == 0 &&
-                _backgroundRequestId == 0)
-                return;
-
             foreach (var readyEntity in _world.Where(out SingleTagAspect<DemoReadyTag> _))
                 _world.DelEntity(readyEntity);
 
-            if (resetFlame)
-                _world.GetPool<ResetFlameCommand>().Add(_world.NewEntity());
-
             // Keep this order. The view must release its sprite references before the owner
-            // destroys them, which _ReleaseRequests below does by releasing the atlas.
+            // destroys them, which releasing the atlas below does.
             if (_screens.TryGet(out PhoenixFlameScreen screen))
             {
                 screen.FlameColor.ClearSprites();
@@ -272,28 +305,22 @@ namespace Client.Adapters.PhoenixFlame.Systems
                 screen.Background.sprite = null;
             }
 
-            _ReleaseRequests();
-
-            _smokeId = 0;
-            _sparkId = 0;
-            _backgroundId = 0;
-            System.Array.Clear(_flameFrameIds, 0, _flameFrameIds.Length);
-            _screenInstanceId = 0;
             _screenWidth = -1;
             _screenHeight = -1;
-            _TransitionTo(StageState.Idle);
+
+            ref var comp = ref pool.Get(stageEntity);
+            _assets.Release(ref comp.AtlasRequestId);
+            _assets.Release(ref comp.BackgroundRequestId);
+
+            _world.DelEntity(stageEntity);
         }
 
-        private void _ReleaseRequests()
+        public void Inject(EcsWorld obj)
         {
-            _assets.Release(ref _atlasRequestId);
-            _assets.Release(ref _backgroundRequestId);
+            _world = obj;
+            _resetCommands = obj.GetPool<ResetFlameCommand>();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _TransitionTo(StageState next) => _state = next;
-
-        public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;

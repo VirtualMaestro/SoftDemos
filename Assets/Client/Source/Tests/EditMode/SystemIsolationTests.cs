@@ -68,6 +68,33 @@ namespace Client.Simulation.Tests
                 string.Join("\n  ", violations));
         }
 
+        /// <summary>No system implements <c>IEcsDestroy</c>.</summary>
+        /// <remarks>
+        /// The count of <c>IEcsDestroy</c> on systems is a direct count of ownership left in
+        /// systems: every <c>Destroy</c> body this project ever had released something its system
+        /// owned — a request, a view, a tween. A stateless system needs none, so the metric for
+        /// "a system may remember, never own" is that this reads zero.
+        /// <para>It runs from the Simulation test assembly because its assembly list is the only
+        /// one covering both halves; the adapter-only list of <c>CompositionRootTests</c> would
+        /// have missed <c>DialogueResetSimSystem</c>.</para>
+        /// </remarks>
+        [Test]
+        public void Systems_ImplementNoDestroy()
+        {
+            var violations = _ProductSystemTypes()
+                .Where(t => typeof(IEcsDestroy).IsAssignableFrom(t))
+                .Select(t => t.FullName)
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToList();
+
+            Assert.That(violations, Is.Empty,
+                "A release right sits with its owner, which the composition root disposes — " +
+                "adr-data-placement-is-decided-on-three-axes rule 8. A system that releases on " +
+                "Destroy is a system that owns." + Environment.NewLine + "Violations:" +
+                Environment.NewLine + "  " +
+                string.Join(Environment.NewLine + "  ", violations));
+        }
+
         /// <summary>
         /// All concrete system types in the product assemblies. An assembly missing from the
         /// AppDomain is a test-environment failure, not a pass — fail loudly rather than skip it.

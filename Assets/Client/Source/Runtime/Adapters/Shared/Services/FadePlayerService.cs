@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -10,8 +11,10 @@ namespace Client.Adapters.Shared.Services
     /// like <see cref="ScreenRegistryService"/>. Card moves live in
     /// <see cref="AceOfShadows.Services.CardMovePlayerService"/> — they are one feature's
     /// behaviour, and this service holds nothing a feature owns.
+    /// An owner disposes what it hands out: the composition root disposes this service, and no
+    /// system releases a fade on destroy.
     /// </remarks>
-    public sealed class FadePlayerService
+    public sealed class FadePlayerService : IDisposable
     {
         private readonly List<CanvasGroup> _fading = new();
 
@@ -33,6 +36,9 @@ namespace Client.Adapters.Shared.Services
 
             _fading.Clear();
         }
+
+        /// <summary>Kills every fade before the world goes away.</summary>
+        public void Dispose() => KillFades();
 
         // Properties are used only for tests
         internal int ActiveFadeCount => _fading.Count;

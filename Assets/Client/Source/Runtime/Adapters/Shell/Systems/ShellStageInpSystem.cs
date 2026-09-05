@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Client.Simulation.Core.Phases;
 using Client.Adapters.Shared.Components;
+using Client.Adapters.Shell.Components;
 using Client.Adapters.Shared.Services;
 using Client.Adapters.Shared.Stage;
 using Client.Adapters.Shell.Views;
@@ -16,15 +17,22 @@ namespace Client.Adapters.Shell.Systems
     /// <remarks>
     /// The lifecycle is <c>Idle -> Loading -> Ready</c>. There is no <c>Closing</c>, because
     /// <c>Boot</c> stays loaded. <c>Ready</c> is terminal: a failed load is reported once and
-    /// not retried.
+    /// not retried - which is why a SETTLED load, successful or not, is handed to
+    /// <see cref="StageTransitions.Next"/> as <see cref="AsyncOpStatus.Done"/>. A plain menu is
+    /// playable and a hidden one is not, so for this stage a failure is not a reason to go back.
     /// <para>Every sprite it paints with is cut out of an atlas by
     /// <see cref="AddressablesAssetService"/> and owned by it, under an id of its own: releasing
     /// the atlas at <see cref="Destroy"/> destroys them all, which is what the hand-written list of
     /// owned copies used to do. The skin view comes from the screen registry per call, and the one
     /// id a demo may draw with crosses to it as <see cref="ShellSkinComp"/>
     /// (adr-an-engine-object-has-one-owner-per-kind, DEU0146).</para>
+    /// <para>It owns nothing. The state and the three request ids live in
+    /// <see cref="ShellStageComp"/> - a world singleton, because this stage lives as long as the
+    /// world does and has no birth or death for an entity to model. There is no
+    /// <c>IEcsDestroy</c>: the asset service releases the session's requests when the composition
+    /// root disposes it (adr-data-placement-is-decided-on-three-axes rules 6 and 8).</para>
     /// </remarks>
-    internal sealed class ShellStageInpSystem : IEcsInput, IEcsDestroy, IEcsInject<EcsWorld>,
+    internal sealed class ShellStageInpSystem : IEcsInput, IEcsInject<EcsWorld>,
         IEcsInject<ILogService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
     {
@@ -50,10 +58,7 @@ namespace Client.Adapters.Shell.Systems
         private ILogService _log;
         private AddressablesAssetService _assets;
         private ScreenRegistryService _screens;
-        private StageState _state;
-        private int _backgroundRequestId;
-        private int _menuAtlasRequestId;
-        private int _sharedAtlasRequestId;
+        private EcsTagPool<ShellReadyTag> _shellReady;
 
         public ShellStageInpSystem(DemoEntry[] demos)
         {
@@ -62,62 +67,71 @@ namespace Client.Adapters.Shell.Systems
 
         public void Input()
         {
-            switch (_state)
+            var state = _world.Get<ShellStageComp>().State;
+
+            if (state == StageState.Ready)
+                return;
+
+            var status = state == StageState.Loading ? _Poll() : AsyncOpStatus.Pending;
+
+            // A settled load makes the menu presentable either way, so the machine is told Done and
+            // the failure is kept for the edge below. The shell is always "present" and never
+            // unloading, which is what leaves it with three of the four states.
+            var settled = status == AsyncOpStatus.Failed ? AsyncOpStatus.Done : status;
+            var next = StageTransitions.Next(state, true, true, false, settled);
+
+            if (next == state)
+                return;
+
+            if (next == StageState.Loading)
             {
-                case StageState.Idle:
-                    _BeginLoading();
-                    break;
-                case StageState.Loading:
-                    _ContinueLoading();
-                    break;
+                _BeginLoading();
+                return;
             }
-        }
 
-        public void Destroy()
-        {
-            _ClearSpriteTargets();
-            // Releasing the atlases destroys every sprite cut from them: the asset service owns
-            // each cut and takes it with the parent.
-            _ReleaseRequests();
-            _TransitionTo(StageState.Idle);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _BeginLoading()
-        {
-            _backgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
-            _menuAtlasRequestId = _assets.Request(new AssetLoadRequest(MenuAtlasAddress));
-            _sharedAtlasRequestId = _assets.Request(new AssetLoadRequest(SharedAtlasAddress));
-            _TransitionTo(StageState.Loading);
-        }
-
-        private void _ContinueLoading()
-        {
-            var backgroundStatus = _assets.Poll(_backgroundRequestId);
-            var menuStatus = _assets.Poll(_menuAtlasRequestId);
-            var sharedStatus = _assets.Poll(_sharedAtlasRequestId);
-
-            if (backgroundStatus == AsyncOpStatus.Failed || menuStatus == AsyncOpStatus.Failed ||
-                sharedStatus == AsyncOpStatus.Failed)
+            if (status == AsyncOpStatus.Failed)
             {
                 _log.Error("Shell skin content failed to load; the menu stays unskinned.");
                 _ReleaseRequests();
                 // Release to presentation anyway. A plain menu is playable, a hidden one is not.
                 // This is the only path that ends with white boxes on screen.
-                _world.GetPool<ShellReadyTag>().Add(_world.NewEntity());
-                _TransitionTo(StageState.Ready);
-                return;
+            }
+            else
+            {
+                _TryApplySkin();
             }
 
-            if (backgroundStatus != AsyncOpStatus.Done || menuStatus != AsyncOpStatus.Done ||
-                sharedStatus != AsyncOpStatus.Done)
-                return;
-
-            _TryApplySkin();
-
             // The menu has its backdrop, panel, buttons and icons. Presentation can show it now.
-            _world.GetPool<ShellReadyTag>().Add(_world.NewEntity());
-            _TransitionTo(StageState.Ready);
+            _shellReady.Add(_world.NewEntity());
+            _world.Get<ShellStageComp>().State = StageState.Ready;
+        }
+
+        /// <summary>The worst of the three content requests: a failure first, then a wait.</summary>
+        private AsyncOpStatus _Poll()
+        {
+            ref readonly var comp = ref _world.Get<ShellStageComp>();
+            var backgroundStatus = _assets.Poll(comp.BackgroundRequestId);
+            var menuStatus = _assets.Poll(comp.MenuAtlasRequestId);
+            var sharedStatus = _assets.Poll(comp.SharedAtlasRequestId);
+
+            if (backgroundStatus == AsyncOpStatus.Failed || menuStatus == AsyncOpStatus.Failed ||
+                sharedStatus == AsyncOpStatus.Failed)
+                return AsyncOpStatus.Failed;
+
+            return backgroundStatus == AsyncOpStatus.Done && menuStatus == AsyncOpStatus.Done &&
+                   sharedStatus == AsyncOpStatus.Done
+                ? AsyncOpStatus.Done
+                : AsyncOpStatus.Pending;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void _BeginLoading()
+        {
+            ref var comp = ref _world.Get<ShellStageComp>();
+            comp.State = StageState.Loading;
+            comp.BackgroundRequestId = _assets.Request(new AssetLoadRequest(BackgroundAddress));
+            comp.MenuAtlasRequestId = _assets.Request(new AssetLoadRequest(MenuAtlasAddress));
+            comp.SharedAtlasRequestId = _assets.Request(new AssetLoadRequest(SharedAtlasAddress));
         }
 
         private void _TryApplySkin()
@@ -128,20 +142,21 @@ namespace Client.Adapters.Shell.Systems
                 return;
             }
 
-            var backgroundId = _assets.ResolveSprite(_backgroundRequestId);
+            ref readonly var comp = ref _world.Get<ShellStageComp>();
+            var backgroundId = _assets.ResolveSprite(comp.BackgroundRequestId);
 
             _ApplyHiddenUntilLoaded(skin.Background, _Sprite(backgroundId));
-            skin.Panel.sprite = _Sprite(_TakeSpriteId(_sharedAtlasRequestId, PanelSpriteName));
+            skin.Panel.sprite = _Sprite(_TakeSpriteId(comp.SharedAtlasRequestId, PanelSpriteName));
 
             _ApplyHiddenUntilLoaded(
-                skin.BackIcon, _Sprite(_TakeSpriteId(_sharedAtlasRequestId, BackIconSpriteName)));
+                skin.BackIcon, _Sprite(_TakeSpriteId(comp.SharedAtlasRequestId, BackIconSpriteName)));
 
             _ApplyHiddenUntilLoaded(
-                skin.Spinner, _Sprite(_TakeSpriteId(_sharedAtlasRequestId, SpinnerSpriteName)));
+                skin.Spinner, _Sprite(_TakeSpriteId(comp.SharedAtlasRequestId, SpinnerSpriteName)));
 
             // One cut across all buttons, and across every demo that wants the same look: the id
             // goes into the world and a demo resolves it through the same owner.
-            var buttonId = _TakeSpriteId(_sharedAtlasRequestId, ButtonSpriteName);
+            var buttonId = _TakeSpriteId(comp.SharedAtlasRequestId, ButtonSpriteName);
             var buttonSprite = _Sprite(buttonId);
 
             foreach (var button in skin.Buttons)
@@ -153,7 +168,7 @@ namespace Client.Adapters.Shell.Systems
 
             for (var i = 0; i < iconCount; i++)
                 _ApplyHiddenUntilLoaded(
-                    skin.DemoIcons[i], _Sprite(_TakeSpriteId(_menuAtlasRequestId, _demos[i].IconName)));
+                    skin.DemoIcons[i], _Sprite(_TakeSpriteId(comp.MenuAtlasRequestId, _demos[i].IconName)));
         }
 
         /// <summary>Assigns a sprite to an <see cref="Image"/> that starts disabled.</summary>
@@ -200,49 +215,21 @@ namespace Client.Adapters.Shell.Systems
         private Sprite _Sprite(int requestId) =>
             _assets.TryGetAsset(requestId, out var asset) ? asset as Sprite : null;
 
-        private void _ClearSpriteTargets()
-        {
-            _world.Get<ShellSkinComp>().Button = 0;
-
-            if (!_screens.TryGet(out ShellSkinView skin))
-                return;
-
-            _ClearSprite(skin.Background, true);
-            _ClearSprite(skin.Panel, false);
-            _ClearSprite(skin.BackIcon, true);
-            _ClearSprite(skin.Spinner, true);
-
-            if (skin.Buttons != null)
-                foreach (var button in skin.Buttons)
-                    _ClearSprite(button, false);
-
-            if (skin.DemoIcons != null)
-                foreach (var icon in skin.DemoIcons)
-                    _ClearSprite(icon, true);
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void _ReleaseRequests()
         {
-            _assets.Release(ref _backgroundRequestId);
-            _assets.Release(ref _menuAtlasRequestId);
-            _assets.Release(ref _sharedAtlasRequestId);
+            ref var comp = ref _world.Get<ShellStageComp>();
+            _assets.Release(ref comp.BackgroundRequestId);
+            _assets.Release(ref comp.MenuAtlasRequestId);
+            _assets.Release(ref comp.SharedAtlasRequestId);
         }
 
-        private void _TransitionTo(StageState next) => _state = next;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void _ClearSprite(Image image, bool disable)
+        public void Inject(EcsWorld obj)
         {
-            if (image == null)
-                return;
-
-            image.sprite = null;
-
-            if (disable)
-                image.enabled = false;
+            _world = obj;
+            _shellReady = obj.GetPool<ShellReadyTag>();
         }
 
-        public void Inject(EcsWorld obj) => _world = obj;
         public void Inject(ILogService obj) => _log = obj;
         public void Inject(AddressablesAssetService obj) => _assets = obj;
         public void Inject(ScreenRegistryService obj) => _screens = obj;

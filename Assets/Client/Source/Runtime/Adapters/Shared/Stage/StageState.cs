@@ -9,6 +9,8 @@
     /// from <c>LateRun</c> and had to wait for the next frame's <c>Run</c> to consume it. The
     /// phases removed the wait — Input runs before Sim in the same frame — and the step went with
     /// it. A state that exists to absorb a scheduling artefact is the artefact.</para>
+    /// <para>The steps between these values are <see cref="StageTransitions.Next"/> — one function
+    /// for every stage, and the only place an edge is decided.</para>
     /// </remarks>
     public enum StageState
     {

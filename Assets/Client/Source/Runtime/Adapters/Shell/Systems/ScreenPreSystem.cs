@@ -21,8 +21,11 @@ namespace Client.Adapters.Shell.Systems
     /// <see cref="CanvasGroup"/> comes off the view it sits on: a system holds no engine object
     /// (DEU0146). The backdrop and the loading indicator are the skin view's, which is where the
     /// scene already puts them.</para>
+    /// <para>It does not stop the fades on destroy either. The fade player owns them and kills
+    /// them when the composition root disposes it - a system that released on <c>Destroy</c> was a
+    /// system that owned (adr-data-placement-is-decided-on-three-axes rule 8).</para>
     /// </remarks>
-    internal sealed class ScreenPreSystem : IEcsPresent, IEcsDestroy, IEcsInject<EcsWorld>,
+    internal sealed class ScreenPreSystem : IEcsPresent, IEcsInject<EcsWorld>,
         IEcsInject<FadePlayerService>, IEcsInject<ScreenRegistryService>
     {
         private const float FadeSeconds = 0.18f;
@@ -40,13 +43,6 @@ namespace Client.Adapters.Shell.Systems
         private bool _menuWasVisible;
         private bool _demoWasVisible;
         private bool _loadingWasVisible;
-
-        void IEcsDestroy.Destroy()
-        {
-            // The fade half of the safety net the old TweenPlayerService.KillAll carried: a fade
-            // that outlives its world calls back into a destroyed pipeline.
-            _tweens.KillFades();
-        }
 
         public void Present()
         {

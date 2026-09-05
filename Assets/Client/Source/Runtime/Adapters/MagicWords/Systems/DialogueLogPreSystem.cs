@@ -32,8 +32,14 @@ namespace Client.Adapters.MagicWords.Systems
     /// and its list come from <see cref="ScreenRegistryService"/> per call. Readiness is
     /// <c>DemoReadyTag</c>, the same fact its sibling <c>MagicWordsPreSystem</c> gates on, rather
     /// than a latch of its own (adr-an-engine-object-has-one-owner-per-kind, DEU0146).
+    /// <para>It owns nothing either. Which row a line is bound to, and the avatar state that row
+    /// was drawn with, live in <see cref="DialogueLineViewComp"/> on the line's own entity — one
+    /// component where a dictionary and a mirroring tag used to record the same fact twice. What
+    /// stays here is per-call scratch, cleared on the call that fills it
+    /// (adr-data-placement-is-decided-on-three-axes rules 4 and 10). There is no
+    /// <c>IEcsDestroy</c>: the list belongs to the scene and dies with it.</para>
     /// </remarks>
-    internal sealed class DialogueLogPreSystem : IEcsPresent, IEcsDestroy,
+    internal sealed class DialogueLogPreSystem : IEcsPresent,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<AvatarImageRouterService>,
         IEcsInject<FadePlayerService>, IEcsInject<AddressablesAssetService>,
         IEcsInject<ScreenRegistryService>
@@ -43,7 +49,6 @@ namespace Client.Adapters.MagicWords.Systems
         private const string EmojiSizeOpen = "<size=200%>";
         private const string EmojiSizeClose = "</size>";
 
-        private readonly Dictionary<int, DialogueLineItemData> _bindings = new();
         private readonly List<int> _pendingLines = new();
         private readonly HashSet<int> _justAddedItemIds = new();
         private readonly StringBuilder _body = new();
@@ -54,7 +59,7 @@ namespace Client.Adapters.MagicWords.Systems
         private FadePlayerService _tweens;
         private AddressablesAssetService _assets;
         private ScreenRegistryService _screens;
-        private EcsTagPool<DialogueLineBoundTag> _bound;
+        private EcsPool<DialogueLineViewComp> _rows;
         private EcsPool<DialogueLineComp> _lines;
         private EcsPool<DialogueTextComp> _texts;
         private EcsPool<SpeakerComp> _speakers;
@@ -66,7 +71,7 @@ namespace Client.Adapters.MagicWords.Systems
         public void Present()
         {
             if (_logReset.Count > 0)
-                _ClearViews();
+                _ClearRows();
 
             // The same readiness fact the sibling MagicWordsPreSystem gates on. The Input half
             // deletes the tag before it releases anything, so this frame's Present is already out
@@ -81,16 +86,16 @@ namespace Client.Adapters.MagicWords.Systems
             _ApplyAvatars(screen);
         }
 
-        /// <summary>The list dies with the pipeline even when no teardown bump arrived first.</summary>
-        public void Destroy()
+        /// <summary>Unbinds every line and empties the list. The reset event is the only caller.</summary>
+        private void _ClearRows()
         {
-            _ClearViews();
-        }
+            foreach (var entityId in _world.Where(out SingleAspect<DialogueLineViewComp> _))
+                _pendingLines.Add(entityId);
 
-        private void _ClearViews()
-        {
-            foreach (var entityId in _bindings.Keys)
-                _bound.TryDel(entityId);
+            foreach (var entityId in _pendingLines)
+                _rows.Del(entityId);
+
+            _pendingLines.Clear();
 
             if (_screens.TryGet(out MagicWordsScreen screen))
             {
@@ -100,8 +105,6 @@ namespace Client.Adapters.MagicWords.Systems
                     list.Clear(0);
             }
 
-            _bindings.Clear();
-            _pendingLines.Clear();
             _justAddedItemIds.Clear();
             _body.Clear();
         }
@@ -109,7 +112,6 @@ namespace Client.Adapters.MagicWords.Systems
         private void _SpawnVisibleLines(MagicWordsScreen screen)
         {
             var list = screen.LogList;
-            ref readonly var art = ref _world.Get<DialogueLogArtComp>();
 
             foreach (var entityId in _world.Where(out VisibleLineAspect _))
                 _pendingLines.Add(entityId);
@@ -119,31 +121,14 @@ namespace Client.Adapters.MagicWords.Systems
 
             foreach (var entityId in _pendingLines)
             {
-                var speakerId = _lines.Read(entityId).Speaker.TryGetID(out var resolvedSpeakerId)
-                    ? resolvedSpeakerId
-                    : -1;
-
-                var data = new DialogueLineItemData
-                {
-                    SpeakerId = speakerId,
-                    SpeakerName = speakerId >= 0 && _speakers.Has(speakerId)
-                        ? _speakers.Read(speakerId).Name
-                        : string.Empty,
-                    Side = speakerId >= 0 && _avatarData.Has(speakerId)
-                        ? _avatarData.Read(speakerId).Side
-                        : AvatarSide.Left,
-                    Bubble = _Sprite(art.Bubble),
-                    Frame = _Sprite(art.Frame),
-                    Emoji = _assets.TryGetAsset(art.Emoji, out var emoji)
-                        ? emoji as TMP_SpriteAsset
-                        : null,
-                    Body = _BuildBody(_texts.Read(entityId).Segments),
-                    Avatar = _Sprite(art.Placeholder),
-                };
+                var data = _BuildItemData(entityId, _Sprite(_world.Get<DialogueLogArtComp>().Placeholder));
 
                 list.AddItem(data);
-                _bindings.Add(entityId, data);
-                _bound.TryAdd(entityId);
+                ref var row = ref _rows.Add(entityId);
+                row.ItemId = data.ItemId;
+                // The re-entry values of the poll cache: the first _ApplyAvatars pass always draws.
+                row.LastState = (AvatarLoadState)(-1);
+                row.LastRequestId = -1;
                 _justAddedItemIds.Add(data.ItemId);
             }
 
@@ -184,42 +169,88 @@ namespace Client.Adapters.MagicWords.Systems
                 _tweens.FadeIn(view.Group, FadeSeconds);
         }
 
+        /// <summary>Redraws the rows whose speaker's avatar poll moved since the last pass.</summary>
+        /// <remarks>
+        /// The record the list holds is rebuilt rather than mutated in place, because the row's own
+        /// state is the component now and the record is what the view draws. Only a row whose poll
+        /// actually moved is rebuilt, which is the comparison the record used to carry itself.
+        /// </remarks>
         private void _ApplyAvatars(MagicWordsScreen screen)
         {
             var list = screen.LogList;
-            ref readonly var art = ref _world.Get<DialogueLogArtComp>();
+            var placeholder = _Sprite(_world.Get<DialogueLogArtComp>().Placeholder);
 
-            foreach (var data in _bindings.Values)
+            foreach (var entityId in _world.Where(out SingleAspect<DialogueLineViewComp> _))
             {
+                var speakerId = _SpeakerOf(entityId);
                 var state = AvatarLoadState.Missing;
                 var requestId = 0;
 
-                if (data.SpeakerId >= 0 && _avatarLoads.Has(data.SpeakerId))
+                if (speakerId >= 0 && _avatarLoads.Has(speakerId))
                 {
-                    ref readonly var load = ref _avatarLoads.Read(data.SpeakerId);
+                    ref readonly var load = ref _avatarLoads.Read(speakerId);
                     state = load.State;
                     requestId = load.RequestId;
                 }
 
-                if (data.LastState == state && data.LastRequestId == requestId)
+                ref var row = ref _rows.Get(entityId);
+
+                if (row.LastState == state && row.LastRequestId == requestId)
                     continue;
 
-                data.LastState = state;
-                data.LastRequestId = requestId;
+                row.LastState = state;
+                row.LastRequestId = requestId;
+                var itemId = row.ItemId;
+
+                Sprite avatar;
 
                 if (state == AvatarLoadState.Ready && _avatars.TryGetSprite(requestId, out var sprite))
-                    data.Avatar = sprite;
+                {
+                    avatar = sprite;
+                }
                 else
                 {
-                    data.Avatar = _Sprite(art.Placeholder);
+                    avatar = placeholder;
 
                     if (state == AvatarLoadState.Ready)
                         _log.Error($"Avatar request #{requestId} does not resolve for a dialogue line.");
                 }
 
+                var data = _BuildItemData(entityId, avatar);
+                data.ItemId = itemId;
                 list.UpdateItem(data);
             }
         }
+
+        /// <summary>Everything one row draws, read out of the world on the call that needs it.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private DialogueLineItemData _BuildItemData(int entityId, Sprite avatar)
+        {
+            ref readonly var art = ref _world.Get<DialogueLogArtComp>();
+            var speakerId = _SpeakerOf(entityId);
+
+            return new DialogueLineItemData
+            {
+                SpeakerId = speakerId,
+                SpeakerName = speakerId >= 0 && _speakers.Has(speakerId)
+                    ? _speakers.Read(speakerId).Name
+                    : string.Empty,
+                Side = speakerId >= 0 && _avatarData.Has(speakerId)
+                    ? _avatarData.Read(speakerId).Side
+                    : AvatarSide.Left,
+                Bubble = _Sprite(art.Bubble),
+                Frame = _Sprite(art.Frame),
+                Emoji = _assets.TryGetAsset(art.Emoji, out var emoji)
+                    ? emoji as TMP_SpriteAsset
+                    : null,
+                Body = _BuildBody(_texts.Read(entityId).Segments),
+                Avatar = avatar,
+            };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int _SpeakerOf(int lineEntityId) =>
+            _lines.Read(lineEntityId).Speaker.TryGetID(out var speakerId) ? speakerId : -1;
 
         private string _BuildBody(DialogueSegment[] segments)
         {
@@ -250,7 +281,7 @@ namespace Client.Adapters.MagicWords.Systems
         public void Inject(EcsWorld obj)
         {
             _world = obj;
-            _bound = obj.GetPool<DialogueLineBoundTag>();
+            _rows = obj.GetPool<DialogueLineViewComp>();
             _lines = obj.GetPool<DialogueLineComp>();
             _texts = obj.GetPool<DialogueTextComp>();
             _speakers = obj.GetPool<SpeakerComp>();
@@ -271,7 +302,7 @@ namespace Client.Adapters.MagicWords.Systems
             public readonly EcsTagPool<LineVisibleTag> Visible = Inc;
             public readonly EcsPool<DialogueLineComp> Lines = Inc;
             public readonly EcsPool<DialogueTextComp> Texts = Inc;
-            public readonly EcsTagPool<DialogueLineBoundTag> Bound = Exc;
+            public readonly EcsPool<DialogueLineViewComp> Rows = Exc;
         }
     }
 }

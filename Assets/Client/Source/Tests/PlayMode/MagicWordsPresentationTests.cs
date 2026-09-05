@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using Client.Adapters.MagicWords;
+using Client.Adapters.MagicWords.Components;
 using Client.Adapters.MagicWords.Views;
 using Client.Adapters.Shared.Components;
 using Client.Adapters.Shell.Systems;
@@ -166,6 +167,71 @@ namespace Client.Adapters.Tests
             yield return null;
             Assert.That(EcsWorld.AllWorldsCount, Is.EqualTo(globalWorldBaseline));
         }
+
+        /// <summary>A reopen loads the same content once, and the stage entity is the record of it.</summary>
+        /// <remarks>
+        /// This is rule 4 of adr-data-placement-is-decided-on-three-axes measured directly. The
+        /// stage used to be five private fields on the Input system, and "is anything live" was a
+        /// hand-written test that all five were zero. It is one entity now, so the count IS the
+        /// answer: 1 while open, 0 after close, and a second open that costs no more requests than
+        /// the first.
+        /// </remarks>
+        [UnityTest]
+        [Category("Network")]
+        [Timeout(120000)]
+        public IEnumerator ReopeningTheDemo_LoadsOnce()
+        {
+            _IgnoreIfOffline();
+            yield return SceneManager.LoadSceneAsync(BootScene, LoadSceneMode.Additive);
+            yield return null;
+
+            var boot = Object.FindFirstObjectByType<Boot>();
+            Assert.That(boot, Is.Not.Null, $"'{BootScene}' must contain the Boot component.");
+            yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
+                "The shell skin never finished loading.", 10f);
+
+            // The counter skips derived rows (ParentId == 0 only), so the demo's three are the
+            // atlas, the background and the emoji asset — not the sprites cut from them.
+            const int demoRequests = 3;
+            var closedFloor = ShellStageInpSystem.AddressCount;
+            Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(closedFloor));
+
+            var firstOpen = 0;
+
+            for (var pass = 1; pass <= 2; pass++)
+            {
+                yield return _Open(boot.World);
+                yield return _WaitUntil(() => boot.World.GetPool<DemoReadyTag>().Count > 0,
+                    $"Magic Words never became ready on open {pass}.", LoadTimeoutSeconds);
+
+                var open = boot.Assets.OpenRequestCount;
+                Assert.That(open, Is.EqualTo(closedFloor + demoRequests),
+                    $"Open {pass} must hold the shell's requests plus this demo's three.");
+                Assert.That(_StageCount(boot.World), Is.EqualTo(1),
+                    $"Open {pass} must have exactly one stage entity.");
+
+                if (pass == 1)
+                    firstOpen = open;
+                else
+                    Assert.That(open, Is.EqualTo(firstOpen),
+                        "A reopen must load once: the second open costs what the first did.");
+
+                yield return _Close(boot.World);
+                yield return null;
+
+                Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(closedFloor),
+                    $"Close {pass} must release every request the demo opened.");
+                Assert.That(_StageCount(boot.World), Is.Zero,
+                    $"Close {pass} must delete the stage entity.");
+            }
+
+            yield return SceneManager.UnloadSceneAsync(BootScene);
+            yield return null;
+        }
+
+        /// <summary>How many stages are live. Idle is the absence of the entity.</summary>
+        private static int _StageCount(EcsWorld world) =>
+            world.GetPool<MagicWordsStageComp>().Count;
 
         // The list virtualizes: only on-screen lines have views, so counting goes through the
         // list's item count rather than child views.

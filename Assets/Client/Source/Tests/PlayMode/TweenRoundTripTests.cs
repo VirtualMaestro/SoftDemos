@@ -45,6 +45,7 @@ namespace Client.Adapters.Tests
         // Only here so the input half builds; it loads nothing, and both must be released.
         private AddressablesAssetService _assets;
         private ScreenRegistryService _screens;
+        private CardMovePlayerService _cardMovePlayer;
 
         [SetUp]
         public void SetUp()
@@ -57,7 +58,7 @@ namespace Client.Adapters.Tests
             _layout.Recalculate(1080, 1920, 5f);
 
             _world = new EcsWorld();
-            var player = new CardMovePlayerService(_registry);
+            _cardMovePlayer = new CardMovePlayerService(_registry);
             _assets = new AddressablesAssetService(new UnityLogService("Test.Tween.Assets"));
             _screens = new ScreenRegistryService();
             _pipeline = EcsPipeline.New()
@@ -65,7 +66,7 @@ namespace Client.Adapters.Tests
                 .Inject<ILogService>(new UnityLogService("Test.Tween"))
                 .Inject<ViewRegistryService>(_registry)
                 .Inject(_layout)
-                .Inject(player)
+                .Inject(_cardMovePlayer)
                 .Inject(_assets)
                 .Inject(_screens)
                 .Add(new AceOfShadowsInpSystem(new AceOfShadowsConfig()))
@@ -135,10 +136,16 @@ namespace Client.Adapters.Tests
         }
 
         /// <summary>
-        /// A tween outliving its world would call back into a destroyed pipeline. The system kills
-        /// every registered view's tweens in <c>IEcsDestroy</c>; the observable proof is that the
-        /// transform stops moving the moment the world goes away.
+        /// A tween outliving its world would call back into a destroyed pipeline. The tween player
+        /// OWNS the tweens and kills them when it is disposed — which is what the composition root
+        /// does before it tears the world down. The observable proof is that the transform stops
+        /// moving the moment the owner is disposed.
         /// </summary>
+        /// <remarks>
+        /// This used to assert on <c>TweenPlaybackPreSystem.Destroy</c>. The fact did not change,
+        /// only where it lives: a release right sits with its owner
+        /// (adr-data-placement-is-decided-on-three-axes rule 8).
+        /// </remarks>
         [UnityTest]
         public IEnumerator DestroyingTheWorldMidTween_StopsTheTween()
         {
@@ -155,6 +162,7 @@ namespace Client.Adapters.Tests
             Assert.That(movedTo, Is.Not.EqualTo(Vector3.zero).Using(new Vector3Comparer(0.0001f)),
                 "The tween should have moved the view before the world is destroyed.");
 
+            _cardMovePlayer.Dispose();
             _pipeline.Destroy();
             _pipeline = null;
             _world.Destroy();
@@ -167,7 +175,7 @@ namespace Client.Adapters.Tests
 
             Assert.That(_view.transform.position,
                 Is.EqualTo(positionAtDestroy).Using(new Vector3Comparer(0.0001f)),
-                "The tween kept running after the world was destroyed — IEcsDestroy did not kill it.");
+                "The tween kept running after its owner was disposed — Dispose did not kill it.");
         }
 
         private int _CreateMovingEntity(float duration)

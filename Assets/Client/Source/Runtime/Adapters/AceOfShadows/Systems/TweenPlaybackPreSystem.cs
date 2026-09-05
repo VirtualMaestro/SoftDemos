@@ -18,8 +18,11 @@ namespace Client.Adapters.AceOfShadows.Systems
     /// on the next frame's Input — a one-frame component written here would be deleted by this same
     /// frame's Cleanup, unseen by any Sim. The queue is what makes the hand-off legal: the player
     /// never touches the world, and the world is written from one phase body.</para>
+    /// <para>It does not stop the tweens on destroy either. The player owns them and kills them
+    /// when the composition root disposes it — a system that released on <c>Destroy</c> was a
+    /// system that owned (adr-data-placement-is-decided-on-three-axes rule 8).</para>
     /// </remarks>
-    internal sealed class TweenPlaybackPreSystem : IEcsInit, IEcsPresent, IEcsDestroy,
+    internal sealed class TweenPlaybackPreSystem : IEcsInit, IEcsPresent,
         IEcsInject<EcsWorld>, IEcsInject<ILogService>, IEcsInject<ViewRegistryService>,
         IEcsInject<StackSlotLayoutService>, IEcsInject<CardMovePlayerService>
     {
@@ -47,11 +50,6 @@ namespace Client.Adapters.AceOfShadows.Systems
                 _ForgetRunningTweens();
             else
                 _StartNewTweens();
-        }
-
-        public void Destroy()
-        {
-            _tweenPlayer.KillAll();
         }
 
         private void _ForgetRunningTweens()

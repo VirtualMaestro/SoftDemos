@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Client.Adapters.AceOfShadows.Views;
 using DCFApixels.DragonECS;
 using DG.Tweening;
@@ -13,8 +14,10 @@ namespace Client.Adapters.AceOfShadows.Services
     /// world change stays in <c>TweenPlaybackPreSystem</c>, which drains the queue in one place at
     /// one point in the frame. The teardown calls are synchronous, because the caller destroys
     /// the views in the same frame.
+    /// An owner disposes what it hands out: the composition root disposes this service, and no
+    /// system kills a tween on destroy.
     /// </remarks>
-    public sealed class CardMovePlayerService
+    public sealed class CardMovePlayerService : IDisposable
     {
         private readonly ViewRegistryService _views;
         private readonly List<entlong> _completedTweens = new();
@@ -54,23 +57,27 @@ namespace Client.Adapters.AceOfShadows.Services
             tween.OnComplete(() => _completedTweens.Add(entity));
         }
 
-        /// <summary>Kills the view tweens and nothing else.</summary>
+        /// <summary>Kills the view tweens of one contiguous handle range and nothing else.</summary>
         /// <remarks>
         /// No world cleanup here — a killed tween never calls back, and a completion already
         /// queued is dropped by the entity's generation check when the system drains the queue.
         /// The orphaned move components are the system's own business
         /// (<c>TweenPlaybackPreSystem._CancelOrphanedMoves</c>).
         /// </remarks>
-        public void KillTweensFor(IReadOnlyList<int> handleIds)
+        public void KillTweensFor(int firstHandle, int count)
         {
-            foreach (var handleId in handleIds)
+            for (var handleId = firstHandle; handleId < firstHandle + count; handleId++)
                 if (_views.TryResolve(handleId, out var view))
                     DOTween.Kill(view);
         }
 
         /// <summary>Kills every move tween before the world goes away.</summary>
-        /// <remarks>A tween that outlives its world calls back into a destroyed pipeline.</remarks>
-        public void KillAll()
+        /// <remarks>
+        /// A tween that outlives its world calls back into a destroyed pipeline. The composition
+        /// root calls this BEFORE it disposes the view registry, because the tweens are found
+        /// through the views the registry still holds.
+        /// </remarks>
+        public void Dispose()
         {
             foreach (var view in _views.Views)
             {

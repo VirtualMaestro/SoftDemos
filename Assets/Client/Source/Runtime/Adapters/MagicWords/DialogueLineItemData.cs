@@ -6,7 +6,11 @@ using UnityEngine;
 namespace Client.Adapters.MagicWords
 {
     /// <summary>One dialogue line for the <see cref="VList"/>. <c>DialogueLineView.OnShow</c> draws it.</summary>
-    /// <remarks>It also carries the avatar poll state, so there is one object per line.</remarks>
+    /// <remarks>
+    /// It carries only what the view draws. The avatar poll state moved to
+    /// <c>DialogueLineViewComp</c> on the line's own entity, so a record is built for a draw and
+    /// kept by nobody (adr-data-placement-is-decided-on-three-axes rule 4).
+    /// </remarks>
     public sealed class DialogueLineItemData : IItemData
     {
         public int SpeakerId;
@@ -17,10 +21,6 @@ namespace Client.Adapters.MagicWords
         public TMP_SpriteAsset Emoji;
         public string Body;
         public Sprite Avatar;
-
-        // Avatar poll state. The system owns it and nothing draws it.
-        public AvatarLoadState LastState = (AvatarLoadState)(-1);
-        public int LastRequestId = -1;
 
         public int ItemId { get; set; }
     }
