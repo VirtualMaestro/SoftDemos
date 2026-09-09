@@ -68,5 +68,18 @@ namespace Client.Adapters.Shell.Views
                 if (button != null)
                     button.onClick.RemoveAllListeners();
         }
+
+        private void OnValidate()
+        {
+            Debug.Assert(demoButtons != null && demoButtons.Length > 0,
+                $"'{nameof(demoButtons)}' is empty on {nameof(MenuScreen)}.", this);
+
+            if (demoButtons == null)
+                return;
+
+            for (var i = 0; i < demoButtons.Length; i++)
+                Debug.Assert(demoButtons[i] != null,
+                    $"'{nameof(demoButtons)}[{i}]' is not assigned on {nameof(MenuScreen)}.", this);
+        }
     }
 }
