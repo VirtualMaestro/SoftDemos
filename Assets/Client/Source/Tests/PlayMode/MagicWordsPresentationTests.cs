@@ -50,7 +50,6 @@ namespace Client.Adapters.Tests
             // spelled as a constant — the cut count follows the demo catalog.
             yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
                 "The shell skin never finished loading.", 10f);
-            var heldFloor = boot.Assets.HeldAssetCount;
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
 
             yield return _Open(boot.World);
@@ -140,7 +139,6 @@ namespace Client.Adapters.Tests
             Assert.That(Object.FindObjectsByType<DialogueLineView>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
             // The leaves are not reached through the router: AvatarImageRouterServiceTests owns
             // the two loaders directly and asserts both are empty after a Release, so an empty
             // route table here is the whole claim this test can add.

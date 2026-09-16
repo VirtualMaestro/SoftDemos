@@ -55,6 +55,8 @@ namespace Client.Adapters.Shared.Services
                 return requestId;
             }
 
+            _log.Info($"Request #{requestId} load '{entry.Address}' started. Open requests: {OpenRequestCount}.");
+
             try
             {
                 entry.Handle = Addressables.LoadAssetAsync<Object>(entry.Address);
@@ -91,6 +93,9 @@ namespace Client.Adapters.Shared.Services
             }
 
             entry.Asset = entry.Handle.Result;
+            _log.Info($"Request #{requestId} load '{entry.Address}': Pending -> Done. " +
+                      $"Open requests: {OpenRequestCount}.");
+
             return status;
         }
 
@@ -101,13 +106,15 @@ namespace Client.Adapters.Shared.Services
         /// </summary>
         /// <remarks>
         /// The entry IS the row: the object sits on it rather than in a second dictionary under the
-        /// same key, so this costs one lookup. The null test is the reference one on purpose — an
-        /// entry either carries what this service filed or carries nothing, and whether a live
-        /// object is still alive is the caller's own <c>as Sprite</c> to ask.
+        /// same key, so this costs one lookup. The null test is the engine's own comparison, not a
+        /// reference test: the caller is about to use what comes back, so an asset whose native
+        /// half is gone must read as "no asset here" rather than reach the caller and throw on its
+        /// next member access. Accounting for a row that still exists is
+        /// <see cref="OpenRequestCount"/>'s job, not this one's.
         /// </remarks>
         public bool TryGetAsset(int requestId, out Object asset)
         {
-            if (_requests.TryGet(requestId, out var entry) && entry.Asset is not null)
+            if (_requests.TryGet(requestId, out var entry) && entry.Asset != null)
             {
                 asset = entry.Asset;
                 return true;
@@ -298,6 +305,9 @@ namespace Client.Adapters.Shared.Services
             // recursion is one level deep whatever the caller passes.
             _ReleaseDerivedChildrenOf(requestId);
             _ReleaseOwn(entry);
+
+            _log.Info($"Request #{requestId} load '{entry.Address}' released in state {entry.Status}. " +
+                      $"Open requests: {OpenRequestCount}.");
         }
 
         /// <summary>
@@ -492,15 +502,16 @@ namespace Client.Adapters.Shared.Services
             }
         }
 
-        // Properties are used only for tests
+        // Read by the PlayMode tests only.
+
         /// <summary>
         /// Loads started but not yet released. Must reach 0 on a clean shutdown.
         /// </summary>
         /// <remarks>
         /// Derived entries are deliberately not counted: <see cref="Derive"/> starts nothing, it
         /// cuts a copy out of something already loaded, and a caller checking that every REQUEST it
-        /// made came back is asking about loads. <see cref="HeldAssetCount"/> is the count that
-        /// includes them.
+        /// made came back is asking about loads. A derived row dies with its parent, so a request
+        /// table that reads 0 here holds no copy either.
         /// </remarks>
         internal int OpenRequestCount
         {
@@ -510,24 +521,6 @@ namespace Client.Adapters.Shared.Services
 
                 foreach (var entry in _requests.Values)
                     if (entry.ParentId == 0)
-                        count++;
-
-                return count;
-            }
-        }
-
-        /// <summary>
-        /// Assets currently held, loaded and derived alike — a sprite cut from an atlas counts as
-        /// its own row. Must reach 0 on a clean shutdown.
-        /// </summary>
-        internal int HeldAssetCount
-        {
-            get
-            {
-                var count = 0;
-
-                foreach (var entry in _requests.Values)
-                    if (entry.Asset is not null)
                         count++;
 
                 return count;

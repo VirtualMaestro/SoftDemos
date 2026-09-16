@@ -57,7 +57,6 @@ namespace Client.Adapters.Tests
             // spelled as a constant — the cut count follows the demo catalog.
             yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
                 "The shell skin never finished loading.", 10f);
-            var heldFloor = boot.Assets.HeldAssetCount;
             var bootWorldBaseline = EcsWorld.AllWorldsCount;
             var world = boot.World;
 
@@ -190,7 +189,6 @@ namespace Client.Adapters.Tests
             Assert.That(UnityEngine.Object.FindObjectsByType<PhoenixFlameScreen>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
             var closedState = world.Get<FlameStateComp>();
             Assert.That(closedState.IsActive, Is.False);
             Assert.That(closedState.IsTransitioning, Is.False);

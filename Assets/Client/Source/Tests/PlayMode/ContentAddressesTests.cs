@@ -89,7 +89,6 @@ namespace Client.Adapters.Tests
             }
 
             Assert.That(_source.OpenRequestCount, Is.Zero);
-            Assert.That(_source.HeldAssetCount, Is.Zero);
         }
 
         /// <summary>

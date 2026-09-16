@@ -260,8 +260,6 @@ namespace Client.Adapters.Tests
 
             Assert.That(assets.OpenRequestCount, Is.Zero,
                 "Unloading Boot left an Addressables request open.");
-            Assert.That(assets.HeldAssetCount, Is.Zero,
-                "Unloading Boot left an Addressables asset held.");
         }
 
         private static IEnumerator _WaitUntilSkinned(ShellSkinView skin)

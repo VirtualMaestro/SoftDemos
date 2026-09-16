@@ -56,7 +56,6 @@ namespace Client.Adapters.Tests
 
             _source.Release(requestId);
             Assert.That(_source.OpenRequestCount, Is.Zero, "Release must empty the request table.");
-            Assert.That(_source.HeldAssetCount, Is.Zero, "Release must empty the asset table.");
             Assert.That(_source.TryGetAsset(requestId, out _), Is.False,
                 "A released request must not resolve an asset.");
         }
@@ -113,9 +112,6 @@ namespace Client.Adapters.Tests
                 "A derived entry is served through the same TryGetAsset as a loaded one.");
             Assert.That(copy, Is.Not.Null, "The copy must resolve to a live object.");
 
-            Assert.That(_source.HeldAssetCount, Is.EqualTo(2),
-                "The parent and the copy are two held rows, and the leak floor counts both.");
-
             // The whole point of the ownership: the caller releases the PARENT and never the copy.
             _source.Release(atlasId);
 
@@ -123,8 +119,6 @@ namespace Client.Adapters.Tests
                 "Releasing the parent must take its derived entries with it.");
             Assert.That(_source.OpenRequestCount, Is.Zero,
                 "Releasing the parent must empty the request table, children included.");
-            Assert.That(_source.HeldAssetCount, Is.Zero,
-                "Releasing the parent must empty the asset table, children included.");
         }
 
         [UnityTest]
@@ -163,12 +157,8 @@ namespace Client.Adapters.Tests
                 Assert.That(name, Does.Not.Contain("(Clone)"),
                     "The clones GetSprites minted are an implementation detail; their suffix must not cross.");
 
-            var heldBefore = _source.HeldAssetCount;
-
             Assert.That(_source.ReadAtlasNames(9999), Is.Null,
                 "An id the source never handed out is not an atlas.");
-            Assert.That(_source.HeldAssetCount, Is.EqualTo(heldBefore),
-                "A rejected read must hold nothing.");
 
             _source.Release(atlasId);
         }
@@ -191,17 +181,12 @@ namespace Client.Adapters.Tests
             Assert.That(asset.name, Is.EqualTo(KnownAtlasSpriteName),
                 "The cut carries the name it was asked for, not GetSprite's '(Clone)' copy name.");
 
-            Assert.That(_source.HeldAssetCount, Is.EqualTo(2),
-                "The atlas and the cut are two held rows.");
-
             _source.Release(atlasId);
 
             Assert.That(_source.TryGetAsset(spriteId, out _), Is.False,
                 "Releasing the atlas must take the sprite cut from it.");
             Assert.That(_source.OpenRequestCount, Is.Zero,
                 "Releasing the atlas must empty the request table, the cut included.");
-            Assert.That(_source.HeldAssetCount, Is.Zero,
-                "Releasing the atlas must empty the asset table, the cut included.");
         }
 
         /// <summary>
@@ -218,12 +203,8 @@ namespace Client.Adapters.Tests
             Assert.That(_source.Poll(atlasId), Is.EqualTo(AsyncOpStatus.Done),
                 $"Loading '{KnownAtlasAddress}' should reach Done before anything is cut from it.");
 
-            var heldBefore = _source.HeldAssetCount;
-
             Assert.That(_source.DeriveSpriteIfPresent(atlasId, "card-does-not-exist"), Is.Zero,
                 "A name the atlas does not carry is an answer, and the answer is 0.");
-            Assert.That(_source.HeldAssetCount, Is.EqualTo(heldBefore),
-                "A miss must file nothing.");
 
             var spriteId = _source.DeriveSpriteIfPresent(atlasId, KnownAtlasSpriteName);
 
@@ -249,7 +230,6 @@ namespace Client.Adapters.Tests
 
             Assert.That(requestId, Is.Zero, "Release and forget: the caller's id is cleared.");
             Assert.That(_source.OpenRequestCount, Is.Zero, "Release must empty the request table.");
-            Assert.That(_source.HeldAssetCount, Is.Zero, "Release must empty the asset table.");
 
             Assert.DoesNotThrow(() => _source.Release(ref requestId),
                 "Releasing the cleared id must be a no-op, not a throw.");

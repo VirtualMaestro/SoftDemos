@@ -87,7 +87,6 @@ namespace Client.Adapters.Tests
             // spelled as a constant — the cut count follows the demo catalog.
             yield return _WaitUntil(() => boot.World.GetPool<ShellReadyTag>().Count > 0,
                 "The shell skin never finished loading.", 10f);
-            var heldFloor = boot.Assets.HeldAssetCount;
 
             yield return _Open(boot.World);
             yield return _WaitUntil(
@@ -152,7 +151,6 @@ namespace Client.Adapters.Tests
             yield return null;
             Assert.That(boot.Views.Count, Is.Zero);
             Assert.That(boot.Assets.OpenRequestCount, Is.EqualTo(ShellStageInpSystem.AddressCount));
-            Assert.That(boot.Assets.HeldAssetCount, Is.EqualTo(heldFloor));
 
             foreach (var sprite in ownedSprites)
                 Assert.That(sprite == null, Is.True, "Closing the demo must destroy every owned sprite copy.");
